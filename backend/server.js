@@ -18,7 +18,7 @@ https://nike-redesign.onrender.com
 app.use(cors({
   origin: [
     'http://localhost:5173',
-    'https://nike-redesign-7snqz9twc-arshids-projects-54081a2e.vercel.app'
+    'https://nike-redesign-six.vercel.app'
   ],
   credentials: true
 }));
