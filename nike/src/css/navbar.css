@@ -1,0 +1,453 @@
+/* Global Navbar Layout */
+.navbar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: fixed;
+  width: 100%;
+  z-index: 100 !important;
+  top: 0;
+  font-family: Arial, sans-serif;
+  animation: slideDown 1s ease-in-out forwards;
+}
+@keyframes slideDown{
+  0%{
+    transform: translateY(-40px);
+  }
+  100%{
+    transform: translateY(0px);
+  }
+}
+.topBar{
+  z-index: 150 !important;
+}
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* .navbar-logo img {
+    position: relative;
+  height: 24px;
+  animation: logoSlide 4s ease-in forwards;
+} */
+
+/* Start at top center, slide to top-left */
+.navbar-logo img {
+  position: relative;
+  width: 100px;
+  height: 24px;
+  animation: slideFromLeft 1.5s ease-in-out forwards;
+}
+
+@keyframes slideFromLeft {
+ 0% {
+    transform: translateX(-300%);
+  }
+ 50% {
+    transform: translateX(-300%);
+  }
+ 
+  100% {
+  
+    transform: translateX(0);
+  }
+}
+/* Desktop Links */
+.navbar-links {
+  display: flex;
+  gap: 20px;
+ animation: slideFromTopCenter 1.5s ease-in-out forwards;
+ background: #ffffff;
+ font-size: 12px;
+
+}
+@media only screen and (min-width: 1025px) {
+.navbar-links {
+ font-size: 14px;
+
+
+}
+}
+/* Animation: from center top to left */
+@keyframes slideFromTopCenter {
+  0% {
+    transform: translateY(-300%);
+  }
+  50% {
+    transform: translateY(-300%);
+  }
+
+  100% {
+  
+    transform: translateX(0%);
+  }
+}
+
+.navbar-links a {
+  text-decoration: none;
+  color: black;
+font-weight: 600!important;  
+}
+
+/* .navbar-links a:hover {
+  color: gray;
+} */
+.navbar-link-with-dropdown {
+  position: relative;
+}
+
+.navbar-link-with-dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  padding: 1.5rem 0rem 0rem 0rem;
+  background: white;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 999;
+  /* Slide down effect */
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.navbar-link-with-dropdown:hover .dropdown-menu {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  
+}
+
+.dropdown-item {
+  padding:8px 0px 8px 10px;
+  color: rgb(214, 198, 198);
+  text-decoration: none;
+  font-size: 12px;
+  transition: color 0.2s ease;
+  
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+
+/* Right Icons (Desktop) */
+.navbar-icons {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+ animation: slideFromLeftToRight 1.5s ease-in-out forwards;
+
+
+}
+/* Animation: from center top to left */
+@keyframes slideFromLeftToRight {
+  0% {
+    transform: translateX(300%);
+  }
+  50% {
+    transform: translateX(300%);
+  }
+ 
+  100% {
+  
+    transform: translateX(0);
+  }
+}
+
+
+
+.size-5 {
+  width: 20px;
+  height: 20px;
+}
+
+.size-4 {
+  width: 18px;
+  height: 18px;
+}
+
+/* Hamburger Menu Icon */
+.navbar-toggle {
+  display: none;
+}
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  animation: mobileIconSlideIn 1.5s ease-in-out forwards;
+}
+
+.menu-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 18px;
+  height: 15px;
+  cursor: pointer;
+  z-index: 1100;
+  gap: 5px;
+  margin-left: 5px;
+  animation: mobileIconSlideIn 1.5s ease-in-out forwards;
+}
+@keyframes mobileIconSlideIn{
+   0% {
+    transform: translateX(400px);
+  }
+   50% {
+    transform: translateX(400px);
+  }
+ 
+  100% {
+  
+    transform: translateX(0);
+  }
+}
+
+
+.menu-btn .line {
+  background-color: #000;
+  height: 2px;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.menu-btn.open .line1 {
+  transform: rotate(45deg) translateY(9px);
+}
+
+.menu-btn.open .line2 {
+  opacity: 0;
+}
+
+.menu-btn.open .line3 {
+  transform: rotate(-45deg) translateY(-9px);
+}
+
+/* Mobile Menu */
+.navbar-mobile-menu {
+  position: fixed;
+  top: 40px; /* same as navbar height */
+  right: 0;
+  width: 250px;
+
+  background-color: rgb(255, 255, 255);
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.05);
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 10;
+}
+
+.navbar-mobile-menu.open {
+  transform: translateX(0);
+}
+
+.navbar-mobile-menu a {
+  margin: 12px 0;
+  text-decoration: none;
+  color: black;
+  font-weight: 600;
+}
+
+/* Mobile Icons */
+.navbar-mobile-icons {
+  display: none;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Responsive Handling */
+@media (max-width: 768px) {
+  .navbar-links,
+  .navbar-icons {
+    display: none;
+  }
+
+  .navbar-toggle {
+    display: block;
+  }
+
+  .navbar-mobile-icons {
+    display: flex;
+  }
+
+  .navbar-mobile-menu {
+    display: flex;
+
+    
+  }
+  
+}
+@media (max-width: 500px) {
+   .nike-logo {
+    display: none;
+  }
+ 
+}
+@media (min-width: 768px) {
+     .navbar-mobile-menu {
+    display: none;
+  }
+ 
+}
+
+/* Submenu Overlay */
+.navbar-submenu-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.navbar-submenu {
+
+  position: absolute;
+  left: -10px;
+  width: 110%;
+  min-height: 416px;
+  background: rgb(255, 255, 255);
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+  z-index: 20;
+}
+
+.navbar-submenu.open {
+  transform: translateX(0);
+}
+
+.navbar-submenu.closing {
+  transform: translateX(100%);
+}
+
+/* Back Button in Submenu */
+.navbar-submenu .back-btn {
+  font-weight: 700;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 10px 10px;
+}
+.navbar-submenu h2 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  margin-left: 15px;
+}
+
+/* Optional Styling for Submenu Items */
+.navbar-submenu a {
+  display: block;
+  padding: 8px 0 8px 32px;
+  color: black;
+  text-decoration: none;
+  font-weight: 500;
+  margin: 0px;
+}
+
+.navbar-submenu a:hover {
+  background-color: #f5f5f5;
+}
+.search-overlay {
+  margin: 0px 10px;
+top: 0px;
+  position: fixed;
+  width:100%;
+  height: 100vh;
+  background: rgb(255, 255, 255);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  animation: searchSlideIn 0.5s ease-in-out forwards;
+
+}
+.search-overlay.slide-out {
+  animation: searchSlideOut 0.5s ease-in-out forwards;
+}
+.search-overlay-content {
+ margin: 10px;
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.nike-logo {
+  height: 25px;
+  margin: 5px;
+}
+.input-div{
+    width: 75%;
+}
+.search-input {
+  height: 35px;
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 1rem;
+  border-radius: 50px;
+  padding-left: 36px;
+box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+outline: none;
+}
+.input-search-icon{
+    width: 33px;
+    position: fixed;
+    top: 11px;
+    margin-left: .5px;
+    background-color: rgb(0, 0, 0);
+    color: rgb(255, 255, 255);
+    border-radius: 50px;
+    padding: 6px;
+}
+/* .search-input:focus {
+    box-shadow: 0 0 0 3px rgba(129, 129, 129, 0.2);
+} */
+
+
+
+.cancel-btn {
+  background: none;
+  border: none;
+height: 30px;
+  padding: 5px;
+  cursor: pointer;
+  /* background-color: red; */
+}
+
+@keyframes searchSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes searchSlideOut {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+

@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* tailwind.css or a global stylesheet */
+/* @layer utilities {
+  .animate-spin-slow {
+    animation: spin 3s linear infinite;
+  }
+} */
+
+@keyframes shimmer{
+    0%{
+        transform: translateX(10px);
+    }
+    100%{
+        transform: translateX(300px);
+    }
+}
+.logo{
+    
+    animation:logoScale ease-in-out 3s forwards ;
+}
+@keyframes logoScale{
+    0%{
+        scale: .1;
+     transform: translateY(0%);
+    }
+    30%{
+        scale: 1;
+    }
+   
+    90%{
+        scale: 1;
+        transform: translateY(0%);
+    }
+    100%{
+        scale: 1;
+        transform: translateY(-70%);
+    }
+   
+}
+.logo::before{
+    position: absolute;
+    top: 45%;
+    left: 35%;
+    width: 30%;
+    height: 100px;
+    content: '';
+    background-color: rgb(0, 0, 0);
+    z-index:-1;
+}
+.shimmer-overlay{
+     content: '';
+     color: black;
+    position: absolute;
+    top: 40%;
+    left: 35%;
+    width: 10px;
+    height: 150px;
+    /* border: 2px solid red; */
+    background: radial-gradient(rgba(192,192,192),rgba(0, 0, 0, 0));
+    z-index: -1;
+    animation: shimmer ease-in 3s infinite;
+}
+@media only screen and (min-width:1000px) {
+   
+    @keyframes shimmer{
+    0%{
+        transform: translateX(100px);
+    }
+    100%{
+        transform: translateX(300px);
+    }
+}
+}
+@media (min-width:300px) and (max-width:600px) {
+   
+    @keyframes shimmer{
+    0%{
+        transform: translateX(100px);
+    }
+    100%{
+        transform: translateX(250px);
+    }
+}
+}
+@media (min-width:601px) and (max-width:900px) {
+   
+    @keyframes shimmer{
+    0%{
+        transform: translateX(50px);
+    }
+    100%{
+        transform: translateX(250px);
+    }
+}
+}

@@ -1,0 +1,130 @@
+.homepage{
+    margin-top: 40px;
+    margin: 40px 10px 10px 10px;
+    animation: slideUp 1s ease-in-out forwards;
+
+}
+
+@keyframes slideUp {
+   0%{
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  100%{
+    transform: translateY(0px);
+    opacity: 1;
+  }
+}
+.home-image {
+  background-color: white; /* fallback bg */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px; /* ensures layout height is maintained */
+  overflow: hidden;
+  position: relative;
+}
+.home-image.loading::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer2 1.5s infinite;
+  z-index: 1;
+}
+.home-image picture img {
+  z-index: 2;
+  position: relative;
+}
+
+@keyframes shimmer2 {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+ .home-image picture img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  display: block;
+  animation: shrink 2s ease-out forwards;
+}
+
+
+
+@keyframes shrink {
+    0%{
+        height: 0px;
+    }
+    100%{
+        opacity: 1;
+        height: 100%;
+    }
+}
+
+.second{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.second h1{
+font-size: 7vw;
+font-family: 'anton';
+text-align: center;
+
+}
+.second p{
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-size: 10px;
+    text-align: center;
+    margin-top: -8px;
+
+}
+.second button{
+    color: white;
+    background-color: black;
+    border-radius: 50px;
+    padding: 4px 12px;
+    font-size: 12px;
+    margin: 10px;
+}
+
+
+@media only screen and (max-width: 480px) {
+
+
+}
+
+@media only screen and (min-width: 481px) and (max-width: 768px) {
+
+}
+
+@media only screen and (min-width: 769px) and (max-width: 1024px) {
+        .second h1{
+font-size: 5vw;
+
+
+}
+.second p{
+    font-size: 14px;
+}
+}
+@media only screen and (min-width: 1025px) {
+    .second h1{
+font-size: 5vw;
+
+
+}
+.second p{
+    font-size: 18px;
+}
+}

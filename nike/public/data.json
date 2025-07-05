@@ -1,0 +1,148 @@
+{
+  "featuredShoe": [
+    { "id": 1, "name": "Air Jordan 1 Low TRAVIS SCOTT", "image": "/assets/shoes/featuredShoe1.png" },
+    { "id": 2, "name": "Dunk High Retro Premium WU-TANG", "image": "/assets/shoes/featuredShoe2.png" },
+    { "id": 3, "name": "Air Force 1", "image": "/assets/shoes/featuredShoe3.png" }
+  ],
+
+  "products": [
+    {
+      "id": 1,
+      "category": "Nike Vomero",
+      "item": "Shoe",
+      "name": "Nike Vomero 18",
+      "gender": "Men",
+      "price": 13295,
+      "image1": "/assets/shoes/nikeVomero18Men1.avif",
+      "image2": "/assets/shoes/nikeVomero18Men2.avif",
+      "image3": "/assets/shoes/nikeVomero18Men3.avif",
+      "description": "Experience plush comfort and responsive cushioning on every mile with the Nike Vomero 18, built for road runners.",
+      "sizes": [
+        { "size": "UK 2.5", "stock": 3 },
+        { "size": "UK 3.5", "stock": 4 },
+        { "size": "UK 4", "stock": 2 },
+        { "size": "UK 4.5", "stock": 1 },
+        { "size": "UK 5", "stock": 5 },
+        { "size": "UK 5.5", "stock": 0 },
+        { "size": "UK 6", "stock": 3 },
+        { "size": "UK 6.5", "stock": 2 },
+        { "size": "UK 7.5", "stock": 1 }
+      ]
+    },
+    {
+      "id": 2,
+      "category": "Nike Vomero",
+      "item": "Shoe",
+      "name": "Nike Vomero 18",
+      "gender": "Women",
+      "price": 13295,
+      "image1": "/assets/shoes/nikeVomero18Women1.avif",
+      "image2": "/assets/shoes/nikeVomero18Women2.avif",
+      "image3": "/assets/shoes/nikeVomero18Women3.avif",
+      "description": "Designed for long-distance comfort, the Nike Vomero 18 delivers a smooth ride and premium cushioning for daily runs.",
+      "sizes": [
+        { "size": "UK 2.5", "stock": 2 },
+        { "size": "UK 3.5", "stock": 3 },
+        { "size": "UK 4", "stock": 4 },
+        { "size": "UK 4.5", "stock": 1 },
+        { "size": "UK 5", "stock": 0 },
+        { "size": "UK 5.5", "stock": 2 },
+        { "size": "UK 6", "stock": 5 },
+        { "size": "UK 6.5", "stock": 1 },
+        { "size": "UK 7.5", "stock": 0 }
+      ]
+    },
+    {
+      "id": 3,
+      "category": "Nike Dunks",
+      "item": "Shoe",
+      "name": "Nike Dunk Low Retro",
+      "gender": "Men",
+      "price": 8295,
+      "image1": "/assets/shoes/NikeDunkLowRetro1.avif",
+      "image2": "/assets/shoes/NikeDunkLowRetro2.avif",
+      "image3": "/assets/shoes/NikeDunkLowRetro3.avif",
+      "description": "The classic Dunk Low Retro blends iconic '80s basketball style with modern streetwear appeal.",
+      "sizes": [
+        { "size": "UK 2.5", "stock": 1 },
+        { "size": "UK 3.5", "stock": 2 },
+        { "size": "UK 4", "stock": 0 },
+        { "size": "UK 4.5", "stock": 1 },
+        { "size": "UK 5", "stock": 3 },
+        { "size": "UK 5.5", "stock": 0 },
+        { "size": "UK 6", "stock": 2 },
+        { "size": "UK 6.5", "stock": 1 },
+        { "size": "UK 7.5", "stock": 0 }
+      ]
+    },
+    {
+      "id": 4,
+      "category": "Nike Dunks",
+      "item": "Shoe",
+      "name": "Nike Dunk Low SE",
+      "gender": "Men",
+      "price": 11895,
+      "image1": "/assets/shoes/NikeDunkLowSe1.avif",
+      "image2": "/assets/shoes/NikeDunkLowSe2.avif",
+      "image3": "/assets/shoes/NikeDunkLowSe3.avif",
+      "description": "Step into bold style and comfort with the Dunk Low SE, featuring premium materials and unique colorways.",
+      "sizes": [
+        { "size": "UK 2.5", "stock": 0 },
+        { "size": "UK 3.5", "stock": 3 },
+        { "size": "UK 4", "stock": 1 },
+        { "size": "UK 4.5", "stock": 0 },
+        { "size": "UK 5", "stock": 4 },
+        { "size": "UK 5.5", "stock": 2 },
+        { "size": "UK 6", "stock": 3 },
+        { "size": "UK 6.5", "stock": 1 },
+        { "size": "UK 7.5", "stock": 2 }
+      ]
+    },
+    {
+      "id": 5,
+      "category": "Nike Air Force 1",
+      "item": "Shoe",
+      "name": "Nike Air Force 1 '07",
+      "gender": "Men",
+      "price": 8195,
+      "image1": "/assets/shoes/airForce1'071.avif",
+      "image2": "/assets/shoes/airForce1'072.avif",
+      "image3": "/assets/shoes/airForce1'073.avif",
+      "description": "An icon reborn, the Air Force 1 '07 brings timeless style and modern comfort to your everyday rotation.",
+      "sizes": [
+        { "size": "UK 2.5", "stock": 3 },
+        { "size": "UK 3.5", "stock": 1 },
+        { "size": "UK 4", "stock": 2 },
+        { "size": "UK 4.5", "stock": 0 },
+        { "size": "UK 5", "stock": 5 },
+        { "size": "UK 5.5", "stock": 1 },
+        { "size": "UK 6", "stock": 4 },
+        { "size": "UK 6.5", "stock": 2 },
+        { "size": "UK 7.5", "stock": 0 }
+      ]
+    },
+    {
+      "id": 6,
+      "category": "Nike Air Force 1",
+      "item": "Shoe",
+      "name": "Nike Air Force 1 Low",
+      "gender": "Men",
+      "price": 13995,
+      "image1": "/assets/shoes/airForce1Low1.avif",
+      "image2": "/assets/shoes/airForce1Low2.avif",
+      "image3": "/assets/shoes/airForce1Low3.avif",
+      "description": "Elevate your street style with the Air Force 1 Low, crafted with clean lines and soft cushioning.",
+      "sizes": [
+        { "size": "UK 2.5", "stock": 0 },
+        { "size": "UK 3.5", "stock": 3 },
+        { "size": "UK 4", "stock": 2 },
+        { "size": "UK 4.5", "stock": 0 },
+        { "size": "UK 5", "stock": 4 },
+        { "size": "UK 5.5", "stock": 1 },
+        { "size": "UK 6", "stock": 5 },
+        { "size": "UK 6.5", "stock": 2 },
+        { "size": "UK 7.5", "stock": 1 }
+      ]
+    }
+  ]
+}
