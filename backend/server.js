@@ -13,12 +13,18 @@ connectDB();
 
 // Initialize express app
 const app = express();
-
+https://nike-redesign.onrender.com
 // Global middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Your frontend URL
-  credentials: true, // Allow credentials (cookies, authorization headers)
-}));app.use(express.json()); // Parses incoming JSON requests
+  origin: [
+    'http://localhost:5173',
+    'https://nike-redesign-7snqz9twc-arshids-projects-54081a2e.vercel.app'
+  ],
+  credentials: true
+}));
+
+
+app.use(express.json()); // Parses incoming JSON requests
 
 // Serve uploaded images statically
 app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
