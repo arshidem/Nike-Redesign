@@ -36,9 +36,8 @@ function App() {
   const { user, isAuthenticated } = useAppContext();
 
   return (
-    <Router>
       <AppRoutes user={user} isAuthenticated={isAuthenticated} />
-    </Router>
+
   );
 }
 
