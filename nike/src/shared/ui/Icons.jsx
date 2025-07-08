@@ -571,3 +571,32 @@ export const ConfirmModal = ({
   );
 };
 
+export const BackBar = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="fixed top-0 left-0 w-full z-30 bg-white shadow-md px-4 py-2 flex items-center">
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-1 px-3 py-2 border border-black rounded hover:bg-gray-100 transition sm:w-auto"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="2"
+          stroke="currentColor"
+          className="w-4 h-4 rotate-180"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M8.25 4.5L15.75 12 8.25 19.5"
+          />
+        </svg>
+        <span className="text-sm font-medium">Back</span>
+      </button>
+    </div>
+  );
+};
+

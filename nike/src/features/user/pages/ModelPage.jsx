@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../../context/AppContext';
 import { useProductService } from '../../product/services/productService';
 import Loader from '../../../shared/ui/Loader';
+import { BackBar } from '../../../shared/ui/Icons';
 
 const ModelPage = () => {
   const { modelName } = useParams();
@@ -56,15 +57,10 @@ const ModelPage = () => {
   return (
     <div className="p-6">
       {/* Back Button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center text-gray-600 hover:text-black mb-4"
-      >
-        <ArrowIconLeft />
-        <span className="ml-2">Back</span>
-      </button>
+        <BackBar/>
+    
 
-      <h1 className="text-xl font-bold mb-2">
+      <h1 className="text-xl font-bold mb-2 mt-10">
         {decodeURIComponent(modelName)} ({products.length})
       </h1>
 
@@ -89,7 +85,7 @@ const ModelPage = () => {
                     className="w-full object-contain mb-4"
                     loading="lazy"
                   />
-                  <span className="text-red-600 font-semibold text-sm">Bestseller</span>
+                  <span className="text-red-600 font-semibold text-sm">{product.tag}</span>
                   <h2 className="text-sm font-semibold">{product.name}</h2>
                   <p className="text-gray-500 text-sm">{product.gender}</p>
                   <p className="text-gray-700 font-medium mt-1">

@@ -5,6 +5,7 @@ import { useDropzone } from "react-dropzone";
 import { useAppContext } from "../../../context/AppContext";
 import { div } from "framer-motion/client";
 import { useProductService } from "../../product/services/productService";
+import Loader from "../../../shared/ui/Loader";
 const UpdateProduct = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -593,9 +594,7 @@ formData.variants.forEach((variant, index) => {
   if (fetching) {
     return (
       <div className="p-6 flex justify-center items-center h-64">
-        <div className="animate-pulse text-gray-500">
-          Loading product data...
-        </div>
+       <Loader/>
       </div>
     );
   }

@@ -107,7 +107,7 @@ const ProductReviewSection = ({ productId }) => {
 
   const topReviews = [...reviews]
     .sort((a, b) => b.rating - a.rating)
-    .slice(0, 3);
+    .slice(0, 2);
 
   return (
     <div className="mt-10 border-t pt-6">

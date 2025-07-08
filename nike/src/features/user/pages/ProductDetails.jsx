@@ -190,17 +190,33 @@ const ProductDetails = () => {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <Toaster position="top-center" />
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center text-gray-600 mb-4"
-      >
-        <ArrowIconLeft className="w-5 h-5" />
-        <span className="ml-2">Back</span>
-      </button>
 
-      <div className="flex flex-col lg:flex-row gap-8">
+     <div className="fixed top-0 left-0 w-full z-30 bg-white shadow-md px-4 py-2 flex items-center">
+  <button
+    onClick={() => navigate(-1)}
+    className="flex items-center gap-1 px-3 py-2 border border-black rounded hover:bg-gray-100 transition sm:w-auto"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="2"
+      stroke="currentColor"
+      className="w-4 h-4  rotate-180"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8.25 4.5L15.75 12 8.25 19.5"
+      />
+    </svg>
+    <span className="text-sm font-medium">Back</span>
+  </button>
+</div>
+
+      <div className="flex flex-col lg:flex-row gap-8 mt-10">
         {/* Image Section */}
-        <div className="lg:w-1/2">
+<div className="w-full lg:w-1/2 lg:sticky lg:top-24 lg:h-fit self-start">
           <img
             src={selectedImage}
             className="w-full aspect-square object-cover rounded"
@@ -361,24 +377,24 @@ const ProductDetails = () => {
             >
               <p>Free delivery on orders above ₹1000. Easy 30-day returns.</p>
             </AccordionItem>
+            {product.videoUrl && (
+              <div className="aspect-w-16 aspect-h-9 mt-4">
+                <h1 className="text-xl font-semibold mb-4 text-gray-800 tracking-tight">
+                  Visual Preview
+                </h1>
+                <iframe
+                  src={product.videoUrl}
+                  className="w-full h-64"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title={`${product.name} video`}
+                />
+              </div>
+            )}
+            <ProductReviewSection productId={product._id} />
           </div>
         </div>
-        <ProductReviewSection productId={product._id} />
       </div>
-      {product.videoUrl && (
-        <div className="aspect-w-16 aspect-h-9 mt-4">
-          <h1 className="text-xl font-semibold mb-4 text-gray-800 tracking-tight">
-            Visual Preview
-          </h1>
-          <iframe
-            src={product.videoUrl}
-            className="w-full h-64"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            title={`${product.name} video`}
-          />
-        </div>
-      )}
     </div>
   );
 };

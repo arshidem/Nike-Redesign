@@ -7,7 +7,8 @@ import {
   PlusIcon,
   MinusIcon,
   XIcon,
-  BackNavigate
+  BackNavigate,
+  BackBar
 } from "../../../shared/ui/Icons";
 import Loader from "../../../shared/ui/Loader";
 import useCartServices from "../services/cartServices";
@@ -125,6 +126,7 @@ console.log(cart);
   if (!cart || cart.items?.length === 0) {
     return (
       <div className="text-center py-20">
+        <BackBar/>
         <h2 className="text-2xl font-bold text-gray-700 mb-4">
           Your Bag is Empty
         </h2>
@@ -141,9 +143,8 @@ console.log(cart);
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 mt-8">
       <Toaster position="top-center" />
-      <BackNavigate/>
-
-      <div className="flex flex-col lg:flex-row gap-8">
+<BackBar/>
+      <div className="flex flex-col lg:flex-row gap-8 mt-4">
         {/* Bag Section */}
         <div className="flex-1">
 {/* Cart Header Summary */}
