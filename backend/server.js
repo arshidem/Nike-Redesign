@@ -42,6 +42,7 @@ const cartRoutes =require('./routes/cartRoutes');
 const couponRoutes = require('./routes/couponRoutes');
 const addressRoutes = require("./routes/addressRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 // Mount routes
 app.use("/api/products", productRouter);
@@ -51,6 +52,8 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use("/api/address", addressRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/reviews", reviewRoutes);
+
 
 // Error handlers
 app.use(notFound);

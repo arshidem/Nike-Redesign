@@ -2,48 +2,61 @@ import axios from 'axios';
 import { useAppContext } from '../../../context/AppContext';
 
 export const useProductService = () => {
-  const { backendUrl,token } = useAppContext();
+  const { backendUrl, token } = useAppContext();
 
   // 🔍 Fetch all products with optional filters
-const fetchProducts = async (filters = {}) => {
-  try {
-    const cleanedFilters = Object.fromEntries(
-      Object.entries(filters).filter(
-        ([_, value]) => value !== undefined && value !== '' && value !== null
-      )
-    );
+  const fetchProducts = async (filters = {}) => {
+    try {
+      const cleanedFilters = Object.fromEntries(
+        Object.entries(filters).filter(
+          ([_, value]) => value !== undefined && value !== '' && value !== null
+        )
+      );
 
-    const response = await axios.get(`${backendUrl}/api/products`, {
-      params: cleanedFilters,
-    });
+      const response = await axios.get(`${backendUrl}/api/products`, {
+        params: cleanedFilters,
+      });
+      return response.data;
+    } catch (err) {
+      console.error("Failed to fetch products", err);
+      return [];
+    }
+  };
+
+  // ⭐ Fetch featured products
+const fetchFeaturedProducts = async () => {
+  try {
+    const url = `${backendUrl}/api/products/featured`;
+    console.log("Calling:", url); // 👈 log this
+    const response = await axios.get(url);
     return response.data;
   } catch (err) {
-    console.error("Failed to fetch products", err);
+    console.error("Failed to fetch featured products", err);
     return [];
   }
 };
 
-
   // 🔍 Fetch a single product by slug
-const fetchProductBySlug = async (slug) => {
-  try {
-    const response = await axios.get(`${backendUrl}/api/products/${slug}`);
-    return response.data;
-  } catch (err) {
-    console.error("Failed to fetch product by slug", err);
-    return null;
-  }
-};
-const fetchProductById = async (id) => {
-  try {
-    const response = await axios.get(`${backendUrl}/api/products/id/${id}`);
-    return response.data;
-  } catch (err) {
-    console.error("Failed to fetch product by id", err);
-    return null;
-  }
-};
+  const fetchProductBySlug = async (slug) => {
+    try {
+      const response = await axios.get(`${backendUrl}/api/products/${slug}`);
+      return response.data;
+    } catch (err) {
+      console.error("Failed to fetch product by slug", err);
+      return null;
+    }
+  };
 
+  // 🔍 Fetch a single product by ID
+  const fetchProductById = async (id) => {
+    try {
+      const response = await axios.get(`${backendUrl}/api/products/id/${id}`);
+      return response.data;
+    } catch (err) {
+      console.error("Failed to fetch product by id", err);
+      return null;
+    }
+  };
 
   // 🔝 Fetch top-selling products
   const fetchTopProducts = async () => {
@@ -71,37 +84,35 @@ const fetchProductById = async (id) => {
   };
 
   // ✏️ Update a product (admin only)
-// ✏️ Update a product (admin only)
-const updateProduct = async (slug, formDataToSend, token) => {
-  try {
-    const response = await axios.put(
-      `${backendUrl}/api/products/${slug}`,
-      formDataToSend,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      }
-    );
-    return response.data;
-  } catch (err) {
-    console.error("Failed to update product", err);
-    throw err;
-  }
-};
+  const updateProduct = async (slug, formDataToSend, token) => {
+    try {
+      const response = await axios.put(
+        `${backendUrl}/api/products/${slug}`,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        }
+      );
+      return response.data;
+    } catch (err) {
+      console.error("Failed to update product", err);
+      throw err;
+    }
+  };
 
   // ❌ Delete a product (admin only)
   const deleteProduct = async (id) => {
     try {
       const response = await axios.delete(`${backendUrl}/api/products/${id}`, {
-         headers: {
+        headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
         },
         withCredentials: true,
-        
       });
       return response.data;
     } catch (err) {
@@ -125,10 +136,11 @@ const updateProduct = async (slug, formDataToSend, token) => {
     fetchProducts,
     fetchProductBySlug,
     fetchTopProducts,
+    fetchFeaturedProducts, // ✅ Added here
     createProduct,
     updateProduct,
     deleteProduct,
-    fetchFilterOptions, // ✅ Make sure this is included
+    fetchFilterOptions,
     fetchProductById,
   };
 };

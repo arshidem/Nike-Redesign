@@ -1,7 +1,7 @@
 const express = require("express");
+const Product=require('../models/Product')
 const router = express.Router();
 const upload = require("../middleware/upload"); // ✅ only once
-
 const {
   createProduct,
   getAllProducts,
@@ -10,18 +10,34 @@ const {
   deleteProduct,
   getTopSellingProducts,
   getFilterOptions,
-  getProductById
+  getProductById,
+  getFeaturedProducts 
 } = require("../controllers/productController");
 
 const { verifyAdmin } = require("../middleware/authMiddleware");
 
 // 🔓 Public Routes
 // 🔓 Public Routes
-router.get("/filter-options", getFilterOptions); // ✅ Correct order
+router.get("/filter-options", getFilterOptions); 
 router.get("/top", getTopSellingProducts);
-router.get("/:slug", getProductBySlug);
 router.get("/id/:id", getProductById);
+router.get("/featured", getFeaturedProducts); // ✅ Move this up
+router.get("/test", async (req, res) => {     // ✅ Move this up
+  console.log("📦 /test route hit"); // 👈 add this
+
+  try {
+    const products = await Product.find({});
+    console.log("✅ Products fetched:", products.length);
+    res.json(products);
+  } catch (err) {
+    console.error("❌ Error:", err);
+    res.status(500).json({ error: "DB query failed" });
+  }});
+router.get("/:slug", getProductBySlug);       // 👈 Put this after specific routes
 router.get("/", getAllProducts);
+
+
+
 
 // 🔐 Admin Routes
 router.post(

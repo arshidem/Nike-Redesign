@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
 
+// Schema for individual items in the order
 const orderItemSchema = new mongoose.Schema({
   product: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Product",
-    required: true
+    required: true,
   },
   title: String,
   image: String,
@@ -12,59 +13,72 @@ const orderItemSchema = new mongoose.Schema({
   quantity: {
     type: Number,
     required: true,
-    min: 1
+    min: 1,
   },
   size: String,
-  color: String
+  color: String,
 });
 
+// Schema for shipping address
 const shippingAddressSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   street: { type: String, required: true },
   city: { type: String, required: true },
-  state: String,
+  state: { type: String },
   postalCode: { type: String, required: true },
   country: { type: String, required: true },
-  phone: { type: String }
+  phone: { type: String },
 });
 
+// Payment result info (used after Razorpay verification)
 const paymentResultSchema = new mongoose.Schema({
-  id: String,
-  status: String,
-  update_time: String,
-  email_address: String
+  id: String,             // Razorpay payment ID
+  status: String,         // success, failed, etc.
+  update_time: String,    // timestamp
+  email_address: String,  // customer email from Razorpay
 });
 
+// Main order schema
 const orderSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
     items: [orderItemSchema],
     shippingAddress: shippingAddressSchema,
+
+    // Required payment info
     paymentMethod: {
       type: String,
       enum: ["cod", "card", "paypal"],
-      required: true
+      required: true,
     },
-    paymentResult: paymentResultSchema,
-    itemsPrice: { type: Number, required: true },
-    shippingPrice: { type: Number, default: 0 },
-    taxPrice: { type: Number, default: 0 },
-    totalPrice: { type: Number, required: true },
+    paymentResult: paymentResultSchema, // Populated after payment verification
+
+    // Pricing
+    itemsPrice: { type: Number, required: true },      // total of all items
+    shippingPrice: { type: Number, default: 0 },       // optional shipping cost
+    taxPrice: { type: Number, default: 0 },            // optional tax
+    totalPrice: { type: Number, required: true },      // final total
+
+    // Payment & delivery status
     isPaid: { type: Boolean, default: false },
     paidAt: Date,
+
     isDelivered: { type: Boolean, default: false },
     deliveredAt: Date,
+
     status: {
       type: String,
       enum: ["processing", "shipped", "delivered", "cancelled"],
-      default: "processing"
-    }
+      default: "processing",
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true, // auto add createdAt & updatedAt
+  }
 );
 
 module.exports = mongoose.model("Order", orderSchema);

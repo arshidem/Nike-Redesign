@@ -226,7 +226,7 @@ exports.getAllProducts = async (req, res) => {
     if (req.query.sortBy === 'priceAsc') sortOption = { finalPrice: 1 };
     if (req.query.sortBy === 'priceDesc') sortOption = { finalPrice: -1 };
 
-    const allProducts = await Product.find(query).sort(sortOption).lean();
+const allProducts = await Product.find(query).sort(sortOption).lean();
 
     // Filter finalPrice or price in JS
     const filtered = allProducts.filter((product) => {
@@ -245,9 +245,9 @@ exports.getAllProducts = async (req, res) => {
 // @route   GET /api/products/:slug
 exports.getProductBySlug = async (req, res) => {
   try {
-    const product = await Product.findOne({ slug: req.params.slug })
-      .populate('category', 'name')
-      .populate('tags', 'name');
+const product = await Product.findOne({ slug: req.params.slug })
+  .populate('category', 'name')
+  .populate('tags', 'name')
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
@@ -290,7 +290,7 @@ exports.getProductBySlug = async (req, res) => {
 // @route   GET /api/products/id/:id
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+const product = await Product.findById(req.params.id).lean();
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
@@ -546,7 +546,7 @@ exports.deleteProduct = async (req, res) => {
 // @route   GET /api/products/top
 exports.getTopSellingProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ sold: -1 }).limit(10);
+const products = await Product.find().sort({ sold: -1 }).limit(10).lean();
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -596,7 +596,7 @@ exports.getFilterOptions = async (req, res) => {
     const sizes = await Product.distinct("variants.sizes.size");
 
     // Build sizesByCategory dynamically from product variants
-    const products = await Product.find({}, "category variants.sizes.size");
+const products = await Product.find({}, "category variants.sizes.size").lean();
 
     const sizesByCategory = {};
 
@@ -636,3 +636,19 @@ exports.getFilterOptions = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+// @desc   Get all featured products (only name, slug, featuredImg)
+// @route  GET /api/products/featured
+// @access Public
+exports.getFeaturedProducts = async (req, res) => {
+  try {
+    const featuredProducts = await Product.find({ isFeatured: true })
+      .select("name slug featuredImg");
+
+    res.status(200).json(featuredProducts);
+  } catch (error) {
+    console.error("Error fetching featured products:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+

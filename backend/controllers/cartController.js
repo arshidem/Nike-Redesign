@@ -20,7 +20,7 @@ exports.getCart = async (req, res) => {
       return res.status(200).json({ items: [], total: 0, shippingFee: 0 });
     }
 
-    const cart = await Cart.findOne({ userId });
+const cart = await Cart.findOne({ userId }).lean();
 
     if (!cart) {
       return res.status(200).json({ items: [], total: 0, shippingFee: 0 });
@@ -168,21 +168,37 @@ exports.removeItemFromCart = async (req, res) => {
   }
 };
 
-// DELETE /api/cart/clear
 exports.clearCart = async (req, res) => {
-  const userId = req.user?._id || null;
+  const userId = req.user?._id;
+  console.log("🛒 DELETE /clear hit");
+  console.log("🔑 clearCart user ID:", userId);
 
   try {
-    const cart = await findCart(userId);
-    if (!cart) return res.status(404).json({ error: "Cart not found" });
+    let cart = await Cart.findOne({ userId }); // <-- FIXED: use userId
 
+    if (!cart) {
+      console.log("⚠️ No cart found. Creating one...");
+      cart = new Cart({ userId });
+    }
+
+    // Clear cart data
     cart.items = [];
+    cart.coupon = null;
+    cart.total = 0;
+    cart.shippingFee = 0;
+
     await cart.save();
+    console.log("✅ Cart cleared successfully");
+
     res.status(200).json({ message: "Cart cleared", cart });
   } catch (err) {
+    console.error("❌ Error clearing cart:", err);
     res.status(500).json({ error: "Failed to clear cart" });
   }
 };
+
+
+
 
 // POST /api/cart/apply-coupon
 

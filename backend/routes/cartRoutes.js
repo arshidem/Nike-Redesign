@@ -8,7 +8,10 @@ router.get("/", protect, cartController.getCart); // if you want getCart to only
 router.post("/add", protect, cartController.addToCart);
 router.put("/update/:itemId", protect, cartController.updateItemQuantity);
 router.delete("/remove/:itemId", protect, cartController.removeItemFromCart);
-router.delete("/clear", protect, cartController.clearCart);
+router.delete("/clear", protect, (req, res, next) => {
+  console.log("🛒 DELETE /clear hit");
+  next();
+}, cartController.clearCart);
 router.post("/apply-coupon", protect, cartController.applyCoupon);
 router.post("/remove-coupon", protect, cartController.removeCoupon);
 

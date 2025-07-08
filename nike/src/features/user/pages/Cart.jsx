@@ -52,6 +52,7 @@ const Cart = () => {
     }
     setLoading(false);
   };
+console.log(cart);
 
   const handleQuantityChange = async (itemId, newQty) => {
     try {

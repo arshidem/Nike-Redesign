@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import useAddressService from "../services/addressServices";
 import { EditIcon } from "../../../shared/ui/Icons";
-import { Spinner } from "../../../shared/ui/Icons";
 import Loader from "../../../shared/ui/Loader";
 import { ConfirmModal } from "../../../shared/ui/Icons";
 import toast, { Toaster } from "react-hot-toast";
@@ -12,6 +11,7 @@ const DeliveryAddresses = () => {
 
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
@@ -71,7 +71,7 @@ const DeliveryAddresses = () => {
     if (!validate()) return;
 
     const fullName = `${formData.firstName} ${formData.lastName}`;
-
+    setIsSaving(true);
     try {
       if (formData.isDefault) {
         await Promise.all(
@@ -99,6 +99,9 @@ const DeliveryAddresses = () => {
       resetForm();
     } catch (err) {
       toast.error("Failed to save address");
+      console.error("Address save failed:", err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -108,11 +111,12 @@ const DeliveryAddresses = () => {
     try {
       await deleteAddress(deleteId);
       setAddresses((prev) => prev.filter((a) => a._id !== deleteId));
-      setDeleteId(null);
       if (editId === deleteId) {
         resetForm();
         setShowForm(false);
       }
+      setDeleteId(null);
+      toast.success("Address deleted");
     } catch {
       toast.error("Failed to delete address");
     } finally {
@@ -189,19 +193,20 @@ const DeliveryAddresses = () => {
   return (
     <div className="p-6">
       <Toaster position="top-center" />
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold mb-4">Delivery Addresses</h2>
         <button
           onClick={() => {
             resetForm();
             setShowForm(true);
           }}
-          className="bg-black text-white px-4 rounded-full"
+          className="bg-black text-white px-4 py-2 rounded-full"
         >
           Add Address
         </button>
       </div>
 
+      {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-xl w-[90%] max-w-lg relative">
@@ -234,9 +239,6 @@ const DeliveryAddresses = () => {
                   className="flex-1 border p-2 rounded"
                 />
               </div>
-              {errors.firstName && (
-                <p className="text-red-500 text-sm">{errors.firstName}</p>
-              )}
 
               <input
                 name="phone"
@@ -245,9 +247,6 @@ const DeliveryAddresses = () => {
                 onChange={handleChange}
                 className="w-full border p-2 rounded"
               />
-              {errors.phone && (
-                <p className="text-red-500 text-sm">{errors.phone}</p>
-              )}
 
               <input
                 name="street"
@@ -264,9 +263,6 @@ const DeliveryAddresses = () => {
                 onChange={handleChange}
                 className="w-full border p-2 rounded"
               />
-              {errors.postalCode && (
-                <p className="text-red-500 text-sm">{errors.postalCode}</p>
-              )}
 
               <input
                 name="city"
@@ -314,17 +310,19 @@ const DeliveryAddresses = () => {
                     </button>
                     <button
                       type="submit"
+                      disabled={isSaving}
                       className="flex-1 bg-black text-white py-2 rounded"
                     >
-                      Update
+                      {isSaving ? "Updating..." : "Update"}
                     </button>
                   </>
                 ) : (
                   <button
                     type="submit"
+                    disabled={isSaving}
                     className="w-full bg-black text-white py-2 rounded"
                   >
-                    Save Address
+                    {isSaving ? "Saving..." : "Save Address"}
                   </button>
                 )}
               </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import {
@@ -36,7 +36,27 @@ export function Navbar() {
   const [isExiting, setIsExiting] = useState(false);
   const [bagItemCount, setBagItemCount] = useState(0);
   const { user, authReady, setUser, backendUrl, setToken } = useAppContext();
+  const menuRef = useRef(null); // Step 1: ref for mobile menu
+  // Step 2: Add click-outside listener
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+        setSubmenuOpen(null);
+        setIsAnimating(false);
+      }
+    };
 
+    if (menuOpen) {
+document.addEventListener("click", handleClickOutside);
+    } else {
+document.addEventListener("click", handleClickOutside);
+    }
+
+    return () => {
+document.removeEventListener("click", handleClickOutside);
+    };
+  }, [menuOpen]);
   useEffect(() => {
     const updateBagCount = () => {
       const items = getFromLocalStorageWithExpiry("bagItems");
@@ -65,17 +85,18 @@ export function Navbar() {
       setSearchOpen(false);
     }, 300); // match the duration in CSS
   };
+const toggleMenu = (e) => {
+  e.preventDefault();       // optional, good for safety
+  e.stopPropagation();      // prevent it from reaching document listener
+  setMenuOpen((prev) => {
+    if (prev) {
+      setSubmenuOpen(null);
+      setIsAnimating(false);
+    }
+    return !prev;
+  });
+};
 
-  const toggleMenu = () => {
-    setMenuOpen((prev) => {
-      if (prev) {
-        // Closing menu: reset submenu and animation states
-        setSubmenuOpen(null);
-        setIsAnimating(false);
-      }
-      return !prev;
-    });
-  };
 
   const handleSubmenu = (menuName) => {
     setSubmenuOpen(menuName); // Step 1: mount submenu off-screen
@@ -294,7 +315,7 @@ export function Navbar() {
               )}
             </Link>
 
-            <div className="navbar-toggle" onClick={toggleMenu}>
+            <div className="navbar-toggle" onClick={(e) => toggleMenu(e)}>
               <div className={`menu-btn ${menuOpen ? "open" : ""}`}>
                 <span className="line line1"></span>
                 <span className="line line2"></span>
@@ -304,65 +325,70 @@ export function Navbar() {
           </div>
         </div>
 
-  <div className={`navbar-mobile-menu ${menuOpen ? "open" : ""}`}>
-  {/* Main Menu — always visible */}
-  <div className="main-menu">
-    {authReady && user && (
-      <div className="border-b pb-2 mb-2">
-        <button
-          onClick={() => handleSubmenu("user")}
-          className="flex justify-between w-full py-2 font-semibold text-black"
+        <div
+          ref={menuRef} // Step 3: attach the ref
+          className={`navbar-mobile-menu ${menuOpen ? "open" : ""}`}
         >
-          Hi, {user.name.split(" ")[0] || "User"}
-          <ArrowIcon />
-        </button>
-      </div>
-    )}
+          {/* Main Menu — always visible */}
+          <div className="main-menu">
+            {authReady && user && (
+              <div className="border-b pb-2 mb-2">
+                <button
+                  onClick={() => handleSubmenu("user")}
+                  className="flex justify-between w-full py-2 font-semibold text-black"
+                >
+                  Hi, {user.name.split(" ")[0] || "User"}
+                  <ArrowIcon />
+                </button>
+              </div>
+            )}
 
-    {Object.keys(menus)
-      .filter((key) => key !== "user") // skip the "user" menu here
-      .map((menuName) => (
-        <button
-          key={menuName}
-          onClick={() => handleSubmenu(menuName)}
-          className="flex justify-between w-full py-2"
-        >
-          {menuName}
-          <ArrowIcon />
-        </button>
-      ))}
+            {Object.keys(menus)
+              .filter((key) => key !== "user") // skip the "user" menu here
+              .map((menuName) => (
+                <button
+                  key={menuName}
+                  onClick={() => handleSubmenu(menuName)}
+                  className="flex justify-between w-full py-2"
+                >
+                  {menuName}
+                  <ArrowIcon />
+                </button>
+              ))}
 
-    <Link to="/snkrs" className="py-2 block">
-      SNKRS
-    </Link>
+            <Link to="/snkrs" className="py-2 block">
+              SNKRS
+            </Link>
 
-    {/* Show Sign In only if not logged in */}
- {authReady && !user && (
-  <div className="mt-4">
-    <p className="text-sm text-gray-600 mb-4">
-      Become a Nike Member for the best products, inspiration and stories in sport.{" "}
-      <span className="underline font-medium cursor-pointer">Learn more</span>
-    </p>
+            {/* Show Sign In only if not logged in */}
+            {authReady && !user && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Become a Nike Member for the best products, inspiration and
+                  stories in sport.{" "}
+                  <span className="underline font-medium cursor-pointer">
+                    Learn more
+                  </span>
+                </p>
 
-    <div className="flex gap-1">
-      {/* Sign In button only */}
-      <Link
-        to="/signin"
-        className="border border-black text-black px-6 py-2 rounded-full text-sm font-medium hover:bg-gray-100"
-      >
-        Sign In
-      </Link>
-    </div>
-  </div>
-)}
+                <div className="flex gap-1">
+                  {/* Sign In button only */}
+                  <Link
+                    to="/signin"
+                    className="border border-black text-black px-6 py-2 rounded-full text-sm font-medium hover:bg-gray-100"
+                  >
+                    Sign In
+                  </Link>
+                </div>
+              </div>
+            )}
 
-    {authReady && user?.role === "admin" && (
-      <Link to="/admin" className="py-2 block">
-        Admin Dashboard
-      </Link>
-    )}
-  </div>
-
+            {authReady && user?.role === "admin" && (
+              <Link to="/admin" className="py-2 block">
+                Admin Dashboard
+              </Link>
+            )}
+          </div>
 
           {/* Submenu — absolutely positioned overlay */}
           {submenuOpen && (
@@ -375,40 +401,45 @@ export function Navbar() {
                 <button onClick={handleCloseSubmenu} className="back-btn">
                   <XIcon />
                 </button>
-              {menus[submenuOpen].map((item) =>
-  item.type === "logout" ? (
-    <button
-      key={item.label}
-      onClick={async () => {
-        try {
-          await axios.post(`${backendUrl}/api/auth/logout`, null, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          });
-          localStorage.removeItem("token");
-          setUser(null);
-          setToken(null);
-        } catch (err) {
-          console.error("Logout failed:", err);
-        }
-      }}
-      className="block w-full text-left px-8 py-2 text-black hover:bg-gray-100"
-    >
-      {item.label}
-    </button>
-  ) : (
-    <Link
-      key={item.link}
-      to={item.link}
-      className="block py-2 pl-4 text-black hover:bg-gray-100"
-      onClick={handleCloseSubmenu}
-    >
-      {item.label}
-    </Link>
-  )
-)}
-
+                {menus[submenuOpen].map((item) =>
+                  item.type === "logout" ? (
+                    <button
+                      key={item.label}
+                      onClick={async () => {
+                        try {
+                          await axios.post(
+                            `${backendUrl}/api/auth/logout`,
+                            null,
+                            {
+                              headers: {
+                                Authorization: `Bearer ${localStorage.getItem(
+                                  "token"
+                                )}`,
+                              },
+                            }
+                          );
+                          localStorage.removeItem("token");
+                          setUser(null);
+                          setToken(null);
+                        } catch (err) {
+                          console.error("Logout failed:", err);
+                        }
+                      }}
+                      className="block w-full text-left px-8 py-2 text-black hover:bg-gray-100"
+                    >
+                      {item.label}
+                    </button>
+                  ) : (
+                    <Link
+                      key={item.link}
+                      to={item.link}
+                      className="block py-2 pl-4 text-black hover:bg-gray-100"
+                      onClick={handleCloseSubmenu}
+                    >
+                      {item.label}
+                    </Link>
+                  )
+                )}
               </div>
             </div>
           )}

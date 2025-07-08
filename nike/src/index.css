@@ -1,6 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Bebas Neue */
+@font-face {
+  font-family: 'Bebas Neue';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/bebas-neue/bebas-neue-v15-latin-regular.woff2') format('woff2');
+}
+
+/* Anton */
+@font-face {
+  font-family: 'Anton';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/anton/anton-v26-latin-regular.woff2') format('woff2');
+}
+
 /* tailwind.css or a global stylesheet */
 /* @layer utilities {
   .animate-spin-slow {

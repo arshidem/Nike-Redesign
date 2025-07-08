@@ -1,3 +1,4 @@
+
 /* Container */
 .featured-container {
   text-align: center;
@@ -18,8 +19,8 @@
 /* Text styling */
 .shoe-name {
   font-weight: 800;
-  font-family: 'bebas neue';
-  font-size: 3vw;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 5vw;
   margin-bottom: 1rem;
 }
 
@@ -82,10 +83,21 @@
 }
 
 .big-nike-text {
-  font-size: 42vw;
+  font-size: 40vw;
   font-weight: 900;
-  font-family: 'anton';
-  letter-spacing: 6vw;
+
+h1 {
+  font-family: 'Anton', sans-serif;
+
+}
+
+.hero-subtitle {
+  font-family: 'Bebas Neue', sans-serif;
+}
+    font-display: swap;
+
+  /* letter-spacing: 1vw; */
+
   color: rgba(0, 0, 0, .3);
   white-space: nowrap;
   line-height: 1;
@@ -94,20 +106,20 @@
 .big-nike-text.mirrored {
   transform: scaleY(1); /* not flipped? use -1 if you want reflection */
   opacity: .8;
-  margin-top: -4.5vw;
-  filter: blur(1px);
+  margin-top: -12vw;
+
 
   /* Gradient fade effect */
 
   -webkit-mask-image: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0) 30%
+    rgba(0, 0, 0, 0) 50%
   );
   mask-image: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0) 30%
+    rgba(0, 0, 0, 0) 50%
   );
   mask-size: 100% 100%;
   mask-repeat: no-repeat;
@@ -225,9 +237,7 @@
 /* ---------------------------- */
 
 @media only screen and (max-width: 480px) {
-  .shoe-name {
-    font-size: 3vw;
-  }
+ 
   .view-button{
   padding: 0.3rem .6rem;
   font-size: .4rem;
@@ -239,11 +249,17 @@
 }
 
 @media only screen and (min-width: 769px) and (max-width: 1024px) {
-  /* Future large tablet styles */
+ .shoe-name {
+    font-size: 4vw;
+  }
+
 }
 
 @media only screen and (min-width: 1025px) {
 .big-nike-text-container {
-margin: 7vw 4vw;
+margin: vw 0vw;
 }
+ .shoe-name {
+    font-size: 3vw;
+  }
 }

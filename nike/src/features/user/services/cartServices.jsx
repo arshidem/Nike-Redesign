@@ -110,17 +110,22 @@ const useCartServices = () => {
     }
   };
 
-const clearCart = async (req, res) => {
-  try {
-    await Cart.findOneAndUpdate(
-      { user: req.user._id },
-      { $set: { items: [], coupon: null } }
-    );
-    res.status(200).json({ message: "Cart cleared" });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to clear cart" });
+// cartServices.jsx
+const clearCart = async () => {
+  if (isAuthenticated) {
+    try {
+      const response = await api.delete("/clear"); // token is already included in api instance
+      return response.data;
+    } catch (err) {
+      console.error("❌ clearCart failed:", err.response?.data || err.message);
+      throw err;
+    }
+  } else {
+    setLocalCart([]); // clear localStorage cart
+    return { items: [], total: 0 };
   }
 };
+
 
 const applyCoupon = async (code) => {
   try {

@@ -37,7 +37,9 @@ exports.addAddress = async (req, res) => {
 // @access  Private
 exports.getAddresses = async (req, res) => {
   try {
-    const addresses = await Address.find({ user: req.user._id }).sort({ isDefault: -1 });
+const addresses = await Address.find({ user: req.user._id })
+  .sort({ isDefault: -1 })
+  .lean();
     res.status(200).json(addresses);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch addresses", error });
@@ -52,13 +54,15 @@ exports.updateAddress = async (req, res) => {
     const { id } = req.params;
     const { fullName, phone, street, city, state, postalCode, country, isDefault } = req.body;
 
-    const address = await Address.findOne({ _id: id, user: req.user._id });
+    const address = await Address.findOne({ _id: id, user: req.user._id }); // ❌ No `.lean()`
+
     if (!address) return res.status(404).json({ message: "Address not found" });
 
     if (isDefault) {
       await Address.updateMany({ user: req.user._id }, { $set: { isDefault: false } });
     }
 
+    // Update fields
     address.fullName = fullName;
     address.phone = phone;
     address.street = street;
@@ -69,6 +73,7 @@ exports.updateAddress = async (req, res) => {
     address.isDefault = !!isDefault;
 
     await address.save();
+
     res.status(200).json(address);
   } catch (error) {
     res.status(500).json({ message: "Failed to update address", error });
