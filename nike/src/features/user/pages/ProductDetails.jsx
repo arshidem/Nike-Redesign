@@ -47,8 +47,8 @@ const ProductDetails = () => {
   const [showFullDesc, setShowFullDesc] = useState(false);
 
   const { fetchProductBySlug } = useProductService();
-  const { backendUrl } = useAppContext();
-  const { addToCart, updateItemQuantity, removeItem, getCart } =
+  const { backendUrl,token } = useAppContext();
+  const { addToCart, updateItemQuantity, removeItemFromCart, getCart } =
     useCartServices();
 
   const formatImageUrl = (imagePath) => {
@@ -77,7 +77,7 @@ const ProductDetails = () => {
       const cart = await getCart();
       const map = {};
       cart.items.forEach((item) => {
-        map[`${item.product}-${item.variantId}-${item.size}`] = item;
+map[`${item.productId}-${item.variantId}-${item.size}`] = item;
       });
       setCartMap(map);
     };
@@ -154,30 +154,51 @@ const ProductDetails = () => {
       setIsProcessing(false);
     }
   };
+const handleQuantityChange = async (delta) => {
+  if (!cartItem || isProcessing) return;
 
-  const handleQuantityChange = async (delta) => {
-    if (!cartItem || isProcessing) return;
+  const newQty = cartItem.quantity + delta;
+  const isGuest = !token;
 
-    const newQty = cartItem.quantity + delta;
-    try {
-      setIsProcessing(true);
+  // For guests: use composite key; for logged-in: use item._id
+  const itemId = isGuest
+    ? cartItem.productId + cartItem.variantId + cartItem.size
+    : cartItem._id;
 
-      if (newQty < 1) {
-        await removeItem(cartItem._id);
-        setCartItem(null);
-      } else {
-        const updatedCart = await updateItemQuantity(cartItem._id, newQty);
-        const updatedItem = updatedCart.items.find(
-          (i) => i._id === cartItem._id
-        );
+  try {
+    setIsProcessing(true);
+
+    if (newQty < 1) {
+      const updatedCart = await removeItemFromCart(itemId);
+      const key = `${cartItem.productId}-${cartItem.variantId}-${cartItem.size}`;
+      setCartMap((prev) => {
+        const updated = { ...prev };
+        delete updated[key];
+        return updated;
+      });
+      setCartItem(null);
+    } else {
+      const updatedCart = await updateItemQuantity(itemId, newQty);
+      const key = `${cartItem.productId}-${cartItem.variantId}-${cartItem.size}`;
+
+      const updatedItem = updatedCart.items.find((item) => {
+        return isGuest
+          ? item.productId + item.variantId + item.size === itemId
+          : item._id === cartItem._id;
+      });
+
+      if (updatedItem) {
+        setCartMap((prev) => ({ ...prev, [key]: updatedItem }));
         setCartItem(updatedItem);
       }
-    } catch {
-      toast.error("Update failed");
-    } finally {
-      setIsProcessing(false);
     }
-  };
+  } catch (err) {
+    toast.error(err.message || "Failed to update quantity");
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
 
   if (!product) return <Loader />;
 
@@ -316,14 +337,12 @@ const ProductDetails = () => {
                   {cartItem.quantity === 1 ? <XIcon /> : <MinusIcon />}
                 </button>
                 <span>{cartItem.quantity}</span>
-                <button
-                  onClick={() => handleQuantityChange(1)}
-                  disabled={
-                    isProcessing || cartItem.quantity >= selectedSizeStock
-                  }
-                >
-                  <PlusIcon />
-                </button>
+            <button
+  onClick={() => handleQuantityChange(1)}
+  disabled={isProcessing || cartItem.quantity >= selectedSizeStock}
+>
+  <PlusIcon />
+</button>
               </div>
             )}
           </div>
