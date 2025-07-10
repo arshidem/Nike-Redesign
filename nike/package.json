@@ -16,7 +16,9 @@
     "aos": "^2.3.4",
     "axios": "^1.10.0",
     "country-state-city": "^3.2.1",
+    "date-fns": "^4.1.0",
     "fast-average-color": "^9.5.0",
+    "file-saver": "^2.0.5",
     "framer-motion": "^12.15.0",
     "joi": "^17.13.3",
     "lodash-es": "^4.17.21",
@@ -30,9 +32,11 @@
     "react-scripts": "^5.0.1",
     "react-slick": "^0.30.3",
     "react-toastify": "^11.0.5",
+    "recharts": "^3.1.0",
     "slick-carousel": "^1.8.1",
     "uuid": "^11.1.0",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

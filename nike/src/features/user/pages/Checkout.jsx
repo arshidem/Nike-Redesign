@@ -9,6 +9,7 @@ import { loadScript } from "../../../utils/loadRazorpayScript";
 import toast from "react-hot-toast";
 import { useAppContext } from "../../../context/AppContext";
 import Loader from "../../../shared/ui/Loader";
+import Footer from "../components/Footer";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -562,6 +563,7 @@ if (!paymentInit?.success || !order) {
           By completing your purchase, you agree to our Terms of Service
         </p>
       </div>
+      <Footer/>
     </div>
   );
 };

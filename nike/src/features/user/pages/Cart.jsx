@@ -8,11 +8,12 @@ import {
   MinusIcon,
   XIcon,
   BackNavigate,
-  BackBar
+  BackBar,
 } from "../../../shared/ui/Icons";
 import Loader from "../../../shared/ui/Loader";
 import useCartServices from "../services/cartServices";
 import { useAppContext } from "../../../context/AppContext";
+import Footer from "../components/Footer";
 
 const Cart = () => {
   const {
@@ -53,7 +54,7 @@ const Cart = () => {
     }
     setLoading(false);
   };
-console.log(cart);
+  console.log(cart);
 
   const handleQuantityChange = async (itemId, newQty) => {
     try {
@@ -86,20 +87,20 @@ console.log(cart);
     }
   };
 
- const handleApplyCoupon = async () => {
-  try {
-    const response = await applyCoupon(couponCode);
-    if (response?.success) {
-      setCart(response.cart);
-      setCouponCode(response.cart.coupon?.code || ""); // ← this ensures the applied code is visible
-      toast.success("Coupon applied successfully");
-    } else {
-      toast.error(response?.error || "Failed to apply coupon");
+  const handleApplyCoupon = async () => {
+    try {
+      const response = await applyCoupon(couponCode);
+      if (response?.success) {
+        setCart(response.cart);
+        setCouponCode(response.cart.coupon?.code || ""); // ← this ensures the applied code is visible
+        toast.success("Coupon applied successfully");
+      } else {
+        toast.error(response?.error || "Failed to apply coupon");
+      }
+    } catch (err) {
+      toast.error("Coupon apply failed");
     }
-  } catch (err) {
-    toast.error("Coupon apply failed");
-  }
-};
+  };
 
   const handleRemoveCoupon = async () => {
     try {
@@ -126,7 +127,7 @@ console.log(cart);
   if (!cart || cart.items?.length === 0) {
     return (
       <div className="text-center py-20">
-        <BackBar/>
+        <BackBar />
         <h2 className="text-2xl font-bold text-gray-700 mb-4">
           Your Bag is Empty
         </h2>
@@ -143,17 +144,18 @@ console.log(cart);
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 mt-8">
       <Toaster position="top-center" />
-<BackBar/>
+      <BackBar />
       <div className="flex flex-col lg:flex-row gap-8 mt-4">
         {/* Bag Section */}
         <div className="flex-1">
-{/* Cart Header Summary */}
-<div className="text-center mb-8">
-  <h1 className="text-2xl font-bold">Bag</h1>
-  <p className="text-sm text-gray-600 mt-1">
-    {cart.items?.length} item{cart.items.length > 1 ? "s" : ""} | ₹{(cart.finalTotal ?? cart.total ?? 0).toLocaleString()}
-  </p>
-</div>
+          {/* Cart Header Summary */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold">Bag</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              {cart.items?.length} item{cart.items.length > 1 ? "s" : ""} | ₹
+              {(cart.finalTotal ?? cart.total ?? 0).toLocaleString()}
+            </p>
+          </div>
           <ul className="space-y-8">
             {cart.items?.map((item) => {
               const localId =
@@ -250,15 +252,12 @@ console.log(cart);
           <div className="bg-gray-50 p-6 rounded-lg sticky top-4">
             <h2 className="text-xl font-bold mb-4">Summary</h2>
 
-          
             {/* Prices */}
             <div className="space-y-2 text-sm text-gray-600 mb-4">
               <div className="flex justify-between">
                 <span>Subtotal</span>₹
                 {(cart.subtotal ?? cart.total ?? 0).toLocaleString()}
               </div>
-
-          
 
               <div className="flex justify-between">
                 <span>Estimated Delivery & Handling</span>₹
@@ -272,21 +271,21 @@ console.log(cart);
               {(cart.finalTotal ?? cart.total ?? 0).toLocaleString()}
             </div>
 
-         <button
-  onClick={() => navigate('/checkout')}
-  disabled={cart.length === 0}
-  className={`w-full mt-6 py-3 rounded-full font-semibold ${
-    cart.length === 0
-      ? "bg-gray-400 cursor-not-allowed"
-      : "bg-black text-white hover:bg-gray-800"
-  }`}
->
-  Go to Checkout
-</button>
-
+            <button
+              onClick={() => navigate("/checkout")}
+              disabled={cart.length === 0}
+              className={`w-full mt-6 py-3 rounded-full font-semibold ${
+                cart.length === 0
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
+            >
+              Go to Checkout
+            </button>
           </div>
         </div>
       </div>
+      <Footer/>
     </div>
   );
 };

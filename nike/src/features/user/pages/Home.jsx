@@ -2,6 +2,7 @@ import React, { useState, lazy, Suspense } from 'react';
 import { Navbar } from '../components/Navbar.jsx';
 import "../../../css/home.css";
 import { useAppContext } from '../../../context/AppContext.jsx';
+import Footer from '../components/Footer.jsx';
 
 const Featured = lazy(() => import('../components/Featured.jsx'));
 const ShopByIcons = lazy(() => import('../components/ShopByIcons.jsx'));
@@ -60,6 +61,7 @@ function Home() {
           <ShopByIcons />
         </Suspense>
       </div>
+      <Footer/>
     </div>
   );
 }

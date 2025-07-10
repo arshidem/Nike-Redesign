@@ -414,6 +414,7 @@ const handleQuantityChange = async (delta) => {
           </div>
         </div>
       </div>
+      <Footer/>
     </div>
   );
 };

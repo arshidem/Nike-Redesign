@@ -1,6 +1,8 @@
+import { format } from "date-fns";
+
 /**
  * Formats a date string or Date object into a human-readable format
- * @param {string|Date} dateInput - The date to format (ISO string or Date object)
+ * @param {string|Date} dateInput - The date to format
  * @param {Object} [options] - Formatting options
  * @param {boolean} [options.includeTime=false] - Whether to include time in the output
  * @param {boolean} [options.shortMonth=false] - Whether to use short month names
@@ -8,95 +10,125 @@
  */
 export const formatDate = (dateInput, options = {}) => {
   const { includeTime = false, shortMonth = false } = options;
-  
-  // Handle invalid input
-  if (!dateInput) return 'N/A';
-  
+
+  if (!dateInput) return "N/A";
+
   const date = new Date(dateInput);
-  
-  // Check if date is valid
-  if (isNaN(date.getTime())) return 'Invalid Date';
+  if (isNaN(date.getTime())) return "Invalid Date";
 
-  // Formatting options
-  const monthFormat = shortMonth ? 'short' : 'long';
-  const dayOptions = { day: 'numeric' };
-  const monthOptions = { month: monthFormat };
-  const yearOptions = { year: 'numeric' };
-  const timeOptions = includeTime ? { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    hour12: true
-  } : null;
+  const pattern = includeTime
+    ? shortMonth
+      ? "MMM d, yyyy hh:mm a"
+      : "MMMM d, yyyy hh:mm a"
+    : shortMonth
+      ? "MMM d, yyyy"
+      : "MMMM d, yyyy";
 
-  // Get locale components
-  const locale = navigator.language || 'en-US';
-  
-  // Format parts
-  const day = date.toLocaleDateString(locale, dayOptions);
-  const month = date.toLocaleDateString(locale, monthOptions);
-  const year = date.toLocaleDateString(locale, yearOptions);
-  const time = timeOptions ? date.toLocaleTimeString(locale, timeOptions) : null;
-
-  // Construct final string
-  if (includeTime) {
-    return `${month} ${day}, ${year} at ${time}`;
-  }
-  return `${month} ${day}, ${year}`;
+  return format(date, pattern);
 };
 
 /**
  * Formats a date as relative time (e.g., "2 days ago")
- * @param {string|Date} dateInput - The date to format
- * @returns {string} Relative time string
  */
 export const formatRelativeTime = (dateInput) => {
-  if (!dateInput) return 'N/A';
-  
+  if (!dateInput) return "N/A";
+
   const date = new Date(dateInput);
-  if (isNaN(date.getTime())) return 'Invalid Date';
+  if (isNaN(date.getTime())) return "Invalid Date";
 
   const now = new Date();
   const seconds = Math.floor((now - date) / 1000);
-  
+
   const intervals = {
     year: 31536000,
     month: 2592000,
     week: 604800,
     day: 86400,
     hour: 3600,
-    minute: 60
+    minute: 60,
   };
 
   for (const [unit, secondsInUnit] of Object.entries(intervals)) {
     const interval = Math.floor(seconds / secondsInUnit);
     if (interval >= 1) {
-      return `${interval} ${unit}${interval === 1 ? '' : 's'} ago`;
+      return `${interval} ${unit}${interval === 1 ? "" : "s"} ago`;
     }
   }
-  
-  return 'Just now';
+
+  return "Just now";
 };
 
 /**
  * Formats a date as an ISO string (YYYY-MM-DD)
- * @param {string|Date} dateInput - The date to format
- * @returns {string} ISO date string (YYYY-MM-DD)
  */
 export const formatISODate = (dateInput) => {
-  if (!dateInput) return '';
-  
+  if (!dateInput) return "";
+
   const date = new Date(dateInput);
-  if (isNaN(date.getTime())) return '';
+  if (isNaN(date.getTime())) return "";
 
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 };
 
+/**
+ * Formats a number as currency
+ * @param {number} amount - The amount to format
+ * @param {Object} [options] - Formatting options
+ * @param {string} [options.currency='INR'] - Currency code (e.g., 'USD', 'EUR')
+ * @param {string} [options.locale='en-IN'] - Locale to use for formatting
+ * @param {number} [options.minimumFractionDigits=2] - Minimum fraction digits
+ * @param {number} [options.maximumFractionDigits=2] - Maximum fraction digits
+ * @param {boolean} [options.compact=false] - Whether to use compact notation (e.g., "1K" instead of "1,000")
+ * @returns {string} Formatted currency string
+ */
+export const formatCurrency = (
+  amount,
+  options = {}
+) => {
+  const {
+    currency = 'INR',
+    locale = 'en-IN',
+    minimumFractionDigits = 2,
+    maximumFractionDigits = 2,
+    compact = false,
+  } = options;
+
+  // Handle invalid input
+  if (typeof amount !== 'number' || isNaN(amount)) {
+    return 'N/A';
+  }
+
+  try {
+    if (compact && amount >= 1000) {
+      return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency,
+        notation: 'compact',
+        minimumFractionDigits,
+        maximumFractionDigits,
+      }).format(amount);
+    }
+
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+      minimumFractionDigits,
+      maximumFractionDigits,
+    }).format(amount);
+  } catch (error) {
+    console.error('Currency formatting error:', error);
+    return `${currency} ${amount.toFixed(maximumFractionDigits)}`;
+  }
+};
+
+// Export all
 export default {
   formatDate,
   formatRelativeTime,
-  formatISODate
+  formatISODate,
+  formatCurrency,
 };

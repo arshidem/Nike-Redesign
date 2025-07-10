@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useAppContext } from "../../../context/AppContext";
 import { Toaster } from "react-hot-toast";
 import axios from "axios";
+import Footer from "../components/Footer";
+import { BackBar } from "../../../shared/ui/Icons";
 
 const INTEREST_CATEGORIES = ["Sports", "Products", "Teams", "Athletes", "Cities"];
 
@@ -66,8 +68,9 @@ const Profile = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
+      <BackBar/>
       <Toaster />
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 mt-10">
         <div className="w-20 h-20 rounded-full bg-gray-300" />
         <div>
           <h1 className="text-2xl font-semibold">{user?.name}</h1>
@@ -92,6 +95,7 @@ const Profile = () => {
       </div>
 
       {loading ? <p>Loading interests...</p> : renderInterestCards()}
+      <Footer/>
     </div>
   );
 };

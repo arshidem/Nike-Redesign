@@ -31,27 +31,16 @@ import Profile from "./features/user/pages/Profile";
 import AccountSettings from "./features/user/AccountSettings/AccountSettings";
 import Checkout from "./features/user/pages/Checkout";
 import Footer from "./features/user/components/Footer";
+import Order from "./features/user/pages/Order";
+import OrderDetails from "./features/user/pages/OrderDetails";
 
-function DelayedFooter() {
-  const [showFooter, setShowFooter] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowFooter(true);
-    }, 4000); // 4 seconds
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  return showFooter ? <Footer /> : null;
-}
 function App() {
   const { user, isAuthenticated } = useAppContext();
 
   return (
     <> 
      <AppRoutes user={user} isAuthenticated={isAuthenticated} />
-      <DelayedFooter /> 
        </>
   );
   
@@ -71,6 +60,9 @@ function AppRoutes({ user, isAuthenticated }) {
       <Route path="model/:modelName" element={<ModelPage />} />
       <Route path="/product/:productSlug" element={<ProductDetails />} />
       <Route path="/bag" element={<Cart />} />
+      <Route path="/orders" element={<Order />} />
+      <Route path="/orders/:orderId" element={<OrderDetails />} />
+
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/account" element={<AccountSettings />} />

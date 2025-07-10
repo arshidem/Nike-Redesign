@@ -4,6 +4,7 @@ import { useAppContext } from '../../../context/AppContext';
 import { useProductService } from '../../product/services/productService';
 import Loader from '../../../shared/ui/Loader';
 import { BackBar } from '../../../shared/ui/Icons';
+import Footer from '../components/Footer';
 
 const ModelPage = () => {
   const { modelName } = useParams();
@@ -98,6 +99,7 @@ const ModelPage = () => {
           </div>
         </div>
       )}
+      <Footer/>
     </div>
   );
 };
