@@ -14,6 +14,7 @@ import {
 import Loader from "../../../shared/ui/Loader";
 import useCartServices from "../services/cartServices";
 import ProductReviewSection from "../components/ProductReviewSection";
+import Footer from "../components/Footer";
 
 const AccordionItem = ({ title, children, isOpen, onClick }) => (
   <div className="border-t">
@@ -414,7 +415,7 @@ const handleQuantityChange = async (delta) => {
           </div>
         </div>
       </div>
-      <Footer/>
+     <Footer/>
     </div>
   );
 };
