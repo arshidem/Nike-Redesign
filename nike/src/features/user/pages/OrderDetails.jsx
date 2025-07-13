@@ -9,7 +9,7 @@ import {
   TruckIcon,
   BoxIcon,
 } from "../../../shared/ui/Icons"; // Include these icons in Icons.jsx
-
+import Footer from "../components/Footer";
 const steps = [
   { label: "Order Placed", icon: <CheckIcon className="w-4 h-4" />, key: "createdAt" },
   { label: "Shipped", icon: <TruckIcon className="w-4 h-4" />, key: "shippedAt" },

@@ -250,6 +250,41 @@ const updateOrderStatus = async (orderId, newStatus) => {
     };
   }
 };
+/**
+ * Bulk update order statuses (admin only)
+ * @param {Array<string>} orderIds - Array of order IDs
+ * @param {string} status - New status (e.g. "cancelled", "shipped", "delivered")
+ * @param {string} cancelReason - Optional cancel reason
+ */
+const bulkUpdateOrders = async (orderIds, status, cancelReason = "") => {
+  if (!Array.isArray(orderIds) || orderIds.length === 0 || !status) {
+    return {
+      success: false,
+      error: "Order IDs and new status are required",
+    };
+  }
+
+  try {
+    const response = await api.patch("/bulk-update", {
+      orderIds,
+      status,
+      cancelReason,
+    });
+
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error("Failed to bulk update orders:", error);
+    return {
+      success: false,
+      error:
+        error.response?.data?.message || "Failed to bulk update orders",
+      status: error.response?.status,
+    };
+  }
+};
 
   /**
    * Get order summary for admin dashboard
@@ -329,6 +364,7 @@ const getOrderStatusStats = async ({ range = "today", startDate, endDate } = {})
     getOrderTrends,
     getOrderStatusStats,
     updateOrderStatus,
+    bulkUpdateOrders,
   };
 };
 

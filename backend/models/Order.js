@@ -32,10 +32,10 @@ const shippingAddressSchema = new mongoose.Schema({
 
 // Payment result info (used after Razorpay verification)
 const paymentResultSchema = new mongoose.Schema({
-  id: String,             // Razorpay payment ID
-  status: String,         // success, failed, etc.
-  update_time: String,    // timestamp
-  email_address: String,  // customer email from Razorpay
+  id: String, // Razorpay payment ID
+  status: String, // success, failed, etc.
+  update_time: String, // timestamp
+  email_address: String, // customer email from Razorpay
 });
 
 // Main order schema
@@ -58,10 +58,10 @@ const orderSchema = new mongoose.Schema(
     paymentResult: paymentResultSchema, // Populated after payment verification
 
     // Pricing
-    itemsPrice: { type: Number, required: true },      // total of all items
-    shippingPrice: { type: Number, default: 0 },       // optional shipping cost
-    taxPrice: { type: Number, default: 0 },            // optional tax
-    totalPrice: { type: Number, required: true },      // final total
+    itemsPrice: { type: Number, required: true }, // total of all items
+    shippingPrice: { type: Number, default: 0 }, // optional shipping cost
+    taxPrice: { type: Number, default: 0 }, // optional tax
+    totalPrice: { type: Number, required: true }, // final total
 
     // Payment & delivery status
     isPaid: { type: Boolean, default: false },
@@ -69,6 +69,26 @@ const orderSchema = new mongoose.Schema(
 
     isDelivered: { type: Boolean, default: false },
     deliveredAt: Date,
+    shippedAt: { type: Date },
+cancelledAt: { 
+  type: Date,
+  validate: {
+    validator: function() {
+      return this.status === 'cancelled'; 
+    },
+    message: 'cancelledAt can only be set when status is cancelled'
+  }
+},
+cancelReason: {
+  type: String,
+  required: function() {
+    return this.status === 'cancelled';
+  }
+},
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
 
     status: {
       type: String,
@@ -80,6 +100,5 @@ const orderSchema = new mongoose.Schema(
     timestamps: true, // auto add createdAt & updatedAt
   }
 );
-
 
 module.exports = mongoose.model("Order", orderSchema);

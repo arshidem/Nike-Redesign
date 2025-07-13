@@ -11,6 +11,8 @@ import {
   MinusIcon,
   PlusIcon,
 } from "../../../shared/ui/Icons";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import Loader from "../../../shared/ui/Loader";
 import useCartServices from "../services/cartServices";
 import ProductReviewSection from "../components/ProductReviewSection";

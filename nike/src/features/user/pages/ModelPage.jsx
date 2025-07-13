@@ -44,8 +44,9 @@ const ModelPage = () => {
     const loadProducts = async () => {
       try {
         setLoading(true);
-        const data = await fetchProducts({ model: decodeURIComponent(modelName) });
-        setProducts(data);
+       const { products: productList } = await fetchProducts({ model: decodeURIComponent(modelName) });
+setProducts(productList);
+
       } catch (err) {
         console.error("Failed to load products", err);
       } finally {

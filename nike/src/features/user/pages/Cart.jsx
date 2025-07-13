@@ -164,10 +164,10 @@ const Cart = () => {
               return (
                 <li
                   key={localId}
-                  className="flex flex-col md:flex-row gap-6 border-b pb-6"
+                  className="flex flex-row gap-6 border-b pb-6"
                 >
                   {/* Image */}
-                  <div className="w-full md:w-40 shrink-0">
+                  <div className="w-40 ">
                     <img
                       src={formatImageUrl(item.image)}
                       alt={item.name}

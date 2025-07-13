@@ -4,24 +4,31 @@ import { useAppContext } from '../../../context/AppContext';
 export const useProductService = () => {
   const { backendUrl, token } = useAppContext();
 
-  // 🔍 Fetch all products with optional filters
-  const fetchProducts = async (filters = {}) => {
-    try {
-      const cleanedFilters = Object.fromEntries(
-        Object.entries(filters).filter(
-          ([_, value]) => value !== undefined && value !== '' && value !== null
-        )
-      );
+const fetchProducts = async (filters = {}) => {
+  try {
+    const cleanedFilters = Object.fromEntries(
+      Object.entries(filters).filter(
+        ([_, value]) => value !== undefined && value !== '' && value !== null
+      )
+    );
 
-      const response = await axios.get(`${backendUrl}/api/products`, {
-        params: cleanedFilters,
-      });
-      return response.data;
-    } catch (err) {
-      console.error("Failed to fetch products", err);
-      return [];
-    }
-  };
+    const response = await axios.get(`${backendUrl}/api/products`, {
+      params: cleanedFilters,
+    });
+
+    // Return both products and pagination data
+    return {
+      products: response.data.products || [],
+      pagination: response.data.pagination || {},
+    };
+  } catch (err) {
+    console.error("Failed to fetch products", err);
+    return {
+      products: [],
+      pagination: { totalItems: 0, totalPages: 0, currentPage: 1 },
+    };
+  }
+};
 
   // ⭐ Fetch featured products
 const fetchFeaturedProducts = async () => {
@@ -58,16 +65,7 @@ const fetchFeaturedProducts = async () => {
     }
   };
 
-  // 🔝 Fetch top-selling products
-  const fetchTopProducts = async () => {
-    try {
-      const response = await axios.get(`${backendUrl}/api/products/top`);
-      return response.data;
-    } catch (err) {
-      console.error("Failed to fetch top products", err);
-      return [];
-    }
-  };
+
 
   // ➕ Create a new product (admin only)
   const createProduct = async (formData) => {
@@ -131,16 +129,29 @@ const fetchFeaturedProducts = async () => {
       return {};
     }
   };
-
+  // 📊 Fetch product analytics
+  const fetchProductAnalytics = async () => {
+    try {
+      const response = await axios.get(`${backendUrl}/api/products/analytics`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (err) {
+      console.error("Failed to fetch product analytics", err);
+      return null;
+    }
+  };
   return {
     fetchProducts,
     fetchProductBySlug,
-    fetchTopProducts,
     fetchFeaturedProducts, // ✅ Added here
     createProduct,
     updateProduct,
     deleteProduct,
     fetchFilterOptions,
     fetchProductById,
+    fetchProductAnalytics
   };
 };

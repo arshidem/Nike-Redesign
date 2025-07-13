@@ -11,7 +11,8 @@ const {
   getTopSellingProducts,
   getFilterOptions,
   getProductById,
-  getFeaturedProducts 
+  getFeaturedProducts ,
+  getProductAnalytics
 } = require("../controllers/productController");
 
 const { verifyAdmin } = require("../middleware/authMiddleware");
@@ -21,7 +22,8 @@ const { verifyAdmin } = require("../middleware/authMiddleware");
 router.get("/filter-options", getFilterOptions); 
 router.get("/top", getTopSellingProducts);
 router.get("/id/:id", getProductById);
-router.get("/featured", getFeaturedProducts); // ✅ Move this up
+router.get("/analytics", verifyAdmin, getProductAnalytics); // ✅ Correct position
+router.get("/featured", getFeaturedProducts);
 router.get("/test", async (req, res) => {     // ✅ Move this up
   console.log("📦 /test route hit"); // 👈 add this
 
@@ -33,9 +35,8 @@ router.get("/test", async (req, res) => {     // ✅ Move this up
     console.error("❌ Error:", err);
     res.status(500).json({ error: "DB query failed" });
   }});
-router.get("/:slug", getProductBySlug);       // 👈 Put this after specific routes
+router.get("/:slug", getProductBySlug); // ✅ Should always be last among GET routes
 router.get("/", getAllProducts);
-
 
 
 

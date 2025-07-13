@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { XIcon, BackNavigate } from "../../../shared/ui/Icons";
+import { XIcon, BackBar } from "../../../shared/ui/Icons";
 import useAddressService from "../services/addressServices";
 import useOrderServices from '/src/features/user/services/orderServices.jsx';
 import useCartServices from "../services/cartServices";
@@ -335,7 +335,6 @@ if (!paymentInit?.success || !order) {
   if (isLoading) {
     return (
       <div className="max-w-5xl mx-auto p-4 mt-12 text-center">
-        <BackNavigate />
        <Loader/>
       </div>
     );
@@ -343,8 +342,9 @@ if (!paymentInit?.success || !order) {
 
   if (cart.items.length === 0) {
     return (
+      <>
+          <BackBar/>
       <div className="max-w-5xl mx-auto p-4 mt-12">
-        <BackNavigate />
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold mb-2">Your cart is empty</h2>
           <button 
@@ -355,19 +355,22 @@ if (!paymentInit?.success || !order) {
           </button>
         </div>
       </div>
+      </>
     );
   }
 
   return (
+    <>
+    <BackBar/>
     <div className="max-w-5xl mx-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-      <BackNavigate />
+      
       <div>
         <h2 className="text-xl font-semibold mb-4">Delivery Information</h2>
         <input
           type="email"
           defaultValue={user?.email || ""}
           placeholder="Email"
-          className="w-full border border-black px-4 py-2 mb-2 text-sm rounded-full"
+          className="w-full border border-black px-4 py-2 mb-2 text-sm rounded"
           disabled
         />
         <p className="text-xs text-gray-500 mb-4">
@@ -563,8 +566,10 @@ if (!paymentInit?.success || !order) {
           By completing your purchase, you agree to our Terms of Service
         </p>
       </div>
-      <Footer/>
+     
     </div>
+     <Footer/>
+    </>
   );
 };
 

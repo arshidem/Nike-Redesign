@@ -3,8 +3,10 @@ const fs = require("fs");
 const path = require("path");
 const slugify = require("slugify")
 const multer = require('multer');
-
-
+const Order =require("../models/Order")
+const Cart = require("../models/Cart");
+const Review = require("../models/Review")
+const mongoose=require("mongoose")
 // @desc    Create a new product
 // @route   POST /api/products
 exports.createProduct = async (req, res) => {
@@ -154,137 +156,239 @@ exports.createProduct = async (req, res) => {
 // @desc    Get all products (filter by category or gender)
 // @route   GET /api/products
 exports.getAllProducts = async (req, res) => {
-  console.log("Received query:", req.query);
-
   try {
     const query = {};
 
-    // Filter by category, model, gender
+    // Filters
     if (req.query.category) query.category = req.query.category;
     if (req.query.model) query.model = req.query.model;
     if (req.query.gender) query.gender = req.query.gender;
-    
-    // Filter by activity and sport types
     if (req.query.activityType) query.activityType = req.query.activityType;
     if (req.query.sportType) query.sportType = req.query.sportType;
-
-    // Boolean filters
     if (req.query.isFeatured) query.isFeatured = req.query.isFeatured === 'true';
     if (req.query.isTrending) query.isTrending = req.query.isTrending === 'true';
-
-    // Filter by tags (match any tag)
-    if (req.query.tags) {
-      const tagsArray = req.query.tags.split(",");
-      query.tags = { $in: tagsArray };
-    }
-
-    // Filter by badges (match any badge)
-    if (req.query.badges) {
-      const badgesArray = req.query.badges.split(",");
-      query.badges = { $in: badgesArray };
-    }
-
-    // Filter by rating
-    if (req.query.minRating) {
-      query.rating = { $gte: Number(req.query.minRating) };
-    }
-
-    // Price or finalPrice filter
-    const minPrice = Number(req.query.minPrice) || 0;
-    const maxPrice = Number(req.query.maxPrice) || Number.MAX_SAFE_INTEGER;
-
-    // Filter by discountPercentage
-    if (req.query.minDiscount) {
-      query.discountPercentage = { $gte: Number(req.query.minDiscount) };
-    }
-
-    // Filter by releaseDate (New Arrivals)
+    if (req.query.tags) query.tags = { $in: req.query.tags.split(",") };
+    if (req.query.badges) query.badges = { $in: req.query.badges.split(",") };
+    if (req.query.minDiscount) query.discountPercentage = { $gte: Number(req.query.minDiscount) };
     if (req.query.newArrival === 'true') {
       const oneMonthAgo = new Date();
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
       query.releaseDate = { $gte: oneMonthAgo };
     }
-
-    // Filter by color
     if (req.query.color) {
       query["variants.color"] = { $regex: new RegExp(`^${req.query.color}$`, 'i') };
     }
-
     if (req.query.size) {
-      query["variants.sizes"] = {
-        $elemMatch: { size: req.query.size }
-      };
+      query["variants.sizes"] = { $elemMatch: { size: req.query.size } };
     }
-
-    // Search by name
     if (req.query.search) {
       query.name = { $regex: req.query.search, $options: "i" };
     }
 
-    let sortOption = { createdAt: -1 }; // Default: newest first
+    // Price range
+    const minPrice = Number(req.query.minPrice) || 0;
+    const maxPrice = Number(req.query.maxPrice) || Number.MAX_SAFE_INTEGER;
+    query.$expr = {
+      $and: [
+        { $gte: [ { $ifNull: ["$finalPrice", "$price"] }, minPrice ] },
+        { $lte: [ { $ifNull: ["$finalPrice", "$price"] }, maxPrice ] }
+      ]
+    };
+
+    // Sorting
+    let sortOption = { createdAt: -1 };
     if (req.query.sortBy === 'sold') sortOption = { sold: -1 };
     if (req.query.sortBy === 'priceAsc') sortOption = { finalPrice: 1 };
     if (req.query.sortBy === 'priceDesc') sortOption = { finalPrice: -1 };
 
-const allProducts = await Product.find(query).sort(sortOption).lean();
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-    // Filter finalPrice or price in JS
-    const filtered = allProducts.filter((product) => {
-      const priceToUse = product.finalPrice || product.price;
-      return priceToUse >= minPrice && priceToUse <= maxPrice;
+    const totalItems = await Product.countDocuments(query);
+    const products = await Product.find(query)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // Enrich with ratings from Review model
+    const productIds = products.map(p => p._id);
+
+    const ratingStats = await Review.aggregate([
+      { $match: { product: { $in: productIds } } },
+      {
+        $group: {
+          _id: "$product",
+          averageRating: { $avg: "$rating" },
+          numReviews: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const ratingMap = {};
+    ratingStats.forEach(stat => {
+      ratingMap[stat._id.toString()] = {
+        average: Number(stat.averageRating?.toFixed(1) || 0),
+        total: stat.numReviews
+      };
     });
 
-    res.json(filtered);
+    // Enrich products
+    let enrichedProducts = products.map(product => {
+      const rating = ratingMap[product._id.toString()] || { average: 0, total: 0 };
+      return {
+        ...product,
+        rating
+      };
+    });
+
+    // Filter by minRating if provided
+    if (req.query.minRating) {
+      const min = Number(req.query.minRating);
+      enrichedProducts = enrichedProducts.filter(p => p.rating.average >= min);
+    }
+
+    res.json({
+      success: true,
+      products: enrichedProducts,
+      pagination: {
+        totalItems: enrichedProducts.length,
+        totalPages,
+        currentPage: page,
+      },
+    });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+    console.error("Error in getAllProducts:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// @desc    Get a product by slug
-// @route   GET /api/products/:slug
 exports.getProductBySlug = async (req, res) => {
   try {
-const product = await Product.findOne({ slug: req.params.slug })
-  .populate('category', 'name')
-  .populate('tags', 'name')
+    const product = await Product.findOne({ slug: req.params.slug })
+      .populate("category", "name")
+      .populate("tags", "name");
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Format image paths for frontend
-    const formatImages = (imgPath) => {
-      if (!imgPath) return null;
-      return imgPath.replace(/\\/g, '/');
-    };
+    const productId = product._id;
+
+    // 📦 Sold Timeline & Total Sold (from Order)
+    const soldTimelineAgg = await Order.aggregate([
+      { $unwind: "$items" },
+      {
+        $match: {
+          "items.product": new mongoose.Types.ObjectId(productId),
+          isPaid: true,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          },
+          unitsSold: { $sum: "$items.quantity" },
+        },
+      },
+      {
+        $project: {
+          date: "$_id.date",
+          unitsSold: 1,
+          _id: 0,
+        },
+      },
+      { $sort: { date: 1 } },
+    ]);
+
+    const totalSold = soldTimelineAgg.reduce((sum, d) => sum + d.unitsSold, 0);
+
+    // 🛒 Cart Stats (from Cart)
+    const cartStats = await Cart.aggregate([
+      { $match: { status: "active" } },
+      { $unwind: "$items" },
+      {
+        $match: {
+          "items.productId": new mongoose.Types.ObjectId(productId),
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalCartQuantity: { $sum: "$items.quantity" },
+          inCartCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const totalCartQuantity = cartStats[0]?.totalCartQuantity || 0;
+    const inCartCount = cartStats[0]?.inCartCount || 0;
+
+    // ⭐️ Rating Stats from Review model
+    const ratingStats = await Review.aggregate([
+      { $match: { product: new mongoose.Types.ObjectId(productId) } },
+      {
+        $group: {
+          _id: "$product",
+          averageRating: { $avg: "$rating" },
+          numReviews: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const ratingInfo = ratingStats[0] || { averageRating: 0, numReviews: 0 };
+
+    // 🖼️ Format image paths
+    const formatImages = (imgPath) => imgPath?.replace(/\\/g, "/");
 
     const formattedProduct = {
       ...product.toObject(),
       featuredImg: formatImages(product.featuredImg),
-      variants: product.variants.map(variant => ({
+      variants: product.variants.map((variant) => ({
         ...variant.toObject(),
         images: variant.images.map(formatImages).filter(Boolean),
-        sizes: variant.sizes || [] // Ensure sizes array exists
+        sizes: variant.sizes || [],
       })),
       meta: {
         title: product.metaTitle,
         description: product.metaDescription,
-        productDetails:product.productDetails
-      }
+        productDetails: product.productDetails,
+      },
+      rating: {
+        average: Number(ratingInfo.averageRating?.toFixed(1) || 0),
+        total: ratingInfo.numReviews || 0,
+      },
+      statistics: {
+        views: product.views,
+        sold: totalSold,
+        wishlist: product.wishlistCount,
+        inCart: inCartCount,
+        totalInCart: totalCartQuantity,
+      },
+      timelineSummary: {
+        soldTimeline: soldTimelineAgg.slice(-14),
+      },
     };
 
-    // Only increment views if not an admin request
-    if (!req.headers['admin-request']) {
+    // 📈 Increment views unless it's admin
+    if (!req.headers["admin-request"]) {
       product.views += 1;
       await product.save();
     }
 
     res.json(formattedProduct);
   } catch (err) {
+    console.error("❌ getProductBySlug error:", err);
     res.status(500).json({ error: err.message });
   }
 };
+
 // @desc    Get a product by ID
 // @route   GET /api/products/id/:id
 // @route   GET /api/products/id/:id
@@ -652,3 +756,234 @@ exports.getFeaturedProducts = async (req, res) => {
   }
 };
 
+// @desc    Get product analytics summary
+// @route   GET /api/products/analytics
+exports.getProductAnalytics = async (req, res) => {
+  try {
+    const now = new Date();
+    
+    // Define date ranges
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const thisWeek = new Date();
+    thisWeek.setDate(thisWeek.getDate() - 7);
+    
+    const thisMonth = new Date();
+    thisMonth.setMonth(thisMonth.getMonth() - 1);
+    
+    const thisYear = new Date();
+    thisYear.setFullYear(thisYear.getFullYear() - 1);
+
+    const products = await Product.find()
+      .select('name slug variants sold views wishlistCount category gender updatedAt featuredImg sizes')
+      .lean();
+
+    // Get all orders to calculate sales by period
+    const allOrders = await Order.find()
+      .select('items createdAt')
+      .lean();
+
+    const analytics = {
+      totalProducts: products.length,
+      totalVariants: 0,
+      totalUnitsSold: {
+        allTime: 0,
+        today: 0,
+        thisWeek: 0,
+        thisMonth: 0,
+        thisYear: 0
+      },
+      totalViews: 0,
+      totalWishlist: 0,
+      totalReviews: 0,
+      categoryBreakdown: {},
+      genderBreakdown: {},
+      trendingProducts: {
+        today: [],
+        thisWeek: [],
+        thisMonth: [],
+        thisYear: []
+      },
+      coldProducts: []
+    };
+
+    const [totalReviews] = await Promise.all([
+      Review.countDocuments(),
+    ]);
+
+    analytics.totalReviews = totalReviews;
+
+    // Calculate sales by time period from orders
+    for (const order of allOrders) {
+      const orderDate = new Date(order.createdAt);
+      
+      // Count items sold in this order
+      const itemsSold = order.items.reduce((sum, item) => sum + item.quantity, 0);
+      
+      analytics.totalUnitsSold.allTime += itemsSold;
+      
+      if (orderDate >= today) {
+        analytics.totalUnitsSold.today += itemsSold;
+      }
+      if (orderDate >= thisWeek) {
+        analytics.totalUnitsSold.thisWeek += itemsSold;
+      }
+      if (orderDate >= thisMonth) {
+        analytics.totalUnitsSold.thisMonth += itemsSold;
+      }
+      if (orderDate >= thisYear) {
+        analytics.totalUnitsSold.thisYear += itemsSold;
+      }
+    }
+
+    for (const product of products) {
+      analytics.totalVariants += product.variants?.length || 0;
+      analytics.totalViews += product.views || 0;
+      analytics.totalWishlist += product.wishlistCount || 0;
+
+      const productImage = product.featuredImg ||
+        (product.variants?.[0]?.images?.[0] || null);
+
+      if (product.category) {
+        analytics.categoryBreakdown[product.category] =
+          (analytics.categoryBreakdown[product.category] || 0) + 1;
+      }
+
+      if (product.gender) {
+        analytics.genderBreakdown[product.gender] =
+          (analytics.genderBreakdown[product.gender] || 0) + 1;
+      }
+
+      // Get product-specific orders to calculate time-based sales
+      const productOrders = await Order.find({
+        'items.product': product._id
+      }).select('items createdAt').lean();
+
+      // Calculate sales by period for this product
+      const productSales = {
+        today: 0,
+        thisWeek: 0,
+        thisMonth: 0,
+        thisYear: 0,
+        allTime: product.sold || 0
+      };
+
+      for (const order of productOrders) {
+        const orderDate = new Date(order.createdAt);
+        const items = order.items.filter(item => item.product.equals(product._id));
+        const quantity = items.reduce((sum, item) => sum + item.quantity, 0);
+
+        if (orderDate >= today) productSales.today += quantity;
+        if (orderDate >= thisWeek) productSales.thisWeek += quantity;
+        if (orderDate >= thisMonth) productSales.thisMonth += quantity;
+        if (orderDate >= thisYear) productSales.thisYear += quantity;
+      }
+
+      // Calculate trend scores for different periods
+      const todayScore = productSales.today * 3 + (product.views || 0);
+      const weekScore = productSales.thisWeek * 2 + (product.views || 0);
+      const monthScore = productSales.thisMonth * 1.5 + (product.views || 0);
+      const yearScore = productSales.thisYear * 1 + (product.views || 0);
+
+      // Add to trending products for each period
+      if (productSales.today > 0) {
+        analytics.trendingProducts.today.push({
+          _id: product._id,
+          name: product.name,
+          slug: product.slug,
+          views: product.views,
+          sold: productSales.today,
+          trendScore: todayScore,
+          image: productImage
+        });
+      }
+
+      if (productSales.thisWeek > 0) {
+        analytics.trendingProducts.thisWeek.push({
+          _id: product._id,
+          name: product.name,
+          slug: product.slug,
+          views: product.views,
+          sold: productSales.thisWeek,
+          trendScore: weekScore,
+          image: productImage
+        });
+      }
+
+      if (productSales.thisMonth > 0) {
+        analytics.trendingProducts.thisMonth.push({
+          _id: product._id,
+          name: product.name,
+          slug: product.slug,
+          views: product.views,
+          sold: productSales.thisMonth,
+          trendScore: monthScore,
+          image: productImage
+        });
+      }
+
+      if (productSales.thisYear > 0) {
+        analytics.trendingProducts.thisYear.push({
+          _id: product._id,
+          name: product.name,
+          slug: product.slug,
+          views: product.views,
+          sold: productSales.thisYear,
+          trendScore: yearScore,
+          image: productImage
+        });
+      }
+
+      // Cold products (no sales in last month and low views)
+    if ((product.sold || 0) <= 5) {
+        analytics.coldProducts.push({
+          _id: product._id,
+          name: product.name,
+          slug: product.slug,
+          views: product.views || 0,
+          sold: product.sold || 0,
+          image: productImage,
+          lastSold: product.updatedAt // You might want to add this to see when it last sold
+        });
+      }
+    }
+
+    // Sort trending products for each period
+    analytics.trendingProducts.today.sort((a, b) => b.trendScore - a.trendScore);
+    analytics.trendingProducts.thisWeek.sort((a, b) => b.trendScore - a.trendScore);
+    analytics.trendingProducts.thisMonth.sort((a, b) => b.trendScore - a.trendScore);
+    analytics.trendingProducts.thisYear.sort((a, b) => b.trendScore - a.trendScore);
+
+    // Limit to top 5 for each period
+    analytics.trendingProducts.today = analytics.trendingProducts.today.slice(0, 5);
+    analytics.trendingProducts.thisWeek = analytics.trendingProducts.thisWeek.slice(0, 5);
+    analytics.trendingProducts.thisMonth = analytics.trendingProducts.thisMonth.slice(0, 5);
+    analytics.trendingProducts.thisYear = analytics.trendingProducts.thisYear.slice(0, 5);
+
+    // Sort cold products
+  analytics.coldProducts.sort((a, b) => {
+      if (a.sold !== b.sold) {
+        return a.sold - b.sold;
+      }
+      return (a.views || 0) - (b.views || 0);
+    });   
+    analytics.coldProducts = analytics.coldProducts.slice(0, 20);
+
+    // Format category/gender breakdown
+    analytics.categoryBreakdown = Object.entries(analytics.categoryBreakdown)
+      .map(([name, value]) => ({ name, value }));
+
+    analytics.genderBreakdown = Object.entries(analytics.genderBreakdown)
+      .map(([gender, count]) => ({ gender, count }));
+
+    res.json(analytics);
+
+  } catch (err) {
+    console.error("Product analytics error:", err);
+    res.status(500).json({
+      error: "Failed to generate product analytics",
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};

@@ -460,6 +460,51 @@ exports.updateOrderStatus = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+// @desc    Bulk update order statuses (e.g., cancel, ship)
+// @route   PATCH /api/orders/bulk-update
+// @access  Admin
+exports.bulkUpdateOrders = async (req, res) => {
+  const { orderIds, status, cancelReason } = req.body;
+  const adminId = req.user._id; // from auth middleware
+
+  if (!Array.isArray(orderIds) || orderIds.length === 0 || !status) {
+    return res.status(400).json({ message: "Invalid request data" });
+  }
+
+  try {
+    const updates = {
+      status,
+      updatedBy: adminId,
+    };
+
+    if (status === "cancelled") {
+      updates.cancelledAt = new Date();
+      updates.cancelReason = cancelReason || "No reason provided";
+    }
+
+    if (status === "shipped") {
+      updates.shippedAt = new Date();
+    }
+
+    if (status === "delivered") {
+      updates.deliveredAt = new Date();
+      updates.isDelivered = true;
+    }
+
+    const result = await Order.updateMany(
+      { _id: { $in: orderIds } },
+      { $set: updates }
+    );
+
+    res.json({
+      success: true,
+      message: `${result.modifiedCount} orders updated`,
+    });
+  } catch (error) {
+    console.error("Bulk update failed:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
 exports.getOrderSummary = async (req, res) => {
   try {

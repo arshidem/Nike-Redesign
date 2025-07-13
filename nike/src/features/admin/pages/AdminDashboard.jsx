@@ -72,13 +72,14 @@ const renderContent = () => {
     { id: 'reports', icon: <ReportsIcon/>, label: 'Reports' },
     { id: 'coupon', icon: <CouponIcon/>, label: 'Coupon' }
   ];
+const handleMenuItemClick = (id) => {
+  setActiveView(id);
+  window.location.hash = id; // 👈 sets URL hash (e.g., /admin#products)
+  if (isMobile) {
+    setSidebarCollapsed(true);
+  }
+};
 
-  const handleMenuItemClick = (id) => {
-    setActiveView(id);
-    if (isMobile) {
-      setSidebarCollapsed(true);
-    }
-  };
 
   const handleSidebarHover = (isHovering) => {
     if (!isMobile) {

@@ -10,6 +10,7 @@ const {
   getOrderTrends,
   getOrderStatusStats,
   updateOrderStatus,
+  bulkUpdateOrders
 } = require("../controllers/orderController");
 const { protect, verifyAdmin } = require("../middleware/authMiddleware");
 
@@ -26,6 +27,7 @@ router.get("/trends", verifyAdmin, getOrderTrends);
 // Status breakdown (pie chart)
 router.get("/status", verifyAdmin, getOrderStatusStats);
 router.put('/:orderId/status', verifyAdmin, updateOrderStatus);
+router.patch("/bulk-update", verifyAdmin, bulkUpdateOrders);
 
 router.get("/:id", protect, getOrderById);
 
