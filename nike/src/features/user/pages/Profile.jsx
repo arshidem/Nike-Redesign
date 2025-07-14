@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 import axios from "axios";
 import Footer from "../components/Footer";
 import { BackBar } from "../../../shared/ui/Icons";
+import { ProfileSkeleton } from "../../../shared/ui/Skeleton";
 
 const INTEREST_CATEGORIES = ["Sports", "Products", "Teams", "Athletes", "Cities"];
 
@@ -94,7 +95,7 @@ const Profile = () => {
         </div>
       </div>
 
-      {loading ? <p>Loading interests...</p> : renderInterestCards()}
+      {loading ? <ProfileSkeleton/> : renderInterestCards()}
       <Footer/>
     </div>
   );

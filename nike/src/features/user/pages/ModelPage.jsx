@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../../context/AppContext';
 import { useProductService } from '../../product/services/productService';
-import Loader from '../../../shared/ui/Loader';
 import { BackBar } from '../../../shared/ui/Icons';
 import Footer from '../components/Footer';
+import { ModelSkeleton } from '../../../shared/ui/Skeleton';
 
 const ModelPage = () => {
   const { modelName } = useParams();
@@ -67,7 +67,7 @@ setProducts(productList);
       </h1>
 
       {loading ? (
-        <Loader />
+        <ModelSkeleton/>
       ) : (
         <div className="flex flex-col md:flex-row gap-5 mt-1">
           <div className="w-full md:w-3/4 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2">

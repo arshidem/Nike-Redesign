@@ -14,6 +14,7 @@ import Loader from "../../../shared/ui/Loader";
 import useCartServices from "../services/cartServices";
 import { useAppContext } from "../../../context/AppContext";
 import Footer from "../components/Footer";
+import { CartSkeleton } from "../../../shared/ui/Skeleton";
 
 const Cart = () => {
   const {
@@ -120,7 +121,7 @@ const Cart = () => {
   if (loading)
     return (
       <div>
-        <Loader />
+        <CartSkeleton/>
       </div>
     );
 

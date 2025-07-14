@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import useOrderServices from "../services/orderServices";
-import Loader from "../../../shared/ui/Loader";
 import { BackBar } from "../../../shared/ui/Icons";
 import toast from "react-hot-toast";
 import { useAppContext } from "../../../context/AppContext";
 import Footer from "../components/Footer";
+import { OrderSkeleton } from "../../../shared/ui/Skeleton";
 
 export default function Order() {
   const { getUserOrders } = useOrderServices();
@@ -45,7 +45,7 @@ export default function Order() {
     cancelled: "bg-gray-200 text-gray-600",
   };
 
-  if (loading) return <Loader />;
+  if (loading) return <OrderSkeleton/>;
 
   return (
     <>

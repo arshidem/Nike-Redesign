@@ -10,6 +10,7 @@ import {
   BoxIcon,
 } from "../../../shared/ui/Icons"; // Include these icons in Icons.jsx
 import Footer from "../components/Footer";
+import { OrderDetailsSkeleton } from "../../../shared/ui/Skeleton";
 const steps = [
   { label: "Order Placed", icon: <CheckIcon className="w-4 h-4" />, key: "createdAt" },
   { label: "Shipped", icon: <TruckIcon className="w-4 h-4" />, key: "shippedAt" },
@@ -56,7 +57,7 @@ const OrderDetails = () => {
     fetchOrder();
   }, [orderId]);
 
-  if (loading) return <div className="text-center p-10">Loading order details...</div>;
+  if (loading) return <OrderDetailsSkeleton/>;
   if (!order) return <div className="text-center text-red-500 mt-10">Order not found.</div>;
 
   const statusStep = getStatusStep(order.status);

@@ -3,8 +3,8 @@ import { useAppContext } from "../../../context/AppContext";
 import useAuthService from "../services/authServices";
 import toast, { Toaster } from "react-hot-toast";
 import { ConfirmModal, EditIcon } from "../../../shared/ui/Icons";
-import Loader from "../../../shared/ui/Loader";
 import { Country, State } from "country-state-city";
+import { AccountDetailsSkeleton } from "../../../shared/ui/Skeleton";
 
 const AccountDetails = () => {
   const { logout, setUser } = useAppContext();
@@ -167,7 +167,7 @@ const AccountDetails = () => {
     </div>
   );
 
-  if (loading) return <Loader />;
+  if (loading) return <AccountDetailsSkeleton/>;
 
   return (
     <div className="max-w-2xl mx-auto p-6">

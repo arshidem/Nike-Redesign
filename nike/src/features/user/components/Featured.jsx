@@ -4,8 +4,8 @@ import { FastAverageColor } from "fast-average-color";
 import { ArrowIconLeft, ArrowIconRight } from "../../../shared/ui/Icons";
 import { useProductService } from "../../product/services/productService";
 import "../../../css/featured.css";
-import Loader from "../../../shared/ui/Loader";
 import { useAppContext } from "../../../context/AppContext";
+import { FeaturedSkeleton } from "../../../shared/ui/Skeleton";
 
 export default function Featured() {
   const [shoes, setShoes] = useState([]);
@@ -94,12 +94,9 @@ export default function Featured() {
     }, 600);
   };
 
-  // 🟡 Loader
   if (!error && shoes.length === 0) {
     return (
-      <div>
-        <Loader />
-      </div>
+     <FeaturedSkeleton/>
     );
   }
 

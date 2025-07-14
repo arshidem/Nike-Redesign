@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUserService } from '../../user/services/userService';
 import { formatDate } from '../../../utils/dateUtils';
+import { AdminUserDetailsSkeleton } from '../../../shared/ui/Skeleton';
 
 export const AdminUserDetails = () => {
   const { userId } = useParams();
@@ -32,11 +33,7 @@ export const AdminUserDetails = () => {
 console.log(user);
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black mb-4"></div>
-      </div>
-    </div>
+  <AdminUserDetailsSkeleton/>
   );
 
   if (error) return (

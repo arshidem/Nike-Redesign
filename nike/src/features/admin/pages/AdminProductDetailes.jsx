@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../../context/AppContext";
-import Loader from "../../../shared/ui/Loader";
 import { EditIcon, XIcon } from "../../../shared/ui/Icons";
 import { useProductService } from "../../product/services/productService";
 import toast, { Toaster } from "react-hot-toast";
@@ -16,6 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { AdminProductDetailsSkeleton } from "../../../shared/ui/Skeleton";
 
 const TimelineChart = ({ data, lines }) => {
   return (
@@ -251,7 +251,7 @@ const AdminProductDetails = () => {
             <div className="bg-gray-50 p-4 rounded">
               <p className="text-gray-600">Average Rating</p>
               <p className="text-lg font-semibold">
-{product.rating.average?.toFixed(1) || "0.0"}
+                {product.rating.average?.toFixed(1) || "0.0"}
               </p>
             </div>
           </div>
@@ -298,7 +298,7 @@ const AdminProductDetails = () => {
     );
   };
 
-  if (loading) return <Loader />;
+  if (loading) return <AdminProductDetailsSkeleton/>;
   if (error) return <div className="p-4 text-center">Error: {error}</div>;
   if (!product) return <div className="p-4 text-center">Product not found</div>;
 

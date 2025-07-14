@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import useAddressService from "../services/addressServices";
 import { EditIcon } from "../../../shared/ui/Icons";
-import Loader from "../../../shared/ui/Loader";
 import { ConfirmModal } from "../../../shared/ui/Icons";
 import toast, { Toaster } from "react-hot-toast";
+import { DeliveryAddressesSkeleton } from "../../../shared/ui/Skeleton";
 
 const DeliveryAddresses = () => {
   const { addAddress, getAddresses, updateAddress, deleteAddress } =
@@ -188,7 +188,7 @@ const DeliveryAddresses = () => {
     autoFill();
   }, [formData.postalCode]);
 
-  if (loading) return <Loader />;
+  if (loading) return <DeliveryAddressesSkeleton/>;
 
   return (
     <div className="p-6">

@@ -11,12 +11,11 @@ import {
   MinusIcon,
   PlusIcon,
 } from "../../../shared/ui/Icons";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
 import Loader from "../../../shared/ui/Loader";
 import useCartServices from "../services/cartServices";
 import ProductReviewSection from "../components/ProductReviewSection";
 import Footer from "../components/Footer";
+import { ProductDetailsSkeleton } from "../../../shared/ui/Skeleton";
 
 const AccordionItem = ({ title, children, isOpen, onClick }) => (
   <div className="border-t">
@@ -203,7 +202,7 @@ const handleQuantityChange = async (delta) => {
 };
 
 
-  if (!product) return <Loader />;
+  if (!product) return <ProductDetailsSkeleton/>;
 
   const variant = product.variants[selectedVariantIndex];
   const thumbnails = variant.images?.map(formatImageUrl) || [];

@@ -8,8 +8,8 @@ import useCartServices from "../services/cartServices";
 import { loadScript } from "../../../utils/loadRazorpayScript";
 import toast from "react-hot-toast";
 import { useAppContext } from "../../../context/AppContext";
-import Loader from "../../../shared/ui/Loader";
 import Footer from "../components/Footer";
+import { CheckoutSkeleton } from "../../../shared/ui/Skeleton";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -334,9 +334,7 @@ if (!paymentInit?.success || !order) {
 
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto p-4 mt-12 text-center">
-       <Loader/>
-      </div>
+      <CheckoutSkeleton/>
     );
   }
 
