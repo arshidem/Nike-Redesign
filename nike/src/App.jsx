@@ -30,24 +30,9 @@ import CompleteRegister from "./features/auth/pages/CompleteRegister";
 import Profile from "./features/user/pages/Profile";
 import AccountSettings from "./features/user/AccountSettings/AccountSettings";
 import Checkout from "./features/user/pages/Checkout";
-import Footer from "./features/user/components/Footer";
 import Order from "./features/user/pages/Order";
 import OrderDetails from "./features/user/pages/OrderDetails";
-import NewArrivals from "./features/user/pages/new/NewArrivals";
-import BestSellers from "./features/user/pages/new/BestSellers";
-import Trending from "./features/user/pages/new/Trending";
-import MenArrivals from "./features/user/pages/men/MenArrivals";
-import MenBestSellers from "./features/user/pages/men/MenBestSellers";
-import MensClothing from "./features/user/pages/men/MensClothing";
-import MenShoes from "./features/user/pages/men/MenShoes";
-import WomenArrivals from "./features/user/pages/women/WomenArrivals";
-import WomenBestSellers from "./features/user/pages/women/WomenBestSellers";
-import WomenClothing from "./features/user/pages/women/WomenClothing";
-import WomenShoes from "./features/user/pages/women/WomenShoes";
-import KidsArrivals from "./features/user/pages/kids/KidsArrivals";
-import KidsBestSellers from "./features/user/pages/kids/KidsBestSellers";
-import KidsClothing from "./features/user/pages/kids/KidsClothing";
-import KidsShoes from "./features/user/pages/kids/KidsShoes";
+
 import ProductListPage from "./features/user/pages/ProductListPage";
 
 
