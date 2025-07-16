@@ -398,7 +398,7 @@ const toggleMenu = (e) => {
               <div
                 className={`navbar-submenu ${
                   isAnimating ? "open" : "closing"
-                } ${user ? "top-[-400px]" : "top-[-292px]"}`}
+                } ${user ? "top-[-400px]" : "top-[-434px]"}`}
               >
                 <button onClick={handleCloseSubmenu} className="back-btn">
                   <XIcon />
