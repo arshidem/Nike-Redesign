@@ -116,33 +116,35 @@ const toggleMenu = (e) => {
   };
 
   const menus = {
-    "New & Featured": [
-      { label: "New Arrivals", link: "/new/arrivals" },
-      { label: "Best Sellers", link: "/new/bestSellers" },
-      { label: "Trending", link: "/new/trending" },
-    ],
-    Men: [
-      { label: "New Arrivals", link: "/new/arrivals" },
-      { label: "Best Sellers", link: "/new/bestSellers" },
-      { label: "Shoes", link: "/men/shoes" },
-      { label: "Clothing", link: "/men/clothing" },
-    ],
-    Women: [
-      { label: "New Arrivals", link: "/new/arrivals" },
-      { label: "Best Sellers", link: "/new/bestSellers" },
-      { label: "Shoes", link: "/women/shoes" },
-      { label: "Clothing", link: "/women/clothing" },
-    ],
-    Kids: [
-      { label: "New Arrivals", link: "/new/arrivals" },
-      { label: "Best Sellers", link: "/new/bestSellers" },
-      { label: "Shoes", link: "/kids/shoes" },
-      { label: "Clothing", link: "/kids/clothing" },
-      { label: "Kids By Age", link: "/kids/age" },
-    ],
+  "New & Featured": [
+    { label: "New Arrivals", link: "/new/arrivals?newArrival=true" },
+    { label: "Best Sellers", link: "/new/best-sellers?bestSellers=true" },
+    { label: "Trending", link: "/new/trending?isTrending=true" },
+  ],
+  Men: [
+    { label: "New Arrivals", link: "/men/arrivals?gender=men&newArrival=true" },
+    { label: "Best Sellers", link: "/men/best-sellers?gender=men&bestSellers=true" },
+    { label: "Shoes", link: "/men/shoes?gender=men&category=shoes" },
+    { label: "Clothing", link: "/men/clothing?gender=men&category=clothing" },
+  ],
+  Women: [
+    { label: "New Arrivals", link: "/women/arrivals?gender=women&newArrival=true" },
+    { label: "Best Sellers", link: "/women/best-sellers?gender=women&bestSellers=true" },
+    { label: "Shoes", link: "/women/shoes?gender=women&category=shoes" },
+    { label: "Clothing", link: "/women/clothing?gender=women&category=clothing" },
+  ],
+  Kids: [
+    { label: "New Arrivals", link: "/kids/arrivals?gender=kids&newArrival=true" },
+    { label: "Best Sellers", link: "/kids/best-sellers?gender=kids&bestSellers=true" },
+    { label: "Shoes", link: "/kids/shoes?gender=kids&category=shoes" },
+    { label: "Clothing", link: "/kids/clothing?gender=kids&category=clothing" },
+    { label: "Kids By Age", link: "/kids/age" }, // for future use
+  ],
+
+
     Sale: [
       { label: "Shop All Sale", link: "/sale/shopAllSale" },
-      { label: "Best Sellers", link: "/sale/bestSellers" },
+      { label: "Best Sellers", link: "/sale/best-sellers" },
       { label: "Last Chance", link: "/sale/lastChance" },
     ],
     user: [

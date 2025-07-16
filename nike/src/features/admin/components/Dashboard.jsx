@@ -1,7 +1,13 @@
 import React from 'react'
+import { OrderAnalytics } from './OrderAnalytics'
+import ProductAnalytics from './ProductAnalytics'
 
 export const Dashboard = () => {
   return (
-    <div>Dashboard</div>
+    <div>
+      <OrderAnalytics/>
+<ProductAnalytics/>
+    </div>
+
   )
 }

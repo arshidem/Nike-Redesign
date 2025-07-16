@@ -12,7 +12,9 @@ const {
   getFilterOptions,
   getProductById,
   getFeaturedProducts ,
-  getProductAnalytics
+  getProductAnalytics,
+  bulkDeleteProducts,
+  getBestSellers,
 } = require("../controllers/productController");
 
 const { verifyAdmin } = require("../middleware/authMiddleware");
@@ -24,6 +26,9 @@ router.get("/top", getTopSellingProducts);
 router.get("/id/:id", getProductById);
 router.get("/analytics", verifyAdmin, getProductAnalytics); // ✅ Correct position
 router.get("/featured", getFeaturedProducts);
+router.delete('/bulk-delete', verifyAdmin, bulkDeleteProducts);
+router.get("/products/best-sellers", getBestSellers);
+
 router.get("/test", async (req, res) => {     // ✅ Move this up
   console.log("📦 /test route hit"); // 👈 add this
 

@@ -33,6 +33,22 @@ import Checkout from "./features/user/pages/Checkout";
 import Footer from "./features/user/components/Footer";
 import Order from "./features/user/pages/Order";
 import OrderDetails from "./features/user/pages/OrderDetails";
+import NewArrivals from "./features/user/pages/new/NewArrivals";
+import BestSellers from "./features/user/pages/new/BestSellers";
+import Trending from "./features/user/pages/new/Trending";
+import MenArrivals from "./features/user/pages/men/MenArrivals";
+import MenBestSellers from "./features/user/pages/men/MenBestSellers";
+import MensClothing from "./features/user/pages/men/MensClothing";
+import MenShoes from "./features/user/pages/men/MenShoes";
+import WomenArrivals from "./features/user/pages/women/WomenArrivals";
+import WomenBestSellers from "./features/user/pages/women/WomenBestSellers";
+import WomenClothing from "./features/user/pages/women/WomenClothing";
+import WomenShoes from "./features/user/pages/women/WomenShoes";
+import KidsArrivals from "./features/user/pages/kids/KidsArrivals";
+import KidsBestSellers from "./features/user/pages/kids/KidsBestSellers";
+import KidsClothing from "./features/user/pages/kids/KidsClothing";
+import KidsShoes from "./features/user/pages/kids/KidsShoes";
+import ProductListPage from "./features/user/pages/ProductListPage";
 
 
 function App() {
@@ -62,6 +78,31 @@ function AppRoutes({ user, isAuthenticated }) {
       <Route path="/bag" element={<Cart />} />
       <Route path="/orders" element={<Order />} />
       <Route path="/orders/:orderId" element={<OrderDetails />} />
+      {/* Menus */}
+
+{/* New & Featured */}
+<Route path="/new/arrivals" element={<ProductListPage title="New Arrivals" />} />
+<Route path="/new/best-sellers" element={<ProductListPage title="Best Sellers" />} />
+<Route path="/new/trending" element={<ProductListPage title="Trending" />} />
+
+{/* Men */}
+<Route path="/men/arrivals" element={<ProductListPage title="Men - New Arrivals" />} />
+<Route path="/men/best-sellers" element={<ProductListPage title="Men - Best Sellers" />} />
+<Route path="/men/shoes" element={<ProductListPage title="Men - Shoes" />} />
+<Route path="/men/clothing" element={<ProductListPage title="Men - Clothing" />} />
+
+{/* Women */}
+<Route path="/women/arrivals" element={<ProductListPage title="Women - New Arrivals" />} />
+<Route path="/women/best-sellers" element={<ProductListPage title="Women - Best Sellers" />} />
+<Route path="/women/shoes" element={<ProductListPage title="Women - Shoes" />} />
+<Route path="/women/clothing" element={<ProductListPage title="Women - Clothing" />} />
+
+{/* Kids */}
+<Route path="/kids/arrivals" element={<ProductListPage title="Kids - New Arrivals" />} />
+<Route path="/kids/best-sellers" element={<ProductListPage title="Kids - Best Sellers" />} />
+<Route path="/kids/shoes" element={<ProductListPage title="Kids - Shoes" />} />
+<Route path="/kids/clothing" element={<ProductListPage title="Kids - Clothing" />} />
+<Route path="/kids/age" element={<ProductListPage title="Shop by Age" />} />
 
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/profile" element={<Profile />} />

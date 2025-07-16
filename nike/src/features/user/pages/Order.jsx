@@ -51,7 +51,7 @@ export default function Order() {
     <>
       <BackBar />
       <div className="max-w-4xl mx-auto px-4 py-8 mt-8">
-        <h1 className="text-3xl font-bold mb-6">Your Orders</h1>
+        <h1 className="sm:text-xl font-bold mb-6">Your Orders</h1>
 
         {orders.length === 0 ? (
           <p className="text-center text-gray-500">No orders found.</p>

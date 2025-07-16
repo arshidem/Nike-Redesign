@@ -29,6 +29,16 @@ const fetchProducts = async (filters = {}) => {
     };
   }
 };
+// 📈 Fetch best sellers based on monthly sales
+const fetchBestSellers = async () => {
+  try {
+    const response = await axios.get(`${backendUrl}/api/products/best-sellers`);
+    return response.data.bestSellers || [];
+  } catch (err) {
+    console.error("Failed to fetch best sellers", err);
+    return [];
+  }
+};
 
   // ⭐ Fetch featured products
 const fetchFeaturedProducts = async () => {
@@ -118,7 +128,28 @@ const fetchFeaturedProducts = async () => {
       throw err;
     }
   };
-
+ const bulkDeleteProducts = async (ids = []) => {
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new Error("No product IDs provided for bulk delete");
+    }
+    try {
+      const response = await axios.delete(
+        `${backendUrl}/api/products/bulk-delete`,
+        {
+          headers: { 
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}` 
+          },
+          data: { ids },
+          withCredentials: true,
+        }
+      );
+      return response.data; // { success: true, deletedCount, message }
+    } catch (err) {
+      console.error("Failed to bulk-delete products", err);
+      throw err;
+    }
+  };
   // 🔍 Fetch filter options (categories, genders, models, etc.)
   const fetchFilterOptions = async () => {
     try {
@@ -147,11 +178,13 @@ const fetchFeaturedProducts = async () => {
     fetchProducts,
     fetchProductBySlug,
     fetchFeaturedProducts, // ✅ Added here
+    fetchBestSellers,
     createProduct,
     updateProduct,
     deleteProduct,
     fetchFilterOptions,
     fetchProductById,
-    fetchProductAnalytics
+    fetchProductAnalytics,
+    bulkDeleteProducts
   };
 };

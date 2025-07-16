@@ -25,7 +25,7 @@ const ShopByIcons = () => {
     const loadProducts = async () => {
       try {
         setLoading(true);
-        const { products: productList } = await fetchProducts({ category: "Shoe" });
+        const { products: productList } = await fetchProducts({ category: "shoes" });
         const uniqueModels = new Map();
 
         productList.forEach((product) => {

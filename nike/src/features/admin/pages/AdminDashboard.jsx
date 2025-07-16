@@ -134,31 +134,26 @@ const handleMenuItemClick = (id) => {
 
       <nav className="p-2">
         <ul className="space-y-1">
-          {menuItems
-            .filter(item => item.id !== 'home') // Exclude 'home' here
-            .map((item) => (
-              <li key={item.id} className="relative">
-                <button
-                  onClick={() => handleMenuItemClick(item.id)}
-                  className={`flex items-center w-full px-3 py-3 rounded-lg transition-colors group relative ${
-                    activeView === item.id
-                      ? 'bg-gray-300'
-                      : 'hover:bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  <span className="flex-shrink-0">{item.icon}</span>
-                  <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>{item.label}</span>
-                  <span
-                    className={`absolute left-14 ml-2 bg-black text-white text-xs px-2 py-1 rounded shadow 
-                      opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 ${
-                        sidebarCollapsed ? 'group-hover:block' : 'hidden'
-                      }`}
-                  >
-                    {item.label}
-                  </span>
-                </button>
-              </li>
-            ))}
+         {menuItems
+  .filter(item => item.id !== 'home')
+  .map((item) => (
+    <li key={item.id} className="relative">
+      <button
+        onClick={() => handleMenuItemClick(item.id)}
+        className={`flex items-center w-full px-3 py-3 rounded-lg transition-colors group relative ${
+          activeView === item.id
+            ? 'bg-gray-300'
+            : 'hover:bg-gray-100 text-gray-700'
+        }`}
+      >
+        <span className="flex-shrink-0">{item.icon}</span>
+        <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>
+          {item.label}
+        </span>
+      </button>
+    </li>
+))}
+
         </ul>
       </nav>
     </div>

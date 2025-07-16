@@ -4,10 +4,11 @@ import { useUserService } from "../../user/services/userService";
 import { useAppContext } from "../../../context/AppContext";
 import { formatDate } from "../../../utils/dateUtils";
 import Loader from "../../../shared/ui/Loader";
-import { XIcon } from "../../../shared/ui/Icons";
-
+import { XIcon, DeleteIcon } from "../../../shared/ui/Icons";
+import { toast } from "react-toastify";
+import { ConfirmModal } from "../../../shared/ui/Icons";
 export const AllUsers = () => {
-  const { fetchUsers } = useUserService();
+  const { fetchUsers, bulkDeleteUsers, bulkUpdateUserRole } = useUserService();
   const navigate = useNavigate();
 
   // State management
@@ -20,6 +21,12 @@ export const AllUsers = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [sortBy, setSortBy] = useState("createdAt:desc");
   const [refreshTrigger, setRefreshTrigger] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [showRoleUpdateModal, setShowRoleUpdateModal] = useState(false);
+  const [selectedRole, setSelectedRole] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -67,21 +74,76 @@ export const AllUsers = () => {
     }
   }, [fetchUsers, page, appliedSearchTerm, sortBy, filters]);
 
+  // Toggle select all
+  const toggleSelectAll = () => {
+    if (selectedIds.length === users.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(users.map((user) => user._id));
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+const handleBulkDelete = () => {
+  if (!selectedIds.length) return toast.error("No users selected");
+  setShowDeleteConfirm(true);
+};
+const confirmDelete = async () => {
+  try {
+    setActionLoading(true);
+    
+    // 1. Optimistically update UI - remove deleted users immediately
+    const originalUsers = [...users]; // Save for potential rollback
+    setUsers(prev => prev.filter(user => !selectedIds.includes(user._id)));
+    
+    // 2. Perform the actual API call
+    const { success } = await bulkDeleteUsers(selectedIds);
+    
+    if (!success) throw new Error("Delete failed");
+    
+    toast.success("Users deleted successfully");
+    setSelectedIds([]);
+    setSelectMode(false);
+    setShowDeleteConfirm(false);
+    
+    // 3. If we're on a page that might now be empty, adjust page number
+    if (users.length === selectedIds.length && page > 1) {
+      setPage(prev => prev - 1);
+    }
+    
+  } catch (err) {
+    // On error, revert the optimistic update and refresh
+    setUsers(originalUsers); // Rollback to original state
+    toast.error(err.message || "Delete failed");
+    setRefreshTrigger(prev => !prev); // Force refresh from server
+  } finally {
+    setActionLoading(false);
+  }
+};
+
+
+  const handleBulkRoleUpdate = () => {
+    if (!selectedIds.length) {
+      toast.error("No users selected");
+      return;
+    }
+    setShowRoleUpdateModal(true);
+  };
   useEffect(() => {
     loadUsers();
   }, [refreshTrigger]);
 
   // Handle search submission
- const handleSearch = useCallback(() => {
-  setAppliedSearchTerm(searchTerm);
-  setPage(1);
-  setRefreshTrigger(prev => !prev); // This will trigger the useEffect
-}, [searchTerm]);
-
-// Update your useEffect dependency array
-useEffect(() => {
-  loadUsers();
-}, [ refreshTrigger]); // Add loadUsers to dependencies
+  const handleSearch = useCallback(() => {
+    setAppliedSearchTerm(searchTerm);
+    setPage(1);
+    setRefreshTrigger((prev) => !prev);
+  }, [searchTerm]);
 
   // Handle Enter key in search input
   const handleKeyDown = (e) => {
@@ -129,63 +191,56 @@ useEffect(() => {
 
   // Handle sort change
   const handleSort = (field) => {
-    // Special case for createdAt since we're using a different format in the API
-    if (field === "createdAt") {
-      const [currentField, currentOrder] = sortBy.split(":");
-      const newOrder =
-        currentField === "createdAt" && currentOrder === "asc" ? "desc" : "asc";
-      setSortBy(`createdAt:${newOrder}`);
-    } else {
-      // Handle other fields normally
-      const [currentField, currentOrder] = sortBy.split(":");
-      const newOrder =
-        currentField === field && currentOrder === "asc" ? "desc" : "asc";
-      setSortBy(`${field}:${newOrder}`);
-    }
+    const [currentField, currentOrder] = sortBy.split(":");
+    const newOrder =
+      currentField === field && currentOrder === "asc" ? "desc" : "asc";
+    setSortBy(`${field}:${newOrder}`);
     setPage(1);
   };
 
   // Loading and error states
-  if (loading && page === 1) return <div className="p-4"><Loader/></div>;
+  if (loading && page === 1)
+    return (
+      <div className="p-4">
+        <Loader />
+      </div>
+    );
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
-
-  
   return (
     <div className="p-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-
-        <div className=" flex sm:flex-row gap-4 w-full">
-         <div className="relative flex-grow">
-  <input
-    type="text"
-    placeholder="Search users..."
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    onKeyDown={handleKeyDown}
-    className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
-  />
-  <button
-    type="button"
-    onClick={handleSearch}
-    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      className="w-5 h-5"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-      />
-    </svg>
-  </button>
-</div>
+        <div className="flex sm:flex-row gap-4 w-full">
+          <div className="relative flex-grow">
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
+            />
+            <button
+              type="button"
+              onClick={handleSearch}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                />
+              </svg>
+            </button>
+          </div>
           <button
             onClick={() => setShowFilters(true)}
             className="px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-2"
@@ -204,12 +259,11 @@ useEffect(() => {
                 d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
               />
             </svg>
-           
           </button>
 
           <button
             onClick={handleRefresh}
-            className="px-3 py-2  rounded hover:bg-gray-100 flex items-center gap-2"
+            className="px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -225,10 +279,132 @@ useEffect(() => {
                 d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
               />
             </svg>
-            
+          </button>
+          <button
+            onClick={() => setSelectMode((m) => !m)}
+            className="px-4 py-2 bg-black text-white rounded"
+          >
+            {selectMode ? "Cancel Select" : "Select Users"}
           </button>
         </div>
       </div>
+      {selectMode && selectedIds.length > 0 && (
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div>
+            <button
+            onClick={toggleSelectAll}
+            className="px-3 py-1 border rounded"
+          >
+            {selectedIds.length === users.length
+              ? "Deselect All"
+              : "Select All"}
+          </button>
+          </div>
+          <div className="flex items-center gap-2">
+             <button
+            onClick={handleBulkDelete}
+  className="px-3 py-1  rounded bg-white hover:bg-gray-200 flex items-center gap-1"
+          >
+            <DeleteIcon />
+            <span className="ml-1">Delete</span>
+          </button>
+          <button
+            onClick={handleBulkRoleUpdate}
+  className="px-3 py-1  rounded bg-white hover:bg-gray-200 flex items-center gap-1"
+          >
+            Update Role
+          </button>
+          </div>
+          
+         
+        </div>
+      )}
+      {showRoleUpdateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6">
+            <h3 className="text-lg font-semibold mb-4">Update User Role</h3>
+
+            {/* Role Selection Pills */}
+            <div className="flex flex-col gap-3 mb-6">
+              {["user", "admin"].map((role) => (
+                <span
+                  key={role}
+                  onClick={() => setSelectedRole(role)}
+                  className={`text-center py-2 rounded-xl cursor-pointer border font-medium capitalize transition
+              ${
+                selectedRole === role
+                  ? "bg-black text-white"
+                  : "bg-white text-black border-black"
+              }`}
+                >
+                  {role}
+                </span>
+              ))}
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex justify-between gap-3">
+              <button
+                onClick={() => {
+                  setShowRoleUpdateModal(false);
+                  setSelectedRole("");
+                }}
+                className="flex-1 py-2 border border-black text-black rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!selectedRole) {
+                    toast.error("Please select a role");
+                    return;
+                  }
+
+                  try {
+                    setActionLoading(true); // ✅ start loading before API call
+
+                    await bulkUpdateUserRole(selectedIds, selectedRole);
+                    toast.success("Roles updated successfully");
+
+                    // ✅ Optimistically update local state
+                    setUsers((prevUsers) =>
+                      prevUsers.map((user) =>
+                        selectedIds.includes(user._id)
+                          ? { ...user, role: selectedRole }
+                          : user
+                      )
+                    );
+
+                    setSelectMode(false);
+                    setSelectedIds([]);
+                    setShowRoleUpdateModal(false);
+                    setSelectedRole("");
+                  } catch (error) {
+                    toast.error(error.message || "Failed to update roles");
+                  } finally {
+                    setActionLoading(false);
+                  }
+                }}
+                disabled={actionLoading}
+                className="flex-1 py-2 bg-black text-white rounded-md disabled:opacity-70"
+              >
+                {actionLoading ? "Updating..." : "Update"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showDeleteConfirm && (
+ <ConfirmModal
+  title={`Delete ${selectedIds.length} users?`}
+  description="This action cannot be undone. Are you sure you want to proceed?"
+  onClose={() => setShowDeleteConfirm(false)}
+  onConfirm={confirmDelete}
+  confirmLabel={actionLoading ? "Deleting..." : "Delete"}
+  cancelLabel="Cancel"
+  loading={actionLoading}
+/>
+)}
 
       {/* Filters Modal */}
       {showFilters && (
@@ -259,7 +435,6 @@ useEffect(() => {
                     <option value="">All Roles</option>
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
-                    <option value="moderator">Moderator</option>
                   </select>
                 </div>
 
@@ -344,6 +519,17 @@ useEffect(() => {
         <table className="min-w-full bg-white border border-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              {selectMode && (
+                <th className="px-6 py-3 text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      selectedIds.length === users.length && users.length > 0
+                    }
+                    onChange={toggleSelectAll}
+                  />
+                </th>
+              )}
               <th
                 className="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-700 cursor-pointer"
                 onClick={() => handleSort("name")}
@@ -376,79 +562,99 @@ useEffect(() => {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {users.length > 0 ? (
-              users.map((user) => (
-                <tr
-                  key={user._id}
-                  onClick={() => handleUserClick(user._id)}
-                  className="hover:bg-gray-50 cursor-pointer"
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                        {user.name ? (
-                          <span className="text-gray-600">
-                            {user.name.charAt(0).toUpperCase()}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">?</span>
-                        )}
-                      </div>
-                      <div className="ml-3">
-                        <div className="text-xs sm:text-sm font-medium text-gray-900">
-                          {user.name || "Not provided"}
+              users.map((user) => {
+                const isSelected = selectedIds.includes(user._id);
+                return (
+                  <tr
+                    key={user._id}
+                    onClick={() => !selectMode && handleUserClick(user._id)}
+                    className={`hover:bg-gray-50 ${
+                      !selectMode ? "cursor-pointer" : ""
+                    }`}
+                  >
+                    {selectMode && (
+                      <td
+                        className="px-6 py-4 text-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelect(user._id)}
+                        />
+                      </td>
+                    )}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          {user.name ? (
+                            <span className="text-gray-600">
+                              {user.name.charAt(0).toUpperCase()}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">?</span>
+                          )}
                         </div>
-                        <div className="text-xs text-gray-500 capitalize">
-                          {user.gender || "Unknown"}
+                        <div className="ml-3">
+                          <div className="text-xs sm:text-sm font-medium text-gray-900">
+                            {user.name || "Not provided"}
+                          </div>
+                          <div className="text-xs text-gray-500 capitalize">
+                            {user.gender || "Unknown"}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
-                    {user.email}
-                  </td>
-                  <td className="px-4 py-3 text-xs sm:text-sm text-gray-700 capitalize">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        user.role === "admin"
-                          ? "bg-purple-100 text-purple-800"
-                          : user.role === "moderator"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
-                    {formatDate(user.createdAt)}
-                  </td>
-                  <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        user.name && user.gender
-                          ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {user.name && user.gender ? "Verified" : "Incomplete"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        user.isActive
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {user.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                    <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
+                      {user.email}
+                    </td>
+                    <td className="px-4 py-3 text-xs sm:text-sm text-gray-700 capitalize">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          user.role === "admin"
+                            ? "bg-purple-100 text-purple-800"
+                            : user.role === "moderator"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
+                      {formatDate(user.createdAt)}
+                    </td>
+                    <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          user.name && user.gender
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {user.name && user.gender ? "Verified" : "Incomplete"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs sm:text-sm text-gray-700">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          user.isActive
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {user.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
-                <td colSpan="6" className="px-4 py-6 text-center text-gray-500">
+                <td
+                  colSpan={selectMode ? 7 : 6}
+                  className="px-4 py-6 text-center text-gray-500"
+                >
                   {appliedSearchTerm || Object.values(filters).some(Boolean) ? (
                     <>
                       No users found matching your criteria

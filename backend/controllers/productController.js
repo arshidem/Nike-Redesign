@@ -159,7 +159,7 @@ exports.getAllProducts = async (req, res) => {
   try {
     const query = {};
 
-    // Filters
+    // Basic filters
     if (req.query.category) query.category = req.query.category;
     if (req.query.model) query.model = req.query.model;
     if (req.query.gender) query.gender = req.query.gender;
@@ -190,13 +190,41 @@ exports.getAllProducts = async (req, res) => {
     const maxPrice = Number(req.query.maxPrice) || Number.MAX_SAFE_INTEGER;
     query.$expr = {
       $and: [
-        { $gte: [ { $ifNull: ["$finalPrice", "$price"] }, minPrice ] },
-        { $lte: [ { $ifNull: ["$finalPrice", "$price"] }, maxPrice ] }
+        { $gte: [{ $ifNull: ["$finalPrice", "$price"] }, minPrice] },
+        { $lte: [{ $ifNull: ["$finalPrice", "$price"] }, maxPrice] }
       ]
     };
 
-    // Sorting
     let sortOption = { createdAt: -1 };
+
+    // 🟡 Best sellers logic
+    let bestSellerIds = null;
+    if (req.query.bestSellers === 'true') {
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+      const orders = await Order.find({ createdAt: { $gte: oneMonthAgo } })
+        .select("items")
+        .lean();
+
+      const salesMap = {};
+      for (const order of orders) {
+        for (const item of order.items) {
+          const id = item.product.toString();
+          salesMap[id] = (salesMap[id] || 0) + item.quantity;
+        }
+      }
+
+      bestSellerIds = Object.entries(salesMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 20)
+        .map(([id]) => id);
+
+      query._id = { $in: bestSellerIds };
+      // Note: You can preserve the order later
+    }
+
+    // Sorting
     if (req.query.sortBy === 'sold') sortOption = { sold: -1 };
     if (req.query.sortBy === 'priceAsc') sortOption = { finalPrice: 1 };
     if (req.query.sortBy === 'priceDesc') sortOption = { finalPrice: -1 };
@@ -207,7 +235,7 @@ exports.getAllProducts = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const totalItems = await Product.countDocuments(query);
-    const products = await Product.find(query)
+    let products = await Product.find(query)
       .sort(sortOption)
       .skip(skip)
       .limit(limit)
@@ -215,9 +243,8 @@ exports.getAllProducts = async (req, res) => {
 
     const totalPages = Math.ceil(totalItems / limit);
 
-    // Enrich with ratings from Review model
+    // Enrich with ratings
     const productIds = products.map(p => p._id);
-
     const ratingStats = await Review.aggregate([
       { $match: { product: { $in: productIds } } },
       {
@@ -237,19 +264,23 @@ exports.getAllProducts = async (req, res) => {
       };
     });
 
-    // Enrich products
+    // Add ratings to products
     let enrichedProducts = products.map(product => {
       const rating = ratingMap[product._id.toString()] || { average: 0, total: 0 };
-      return {
-        ...product,
-        rating
-      };
+      return { ...product, rating };
     });
 
-    // Filter by minRating if provided
+    // Filter by rating
     if (req.query.minRating) {
       const min = Number(req.query.minRating);
       enrichedProducts = enrichedProducts.filter(p => p.rating.average >= min);
+    }
+
+    // Preserve order of best sellers
+    if (req.query.bestSellers === 'true' && bestSellerIds) {
+      enrichedProducts.sort(
+        (a, b) => bestSellerIds.indexOf(a._id.toString()) - bestSellerIds.indexOf(b._id.toString())
+      );
     }
 
     res.json({
@@ -267,6 +298,7 @@ exports.getAllProducts = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 exports.getProductBySlug = async (req, res) => {
   try {
@@ -645,7 +677,89 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+// @desc    Bulk delete products
+// @route   DELETE /api/products/bulk-delete
+// @access  Private/Admin
+exports.bulkDeleteProducts = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    
+    // Validate input
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "No product IDs provided" 
+      });
+    }
 
+    // 1) Load products with only necessary fields
+    const products = await Product.find(
+      { _id: { $in: ids } },
+      { featuredImg: 1, variants: 1 }
+    ).lean();
+
+    if (products.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "No matching products found" 
+      });
+    }
+
+    // 2) Safely remove images
+    const deleteFile = (path) => {
+      try {
+        if (path && fs.existsSync(path)) {
+          fs.unlinkSync(path);
+        }
+      } catch (fileErr) {
+        console.error(`Failed to delete file ${path}:`, fileErr);
+      }
+    };
+
+    products.forEach(product => {
+      deleteFile(product.featuredImg);
+      product.variants?.forEach(variant => {
+        variant.images?.forEach(deleteFile);
+      });
+    });
+
+    // 3) Delete products and reviews in transaction
+    const session = await mongoose.startSession();
+    let result;
+    
+    try {
+      await session.withTransaction(async () => {
+        // Delete products
+        result = await Product.deleteMany(
+          { _id: { $in: ids } },
+          { session }
+        );
+        
+        // Delete associated reviews - no need to convert to ObjectId
+        await Review.deleteMany(
+          { product: { $in: ids } }, // Mongoose handles string conversion automatically
+          { session }
+        );
+      });
+    } finally {
+      session.endSession();
+    }
+
+    return res.json({
+      success: true,
+      deletedCount: result.deletedCount,
+      message: `${result.deletedCount} products deleted`
+    });
+
+  } catch (err) {
+    console.error("Bulk delete error:", err);
+    return res.status(500).json({ 
+      success: false, 
+      error: "Bulk delete failed",
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
 // @desc    Get top-selling products
 // @route   GET /api/products/top
 exports.getTopSellingProducts = async (req, res) => {
@@ -753,6 +867,44 @@ exports.getFeaturedProducts = async (req, res) => {
   } catch (error) {
     console.error("Error fetching featured products:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+exports.getBestSellers = async (req, res) => {
+  try {
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+    const orders = await Order.find({ createdAt: { $gte: oneMonthAgo } })
+      .select("items")
+      .lean();
+
+    const salesMap = {};
+
+    for (const order of orders) {
+      for (const item of order.items) {
+        const id = item.product.toString();
+        salesMap[id] = (salesMap[id] || 0) + item.quantity;
+      }
+    }
+
+    const topIds = Object.entries(salesMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([id]) => id);
+
+    const products = await Product.find({ _id: { $in: topIds } })
+      .select("name slug price featuredImg")
+      .lean();
+
+    const response = products.map(p => ({
+      ...p,
+      sold: salesMap[p._id.toString()] || 0
+    }));
+
+    res.json({ success: true, bestSellers: response });
+  } catch (err) {
+    console.error("Best seller fetch failed:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 

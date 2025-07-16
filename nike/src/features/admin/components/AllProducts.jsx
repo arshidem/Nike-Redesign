@@ -4,7 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../../../context/AppContext";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import toast from "react-hot-toast";
+import { ConfirmModal } from "../../../shared/ui/Icons";
+
 import {
+  DeleteIcon,
   FilterIcon,
   HomeIcon,
   PlusIconWhite,
@@ -16,7 +20,8 @@ import {
 import ProductAnalytics from "./ProductAnalytics";
 
 export const AllProducts = () => {
-  const { fetchProducts, fetchFilterOptions } = useProductService();
+  const { fetchProducts, fetchFilterOptions, bulkDeleteProducts } =
+    useProductService();
   const { backendUrl } = useAppContext();
   const navigate = useNavigate();
 
@@ -53,6 +58,9 @@ export const AllProducts = () => {
   const [selectedSize, setSelectedSize] = useState("");
   const [pagination, setPagination] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   const [products, setProducts] = useState(() => {
     const loadInitialProducts = async () => {
@@ -71,6 +79,41 @@ export const AllProducts = () => {
 
   const handleRefresh = () => {
     setRefreshTrigger((prev) => !prev);
+  };
+const handleBulkDelete = async () => {
+  setShowConfirmDelete(false); // Close modal immediately
+  
+  try {
+    // Optimistically update UI
+    setProducts(prevProducts => 
+      prevProducts.filter(product => !selectedIds.includes(product._id))
+    );
+    
+    const { deletedCount, message } = await bulkDeleteProducts(selectedIds);
+    toast.success(message);
+    
+    // Refresh data in background
+    setRefreshTrigger(prev => !prev);
+  } catch (err) {
+    // Revert UI if error occurs
+    setRefreshTrigger(prev => !prev);
+    toast.error(err.response?.data?.error || "Bulk delete failed");
+  } finally {
+    setSelectedIds([]);
+    setSelectMode(false);
+  }
+};
+
+
+  // Toggle select all
+  const toggleSelectAll = () => {
+    if (selectedIds.length === products.length) setSelectedIds([]);
+    else setSelectedIds(products.map((o) => o._id));
+  };
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
   };
 
   useEffect(() => {
@@ -120,7 +163,6 @@ export const AllProducts = () => {
       setProducts(res.products);
       setPagination(res.pagination);
       setShowFilters(false);
-      
     } catch (err) {
       console.error("Error fetching products:", err);
     } finally {
@@ -200,11 +242,10 @@ export const AllProducts = () => {
 
   return (
     <>
-      <ProductAnalytics />
       <div className="p-4">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 w-full">
           {/* Search + Filter group */}
-          <div className="flex gap-4 w-full">
+          <div className="flex gap-2 w-full">
             {/* Search Input */}
             <div className="relative flex-grow">
               <input
@@ -230,7 +271,7 @@ export const AllProducts = () => {
             {/* Filter Button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="h-10 px-3 rounded-lg border border-gray-300 hover:bg-gray-200 transition"
+              className="h-10 px-3 rounded-lg  hover:bg-gray-200 transition"
             >
               <FilterIcon />
             </button>
@@ -238,21 +279,61 @@ export const AllProducts = () => {
             {/* Refresh Button */}
             <button
               onClick={handleRefresh}
-              className="h-10 px-3 rounded-lg border border-gray-300 hover:bg-gray-200 flex items-center gap-2 transition"
+              className="h-10 px-3 rounded-lg hover:bg-gray-200 flex items-center gap-2 transition"
             >
               <RefreshIcon />
             </button>
           </div>
-
+          <button
+            onClick={() => setSelectMode((m) => !m)}
+            className="h-10 flex items-center justify-center bg-black gap-2 border border-black rounded-lg hover:bg-gray-700 transition w-full sm:w-44 text-sm text-white"
+          >
+            {selectMode ? "Cancel Select" : "Select Products"}
+          </button>
           {/* New Product Button */}
           <button
             onClick={() => navigate("/admin/create-product")}
             className="h-10 flex items-center justify-center bg-black gap-2 border border-black rounded-lg hover:bg-gray-700 transition w-full sm:w-44 text-sm text-white"
           >
-            <PlusIconWhite />
             <span>New Product</span>
           </button>
         </div>
+        {selectMode && (
+          <div className="flex flex-wrap items-center justify-between mb-4">
+            <button
+              onClick={toggleSelectAll}
+              className="px-3 py-1 border rounded"
+            >
+              {selectedIds.length === products.length
+                ? "Deselect All"
+                : "Select All"}
+            </button>
+
+            {selectedIds.length > 0 && (
+              <>
+              <button
+  onClick={() => setShowConfirmDelete(true)}
+  className="px-3 py-1  rounded bg-white hover:bg-gray-200 flex items-center gap-1"
+>
+  <DeleteIcon />
+  <span>Delete</span>
+</button>
+
+              </>
+            )}
+          </div>
+        )}
+{showConfirmDelete && (
+  <ConfirmModal
+    open={showConfirmDelete}
+    onClose={() => setShowConfirmDelete(false)}
+    onConfirm={handleBulkDelete}
+    title={`Delete ${selectedIds.length} product(s)?`}
+    message={`Are you sure you want to permanently delete the selected products? This action cannot be undone.`}
+    confirmText="Delete"
+    cancelText="Cancel"
+  />
+)}
 
         {/* Filters Modal */}
         {showFilters && (
@@ -546,10 +627,22 @@ export const AllProducts = () => {
           </div>
         )}
         {/* Product Table */}
-        <div className="overflow-x-auto border rounded-lg ">
+        <div className="overflow-x-auto border rounded-lg">
           <table className="min-w-full bg-white border border-gray-200">
             <thead className="bg-gray-50 text-xs sm:text-sm">
               <tr>
+                {selectMode && (
+                  <th className="px-6 py-3 text-center align-middle">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedIds.length === products.length &&
+                        products.length > 0
+                      }
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
+                )}
                 <th
                   className="px-4 py-3 text-left font-medium text-gray-700 cursor-pointer"
                   onClick={() => handleSort("name")}
@@ -591,91 +684,112 @@ export const AllProducts = () => {
                 </th>
               </tr>
             </thead>
-
             <tbody className="divide-y divide-gray-200">
               {products.length > 0 ? (
-                products.map((product) => (
-                  <tr
-                    key={product._id}
-                    onClick={() => handleProductClick(product.slug)}
-                    className="hover:bg-gray-50 cursor-pointer"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-16 w-16 rounded-md overflow-hidden border border-gray-200">
-                          <img
-                            src={getProductImage(product)}
-                            alt={product.name}
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.target.src = "/placeholder.jpg";
-                              e.target.className =
-                                "h-full w-full object-contain p-2 bg-gray-100";
-                            }}
-                          />
-                        </div>
-                        <div className="ml-3">
-                          <div className="text-sm font-medium text-gray-900 line-clamp-1">
-                            {product.name}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            ID: {product._id}
-                          </div>
-                          {product.model && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              Model: {product.model}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
+                products.map((product) => {
+                  const isSelected = selectedIds.includes(product._id);
+                  const handleRowClick = () => {
+                    if (selectMode) {
+                      toggleSelect(product._id);
+                    } else {
+                      handleProductClick(product.slug);
+                    }
+                  };
 
-                    <td className="px-4 py-3 text-sm text-gray-700 capitalize">
-                      {product.gender}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      ₹{product.price?.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-700">
-                      ₹{product.finalPrice?.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      <div className="flex items-center">
-                        <div className="font-medium">
-{product.rating.average?.toFixed(1) || "0.0"}
-                        </div>
-                        <div className="ml-1">
-                          <StarIcon />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      {product.sold?.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <div className="flex flex-nowrap gap-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
-                        {product.variants?.map((variant, i) => (
-                          <img
-                            key={i}
-                            src={formatImageUrl(variant.images?.[0])}
-                            alt={variant.color}
-                            title={variant.color}
-                            className="w-8 h-8 rounded-md border border-gray-300 object-cover flex-shrink-0"
-                            onError={(e) => {
-                              e.target.src = "/placeholder.jpg";
-                              e.target.className =
-                                "w-8 h-8 object-contain p-1 bg-gray-100 border border-gray-300 rounded";
-                            }}
+                  return (
+                    <tr
+                      key={product._id}
+                      onClick={handleRowClick}
+                      className="hover:bg-gray-50 cursor-pointer"
+                    >
+                      {selectMode && (
+                        <td
+                          className="px-6 py-4 text-center align-middle"
+                          onClick={(e) => e.stopPropagation()} // prevent double toggle
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelect(product._id)}
                           />
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                        </td>
+                      )}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-16 w-16 rounded-md overflow-hidden border border-gray-200">
+                            <img
+                              src={getProductImage(product)}
+                              alt={product.name}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                e.target.src = "/placeholder.jpg";
+                                e.target.className =
+                                  "h-full w-full object-contain p-2 bg-gray-100";
+                              }}
+                            />
+                          </div>
+                          <div className="ml-3">
+                            <div className="text-sm font-medium text-gray-900 line-clamp-1">
+                              {product.name}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              ID: {product._id}
+                            </div>
+                            {product.model && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                Model: {product.model}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700 capitalize">
+                        {product.gender}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        ₹{product.price?.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-700">
+                        ₹{product.finalPrice?.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        <div className="flex items-center">
+                          <div className="font-medium">
+                            {product.rating.average?.toFixed(1) || "0.0"}
+                          </div>
+                          <div className="ml-1">
+                            <StarIcon />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {product.sold?.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex flex-nowrap gap-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
+                          {product.variants?.map((variant, i) => (
+                            <img
+                              key={i}
+                              src={formatImageUrl(variant.images?.[0])}
+                              alt={variant.color}
+                              title={variant.color}
+                              className="w-8 h-8 rounded-md border border-gray-300 object-cover flex-shrink-0"
+                              onError={(e) => {
+                                e.target.src = "/placeholder.jpg";
+                                e.target.className =
+                                  "w-8 h-8 object-contain p-1 bg-gray-100 border border-gray-300 rounded";
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan={selectMode ? 8 : 7}
                     className="px-4 py-6 text-center text-sm text-gray-500"
                   >
                     No products found. Try adjusting your filters.

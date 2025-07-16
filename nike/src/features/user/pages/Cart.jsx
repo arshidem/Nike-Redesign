@@ -121,7 +121,7 @@ const Cart = () => {
   if (loading)
     return (
       <div>
-        <CartSkeleton/>
+        <CartSkeleton />
       </div>
     );
 
@@ -151,7 +151,7 @@ const Cart = () => {
         <div className="flex-1">
           {/* Cart Header Summary */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold">Bag</h1>
+            <h1 className="sm:text-xl font-bold">Bag</h1>
             <p className="text-sm text-gray-600 mt-1">
               {cart.items?.length} item{cart.items.length > 1 ? "s" : ""} | ₹
               {(cart.finalTotal ?? cart.total ?? 0).toLocaleString()}
@@ -163,16 +163,13 @@ const Cart = () => {
                 item._id || `${item.productId}${item.variantId}${item.size}`;
 
               return (
-                <li
-                  key={localId}
-                  className="flex flex-row gap-6 border-b pb-6"
-                >
+                <li key={localId} className="flex flex-row gap-2 sm:gap-6 border-b pb-6">
                   {/* Image */}
-                  <div className="w-40 ">
+                  <div className="w-full max-w-[100px] sm:max-w-[150px] md:max-w-[180px]">
                     <img
                       src={formatImageUrl(item.image)}
                       alt={item.name}
-                      className="w-full h-40 object-contain bg-gray-100 rounded-lg"
+                      className="w-full h-auto object-contain bg-gray-100 rounded-lg aspect-square"
                       onError={(e) => {
                         e.target.src = "/placeholder.jpg";
                       }}
@@ -182,11 +179,11 @@ const Cart = () => {
                   {/* Details */}
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
-                      <h3 className="font-semibold text-lg">{item.name}</h3>
-                      <p className="text-sm text-gray-600">
+                      <h3 className="font-semibold text-xs sm:text-lg">{item.name}</h3>
+                      <p className="text-xs sm:text-sm text-gray-600">
                         {item.gender || "Men's Shoe"}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-xs sm:text-sm text-gray-600">
                         {item.color} | Size{" "}
                         <span className="underline">{item.size}</span>
                       </p>
@@ -217,7 +214,7 @@ const Cart = () => {
                         )}
                       </button>
 
-                      <span className="text-sm font-medium">
+                      <span className="text-xs sm:text-sm font-medium">
                         {item.quantity}
                       </span>
 
@@ -238,7 +235,7 @@ const Cart = () => {
 
                   {/* Price */}
                   <div className="text-right md:text-left">
-                    <p className="text-lg font-semibold">
+                    <p className="text-xs sm:text-lg font-semibold">
                       ₹{(item?.total ?? 0).toLocaleString()}
                     </p>
                   </div>
@@ -286,7 +283,7 @@ const Cart = () => {
           </div>
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 };

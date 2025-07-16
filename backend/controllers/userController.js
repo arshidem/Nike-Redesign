@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const asyncHandler = require('express-async-handler');
-
+const mongoose = require('mongoose');
 // Helper function to format user response
 const formatUserResponse = (user) => ({
   _id: user._id,
@@ -282,10 +282,10 @@ exports.updateUserRole = asyncHandler(async (req, res) => {
   try {
     const { role } = req.body;
     
-    if (!role || !['user', 'admin', 'moderator'].includes(role)) {
+    if (!role || !['user', 'admin'].includes(role)) {
       return res.status(400).json({
         success: false,
-        message: 'Valid role (user, admin, or moderator) is required'
+        message: 'Valid role (user, admin) is required'
       });
     }
 
@@ -353,7 +353,77 @@ exports.deleteUser = asyncHandler(async (req, res) => {
     });
   }
 });
+// DELETE /api/users/bulk-delete
+exports.bulkDeleteUsers = async (req, res) => {
+  try {
+    const { ids } = req.body; // array of user IDs
 
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: "No user IDs provided" });
+    }
+
+    const result = await User.deleteMany({ _id: { $in: ids } });
+
+    res.json({
+      success: true,
+      message: `${result.deletedCount} user(s) deleted`,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+// PATCH /api/users/bulk-role
+// controllers/userController.js
+exports.bulkUpdateUserRole = async (req, res) => {
+  try {
+    const { ids, role } = req.body;  // Note 'ids' not 'userIds'
+
+    // Validate input
+    if (!ids || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "Both 'ids' and 'role' are required"
+      });
+    }
+
+    // Validate all IDs
+    const invalidIds = ids.filter(id => !mongoose.Types.ObjectId.isValid(id));
+    if (invalidIds.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid user IDs: ${invalidIds.join(', ')}`
+      });
+    }
+
+    // Check if current user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: "Only admins can update roles"
+      });
+    }
+
+    // Perform update
+    const result = await User.updateMany(
+      { _id: { $in: ids } },
+      { $set: { role } }
+    );
+
+    res.json({
+      success: true,
+      message: `Updated ${result.modifiedCount} users to ${role} role`,
+      modifiedCount: result.modifiedCount
+    });
+
+  } catch (error) {
+    console.error('Bulk role update error:', error);
+    res.status(500).json({
+      success: false,
+      message: "Server error during bulk update",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
 // @desc    Get user activity stats
 // @route   GET /api/admin/users/activity/stats
 // @access  Private/Admin

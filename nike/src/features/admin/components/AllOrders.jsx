@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useCallback, useMemo, useContext } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useContext,
+} from "react";
 import { Link } from "react-router-dom";
 import useOrderServices from "../../user/services/orderServices";
 import Skeleton from "react-loading-skeleton";
@@ -19,27 +25,14 @@ import {
 } from "../../../shared/ui/Icons";
 import AppContext, { useAppContext } from "../../../context/AppContext";
 import { formatDate, formatCurrency } from "../../../utils/dateUtils";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+
 import { format } from "date-fns";
 import EmptyState from "../../../shared/ui/EmptyState";
 
 export const AllOrders = () => {
   const {
     getAllOrders,
-    getOrderSummary,
-    getOrderTrends,
-    getOrderStatusStats,
+
     updateOrderStatus,
     bulkUpdateOrders,
   } = useOrderServices();
@@ -52,13 +45,10 @@ export const AllOrders = () => {
   const [appliedSearch, setAppliedSearch] = useState("");
   const [sortBy, setSortBy] = useState("-createdAt");
   const [showFilters, setShowFilters] = useState(false);
-  const [summary, setSummary] = useState(null);
-  const [dailyData, setDailyData] = useState([]);
-  const [statusData, setStatusData] = useState([]);
+
   const [showModal, setShowModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [orderRange, setOrderRange] = useState("daily");
-  const [statusRange, setStatusRange] = useState("month"); // or your default range
+
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("processing");
@@ -71,7 +61,7 @@ export const AllOrders = () => {
     minTotalPrice: "",
     maxTotalPrice: "",
   });
-const {backendUrl}=useAppContext(AppContext)
+  const { backendUrl } = useAppContext(AppContext);
   const [appliedFilters, setAppliedFilters] = useState({});
   // Bulk selection state
   const [selectMode, setSelectMode] = useState(false);
@@ -141,26 +131,6 @@ const {backendUrl}=useAppContext(AppContext)
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
-  useEffect(() => {
-    const fetchTrends = async () => {
-      const res = await getOrderTrends(orderRange); // ✅ use selected range
-      if (res.success) {
-        setDailyData(res.data);
-      }
-    };
-    fetchTrends();
-  }, [orderRange]); // ✅ re-run when range changes
-  const fetchStatusStats = useCallback(async () => {
-    let params = { range: statusRange };
-
-    // If custom range needed, add startDate/endDate here from somewhere (optional)
-
-    const statusRes = await getOrderStatusStats(params);
-    if (statusRes.success) setStatusData(statusRes.data);
-  }, [statusRange, getOrderStatusStats]);
-  useEffect(() => {
-    fetchStatusStats();
-  }, [statusRange]);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -195,30 +165,8 @@ const {backendUrl}=useAppContext(AppContext)
     }
   }, [page, appliedSearch, sortBy, appliedFilters]);
 
-  const fetchDashboard = useCallback(async () => {
-    const summaryRes = await getOrderSummary();
-
-    // Extract dates from appliedFilters for status stats
-    const { startDate, endDate } = appliedFilters;
-
-    // Build range and dates params for getOrderStatusStats
-    let params = { range: "custom" }; // default to custom if date filters applied
-    if (startDate && endDate) {
-      params.startDate = startDate;
-      params.endDate = endDate;
-    } else {
-      params.range = "month"; // fallback to some default range
-    }
-
-    const statusRes = await getOrderStatusStats(params);
-
-    if (summaryRes.success) setSummary(summaryRes.data);
-    if (statusRes.success) setStatusData(statusRes.data);
-  }, [getOrderSummary, getOrderStatusStats, appliedFilters]);
-
   useEffect(() => {
     fetchOrders();
-    fetchDashboard();
   }, [page, sortBy, appliedSearch, appliedFilters]);
 
   const handleSearch = useCallback(() => {
@@ -742,86 +690,96 @@ const {backendUrl}=useAppContext(AppContext)
     document.body.removeChild(link);
   };
 
-if (loading && page === 1) {
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Summary Cards Skeleton */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="p-4 bg-white border rounded-lg shadow-sm h-24">
-            <Skeleton height={20} width="40%" className="mb-2" />
-            <Skeleton height={24} width="60%" className="mb-1" />
-            <Skeleton height={16} width="50%" />
-          </div>
-        ))}
-      </div>
-
-      {/* Charts Skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-        {[...Array(2)].map((_, i) => (
-          <div key={i} className="bg-white border rounded-lg p-4 shadow-sm h-80">
-            <div className="flex justify-between items-center mb-4">
-              <Skeleton height={20} width="30%" />
-              <Skeleton height={32} width="25%" />
+  if (loading && page === 1) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Summary Cards Skeleton */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="p-4 bg-white border rounded-lg shadow-sm h-24"
+            >
+              <Skeleton height={20} width="40%" className="mb-2" />
+              <Skeleton height={24} width="60%" className="mb-1" />
+              <Skeleton height={16} width="50%" />
             </div>
-            <Skeleton height={240} />
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {/* Header and Toolbar Skeleton */}
-      <div className="mb-6">
-        <Skeleton height={32} width="40%" className="mb-4" />
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Skeleton height={40} width="100%" className="sm:flex-1" />
-          <div className="flex space-x-3">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} height={40} width={40} />
-            ))}
+        {/* Charts Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+          {[...Array(2)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-white border rounded-lg p-4 shadow-sm h-80"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <Skeleton height={20} width="30%" />
+                <Skeleton height={32} width="25%" />
+              </div>
+              <Skeleton height={240} />
+            </div>
+          ))}
+        </div>
+
+        {/* Header and Toolbar Skeleton */}
+        <div className="mb-6">
+          <Skeleton height={32} width="40%" className="mb-4" />
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <Skeleton height={40} width="100%" className="sm:flex-1" />
+            <div className="flex space-x-3">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} height={40} width={40} />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Table Skeleton */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {[...Array(6)].map((_, i) => (
-                <th key={i} className="px-6 py-3">
-                  <Skeleton height={20} width="80%" className="mx-auto" />
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {[...Array(5)].map((_, i) => (
-              <tr key={i}>
-                {[...Array(6)].map((_, j) => (
-                  <td key={j} className="px-6 py-4">
-                    <Skeleton height={20} width={j === 3 ? "60%" : "80%"} className="mx-auto" />
-                  </td>
+        {/* Table Skeleton */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                {[...Array(6)].map((_, i) => (
+                  <th key={i} className="px-6 py-3">
+                    <Skeleton height={20} width="80%" className="mx-auto" />
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* Pagination Skeleton */}
-        <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
-          <div className="hidden sm:flex sm:items-center sm:justify-between">
-            <Skeleton height={20} width="30%" />
-            <div className="flex space-x-2">
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
               {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} height={36} width={36} />
+                <tr key={i}>
+                  {[...Array(6)].map((_, j) => (
+                    <td key={j} className="px-6 py-4">
+                      <Skeleton
+                        height={20}
+                        width={j === 3 ? "60%" : "80%"}
+                        className="mx-auto"
+                      />
+                    </td>
+                  ))}
+                </tr>
               ))}
+            </tbody>
+          </table>
+
+          {/* Pagination Skeleton */}
+          <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
+            <div className="hidden sm:flex sm:items-center sm:justify-between">
+              <Skeleton height={20} width="30%" />
+              <div className="flex space-x-2">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} height={36} width={36} />
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {exporting && (
@@ -1148,196 +1106,67 @@ if (loading && page === 1) {
           </div>
         </div>
       )}
-      {summary && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="p-4 bg-white border rounded-lg shadow-sm">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">
-              Today
-            </h4>
-            <p className="text-xl font-bold">{summary.todayOrders} Orders</p>
-            <p className="text-sm text-gray-500">
-              {formatCurrency(summary.todayRevenue)}
-            </p>
-          </div>
-          <div className="p-4 bg-white border rounded-lg shadow-sm">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">
-              This Week
-            </h4>
-            <p className="text-xl font-bold">{summary.weekOrders} Orders</p>
-            <p className="text-sm text-gray-500">
-              {formatCurrency(summary.weekRevenue)}
-            </p>
-          </div>
-          <div className="p-4 bg-white border rounded-lg shadow-sm">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">
-              This Month
-            </h4>
-            <p className="text-xl font-bold">{summary.monthOrders} Orders</p>
-            <p className="text-sm text-gray-500">
-              {formatCurrency(summary.monthRevenue)}
-            </p>
-          </div>
-          <div className="p-4 bg-white border rounded-lg shadow-sm">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">
-              Total Revenue
-            </h4>
-            <p className="text-xl font-bold">{summary.totalOrders} Orders</p>
-
-            <p className="text-xl font-bold">
-              {formatCurrency(summary.totalRevenue)}
-            </p>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-        <div className="bg-white border rounded-lg p-4 shadow-sm">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-sm font-semibold text-gray-600">Order Trend</h2>
-            <select
-              value={orderRange}
-              onChange={(e) => setOrderRange(e.target.value)}
-              className="border px-2 py-1 text-sm rounded"
-            >
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-          </div>
-
-          <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="_id"
-                tickFormatter={(str) => {
-                  try {
-                    if (orderRange === "yearly") return str;
-                    if (orderRange === "monthly")
-                      return format(new Date(`${str}-01`), "MMM yyyy");
-                    if (orderRange === "weekly") return `Wk ${str}`;
-                    return format(new Date(str), "MMM d");
-                  } catch (err) {
-                    return str;
-                  }
-                }}
-              />
-
-              <YAxis />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="count"
-                stroke="#111"
-                strokeWidth={2}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-white border rounded-lg p-4 shadow-sm">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-sm font-semibold text-gray-600">
-              Status Breakdown
-            </h2>
-            <select
-              value={statusRange}
-              onChange={(e) => setStatusRange(e.target.value)}
-              className="border px-2 py-1 text-sm rounded"
-            >
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="year">This Year</option>
-            </select>
-          </div>
-
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={statusData}
-                dataKey="count"
-                nameKey="_id"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label
-              >
-                {statusData.map((_, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={
-                      ["#f87171", "#facc15", "#34d399", "#9ca3af"][index % 4]
-                    }
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
 
       {/* Header / Toolbar */}
       <h1 className="text-2xl font-bold mb-4">Order Management</h1>
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-  {/* -- Search Bar -- */}
-  <div className="relative flex-1">
-    <input
-      type="text"
-      placeholder="Search orders..."
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-      className="w-full h-10 pl-4 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-sm"
-    />
-    <button
-      onClick={handleSearch}
-      aria-label="Search orders"
-      className="absolute top-1/2 right-3 -translate-y-1/2"
-    >
-      <SearchIcon className="w-5 h-5 text-gray-500 hover:text-black" />
-    </button>
-  </div>
+        {/* -- Search Bar -- */}
+        <div className="relative flex-1">
+          <input
+            type="text"
+            placeholder="Search orders..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            className="w-full h-10 pl-4 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-sm"
+          />
+          <button
+            onClick={handleSearch}
+            aria-label="Search orders"
+            className="absolute top-1/2 right-3 -translate-y-1/2"
+          >
+            <SearchIcon className="w-5 h-5 text-gray-500 hover:text-black" />
+          </button>
+        </div>
 
-  {/* -- Filter, Refresh & Select Toggle -- */}
-  <div className="flex items-center space-x-3">
-    {/* Filter */}
-    <button
-      onClick={() => setShowFilters(true)}
-      aria-label="Open filters"
-      className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition"
-    >
-      <FilterIcon className="w-5 h-5 text-gray-600" />
-    </button>
+        {/* -- Filter, Refresh & Select Toggle -- */}
+        <div className="flex items-center space-x-3">
+          {/* Filter */}
+          <button
+            onClick={() => setShowFilters(true)}
+            aria-label="Open filters"
+            className="w-10 h-10 flex items-center justify-center  rounded-lg hover:bg-gray-100 transition"
+          >
+            <FilterIcon className="w-5 h-5 text-gray-600" />
+          </button>
 
-    {/* Refresh */}
-    <button
-      onClick={() => {
-        fetchOrders();
-        fetchDashboard();
-      }}
-      aria-label="Refresh data"
-      className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition"
-    >
-      <RefreshIcon className="w-5 h-5 text-gray-600" />
-    </button>
+          {/* Refresh */}
+          <button
+            onClick={() => {
+              fetchOrders();
+              fetchDashboard();
+            }}
+            aria-label="Refresh data"
+            className="w-10 h-10 flex items-center justify-center  rounded-lg hover:bg-gray-100 transition"
+          >
+            <RefreshIcon className="w-5 h-5 text-gray-600" />
+          </button>
 
-    {/* Select Mode Toggle */}
-    <button
-      onClick={() => setSelectMode((m) => !m)}
-      className="h-10 px-4 bg-black text-white rounded-lg hover:bg-gray-800 text-sm"
-    >
-      {selectMode ? "Cancel Select" : "Select Orders"}
-    </button>
-  </div>
-</div>
+          {/* Select Mode Toggle */}
+          <button
+            onClick={() => setSelectMode((m) => !m)}
+            className="h-10 px-4 bg-black text-white rounded-lg hover:bg-gray-800 text-sm"
+          >
+            {selectMode ? "Cancel Select" : "Select Orders"}
+          </button>
+        </div>
+      </div>
 
       {selectMode && (
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <button
+        <div className="flex  items-center gap-2 mb-4 justify-between">
+          <div>
+     <button
             onClick={toggleSelectAll}
             className="px-3 py-1 border rounded"
           >
@@ -1345,25 +1174,29 @@ if (loading && page === 1) {
               ? "Deselect All"
               : "Select All"}
           </button>
-
-          {selectedIds.length > 0 && (
+          </div>
+          <div className="flex items-center gap-2">
+ {selectedIds.length > 0 && (
             <>
               <button
                 onClick={() => setShowStatusModal(true)}
-                className="px-3 py-1 border rounded bg-yellow-100 hover:bg-yellow-200"
+                className="px-3 py-1  rounded bg-white hover:bg-gray-200 flex items-center gap-1"
               >
                 Change Status
               </button>
 
               <button
                 onClick={() => setShowExportModal(true)}
-                className="px-3 py-1 border rounded bg-blue-100 hover:bg-blue-200 flex"
+                className="px-3 py-1  rounded bg-white hover:bg-gray-200 flex items-center gap-1"
               >
-                <ExportIcon />
                 <span>Export</span>
               </button>
             </>
           )}
+          </div>
+     
+
+         
         </div>
       )}
 
@@ -1468,13 +1301,6 @@ if (loading && page === 1) {
                               order.status.slice(1)}
                           </span>
                         </td>
-
-                        {/* Remove View cell */}
-                        {/* {!selectMode && (
-          <td className="px-6 py-4 text-center align-middle text-blue-600 hover:underline">
-            View
-          </td>
-        )} */}
                       </tr>
                     );
                   })}
