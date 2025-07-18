@@ -10,18 +10,15 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
- VitePWA({
+VitePWA({
   registerType: 'autoUpdate',
-  // 👇 Point to your custom service worker
-  srcDir: 'public',
-  filename: 'service-worker.js',
-  strategies: 'injectManifest', // required for custom sw
+  strategies: 'injectManifest',
   injectManifest: {
-    swSrc: 'public/service-worker.js',
+    swSrc: 'src/service-worker.js',      // ✅ correct path
     swDest: 'service-worker.js'
   },
   manifest: {
-    name: env.VITE_APP_NAME || 'Nike Redesign',
+    name: 'Nike Redesign',
     short_name: 'Nike',
     start_url: '/',
     display: 'standalone',
@@ -41,6 +38,7 @@ export default defineConfig(({ mode }) => {
     ]
   }
 })
+
 
 
     ],
