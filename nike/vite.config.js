@@ -4,43 +4,39 @@ import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 export default defineConfig(({ mode }) => {
-  // Load env file based on `mode` in the root directory
   const env = loadEnv(mode, process.cwd());
 
   return {
     plugins: [
       react(),
-VitePWA({
-  registerType: 'autoUpdate',
-  strategies: 'injectManifest',
-  injectManifest: {
-    swSrc: 'src/service-worker.js',      // ✅ correct path
-    swDest: 'service-worker.js'
-  },
-  manifest: {
-    name: 'Nike Redesign',
-    short_name: 'Nike',
-    start_url: '/',
-    display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#000000',
-    icons: [
-      {
-        src: '/icons/icon-192x192.png',
-        sizes: '192x192',
-        type: 'image/png'
-      },
-      {
-        src: '/icons/icon-512x512.png',
-        sizes: '512x512',
-        type: 'image/png'
-      }
-    ]
-  }
-})
-
-
-
+      VitePWA({
+        registerType: 'autoUpdate',
+        strategies: 'injectManifest',
+        injectManifest: {
+          swSrc: 'src/service-worker.js',  // ✅ correct file inside src
+          swDest: 'service-worker.js'
+        },
+        manifest: {
+          name: 'Nike Redesign',
+          short_name: 'Nike',
+          start_url: '/',
+          display: 'standalone',
+          background_color: '#ffffff',
+          theme_color: '#000000',
+          icons: [
+            {
+              src: '/icons/icon-192x192.png',
+              sizes: '192x192',
+              type: 'image/png'
+            },
+            {
+              src: '/icons/icon-512x512.png',
+              sizes: '512x512',
+              type: 'image/png'
+            }
+          ]
+        }
+      })
     ],
     resolve: {
       alias: {
