@@ -1,13 +1,14 @@
-// Listen for push events
+// public/service-worker.js
+
 self.addEventListener("push", function (event) {
-  const data = event.data.json();
+  const data = event.data?.json() || {};
 
   const options = {
-    body: data.body || "You have a new update",
+    body: data.body || "You have a new notification",
     icon: "/logo192.png",
     badge: "/logo192.png",
     data: {
-      url: data.url || "/", // This will be used in notification click
+      url: data.url || "/",
     },
   };
 
@@ -16,15 +17,13 @@ self.addEventListener("push", function (event) {
   );
 });
 
-// Handle notification click
 self.addEventListener("notificationclick", function (event) {
   event.notification.close();
   const targetUrl = event.notification.data.url;
 
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (clientList) {
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        // Check if it's the same origin and not already at the target
         if (client.url === targetUrl && "focus" in client) {
           return client.focus();
         }
@@ -35,5 +34,3 @@ self.addEventListener("notificationclick", function (event) {
     })
   );
 });
-
-
