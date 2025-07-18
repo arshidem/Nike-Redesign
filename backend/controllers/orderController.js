@@ -219,26 +219,34 @@ exports.verifyPayment = async (req, res) => {
 console.log(orderData);
 
     // 8. Notify admins about new order
-    const io = req.app.get("io");
-    const { adminSockets } = require("../utils/socketState");
-console.log("🧠 All admin sockets:", adminSockets);
+  // Remove these imports at top of file:
+// const sendPushNotification = require("../utils/push");
 
-    adminSockets.forEach((adminUser, socketId) => {
-      io.to(socketId).emit("new-order", {
-        orderId: newOrder[0]._id,
-        user: {
-          id: req.user._id,
-          name: req.user.name,
-          email: req.user.email,
-        },
-        totalPrice,
-        itemCount: req.body.items.length,
-        paidAt: orderData.paidAt,
-        status: orderData.status,
-      });
-    });
+// In your verifyPayment function, replace the notification section with:
 
-    console.log('✅ Admin notified: New order placed');
+// 8. Notify admins about new order (foreground only)
+const io = req.app.get("io");
+const { adminSockets } = require("../utils/socketState");
+
+adminSockets.forEach((adminUser, socketId) => {
+  io.to(socketId).emit("new-order", {
+    type: "toast", // Explicitly specify notification type
+    data: {
+      orderId: newOrder[0]._id,
+      user: {
+        id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+      },
+      totalPrice,
+      itemCount: req.body.items.length,
+      paidAt: orderData.paidAt,
+      status: orderData.status,
+    }
+  });
+});
+
+console.log('✅ Admin notified via toast: New order placed');
 const sendPushNotification = require("../utils/push");
 
 // After new order is created:

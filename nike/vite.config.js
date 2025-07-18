@@ -1,58 +1,56 @@
-import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
-import path from 'path';
+import { defineConfig } from "vite";
+import { VitePWA } from "vite-plugin-pwa";
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd());
-
-  return {
-    plugins: [
-      react(),
-      VitePWA({
-        registerType: 'autoUpdate',
-        strategies: 'injectManifest',
-        injectManifest: {
-          swSrc: 'public/service-worker.js',
-          swDest: 'service-worker.js'
-        },
-        manifest: {
-          name: 'Nike Redesign',
-          short_name: 'Nike',
-          start_url: '/',
-          display: 'standalone',
-          background_color: '#ffffff',
-          theme_color: '#000000',
-          icons: [
-            {
-              src: '/icons/icon-192x192.png',
-              sizes: '192x192',
-              type: 'image/png'
-            },
-            {
-              src: '/icons/icon-512x512.png',
-              sizes: '512x512',
-              type: 'image/png'
+export default defineConfig({
+  plugins: [
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'My App',
+        short_name: 'App',
+        description: 'My Awesome App',
+        theme_color: '#ffffff',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/api\.example\.com\/api/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+              }
             }
-          ]
-        }
-      })
-    ],
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src'),
-        '~': path.resolve(__dirname, './public')
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
+              }
+            }
+          }
+        ]
       }
-    },
-    server: {
-      port: 5173,
-      proxy: {
-        '/api': {
-          target: env.VITE_BACKEND_URL, // ✅ FIXED HERE
-          changeOrigin: true,
-          secure: false
-        }
-      }
-    }
-  };
-});
+    })
+  ]
+})
