@@ -52,7 +52,7 @@ const AccountDetails = () => {
         const data = await getMe();
         const userData = {
           name: data.name || "",
-          phoneNumber: data.phoneNumber || "",
+          phone: data.phone || "",
           dob: data.dob || "",
           country: data.country || "",
           state: data.state || "",
@@ -93,7 +93,7 @@ const AccountDetails = () => {
       toast.success("Profile updated successfully");
       const updated = {
         name: res.user.name || "",
-        phoneNumber: res.user.phoneNumber || "",
+        phone: res.user.phone || "",
         dob: res.user.dob || "",
         country: res.user.country || "",
         state: res.user.state || "",
@@ -192,7 +192,7 @@ const AccountDetails = () => {
             className="w-full mt-1 border rounded p-2 bg-gray-100"
           />
         </div>
-        {renderField("Phone", "phoneNumber")}
+        {renderField("Phone", "phone")}
         {renderField("Date of Birth", "dob", "date")}
 
         <div className="mt-6">

@@ -1088,17 +1088,17 @@ exports.getProductAnalytics = async (req, res) => {
       }
 
       // Cold products (no sales in last month and low views)
-    if ((product.sold || 0) <= 5) {
-        analytics.coldProducts.push({
-          _id: product._id,
-          name: product.name,
-          slug: product.slug,
-          views: product.views || 0,
-          sold: product.sold || 0,
-          image: productImage,
-          lastSold: product.updatedAt // You might want to add this to see when it last sold
-        });
-      }
+  if (productSales.thisMonth === 0 && productSales.allTime <= 5) {
+  analytics.coldProducts.push({
+    _id: product._id,
+    name: product.name,
+    slug: product.slug,
+    views: product.views || 0,
+    sold: productSales.allTime,
+    image: productImage,
+    lastSold: product.updatedAt
+  });
+}
     }
 
     // Sort trending products for each period

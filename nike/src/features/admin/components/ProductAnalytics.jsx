@@ -30,7 +30,9 @@ const COLORS = [
 
 const formatImageUrl = (imagePath, backendUrl) => {
   if (!imagePath || typeof imagePath !== "string") return "/placeholder.jpg";
-  const match = imagePath.match(/uploads[\\/][\w\-.]+\.(jpg|jpeg|png|webp|avif)/i);
+  const match = imagePath.match(
+    /uploads[\\/][\w\-.]+\.(jpg|jpeg|png|webp|avif)/i
+  );
   const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
   return `${backendUrl}/${relativePath}`;
 };
@@ -38,29 +40,54 @@ const formatImageUrl = (imagePath, backendUrl) => {
 const ProductAnalytics = () => {
   const { fetchProductAnalytics } = useProductService();
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingSummary, setLoadingSummary] = useState(true);
+  const [loadingCategory, setLoadingCategory] = useState(true);
+  const [loadingGender, setLoadingGender] = useState(true);
+  const [loadingTrending, setLoadingTrending] = useState(true);
+  const [loadingCold, setLoadingCold] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { backendUrl } = useAppContext();
-  
+
   // State for time period filters
   const [trendingPeriod, setTrendingPeriod] = useState("week");
   const [coldPeriod, setColdPeriod] = useState("month");
 
   useEffect(() => {
     let isMounted = true;
+
     const loadAnalytics = async () => {
       try {
-        setLoading(true);
+        setLoadingSummary(true);
+        setLoadingCategory(true);
+        setLoadingGender(true);
+        setLoadingTrending(true);
+        setLoadingCold(true);
         setError(null);
+
         const res = await fetchProductAnalytics();
-        if (isMounted) setData(res);
+        if (!isMounted) return;
+
+        setData(res);
+
+        // Set loaders off for each section (optional: based on actual data)
+        setLoadingSummary(false);
+        setLoadingCategory(false);
+        setLoadingGender(false);
+        setLoadingTrending(false);
+        setLoadingCold(false);
       } catch (err) {
-        if (isMounted) setError(err.message || "Failed to load analytics data");
-      } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setError(err.message || "Failed to load analytics data");
+          setLoadingSummary(false);
+          setLoadingCategory(false);
+          setLoadingGender(false);
+          setLoadingTrending(false);
+          setLoadingCold(false);
+        }
       }
     };
+
     loadAnalytics();
     return () => {
       isMounted = false;
@@ -74,63 +101,90 @@ const ProductAnalytics = () => {
   const handleStockDetailsClick = () => {
     navigate("/admin/stock-details");
   };
-// In your ProductAnalytics component, update the processedData memo:
-const processedData = useMemo(() => {
-  if (!data) return null;
-  
-  // Get the correct trending products based on selected period
-  const getTrendingProducts = () => {
-    if (!data.trendingProducts) return [];
-    
-    if (typeof data.trendingProducts === 'object' && !Array.isArray(data.trendingProducts)) {
-      // New format with time periods
-      return data.trendingProducts[trendingPeriod] || [];
-    }
-    
-    // Fallback to old array format
-    return Array.isArray(data.trendingProducts) ? data.trendingProducts.slice(0, 5) : [];
-  };
-  
-  // Get total units sold for display
-  const getTotalUnitsSold = () => {
-    if (typeof data.totalUnitsSold === 'object') {
-      // Return the allTime count if available, or sum all periods
-      return data.totalUnitsSold.allTime || 
-             Object.values(data.totalUnitsSold).reduce((sum, val) => sum + val, 0);
-    }
-    return data.totalUnitsSold || 0;
-  };
-  
-  return {
-    ...data,
-    categoryBreakdown: Array.isArray(data.categoryBreakdown) ? data.categoryBreakdown : [],
-    genderBreakdown: Array.isArray(data.genderBreakdown) ? data.genderBreakdown : [],
-    trendingProducts: getTrendingProducts(),
-    coldProducts: Array.isArray(data.coldProducts) ? data.coldProducts.slice(0, 5) : [],
-    totalUnitsSold: getTotalUnitsSold(),
-  };
-}, [data, trendingPeriod, coldPeriod]);
+  // In your ProductAnalytics component, update the processedData memo:
+  const processedData = useMemo(() => {
+    if (!data) return null;
 
-  if (loading) {
-    return (
-      <div className="p-4 space-y-6">
-        <Skeleton height={32} width={200} />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(6)].map((_, i) => <Skeleton key={i} height={80} />)}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} height={300} />)}
-        </div>
-      </div>
-    );
-  }
+    // Get the correct trending products based on selected period
+    const getTrendingProducts = () => {
+      if (!data.trendingProducts) return [];
+
+      if (
+        typeof data.trendingProducts === "object" &&
+        !Array.isArray(data.trendingProducts)
+      ) {
+        // New format with time periods
+        return data.trendingProducts[trendingPeriod] || [];
+      }
+
+      // Fallback to old array format
+      return Array.isArray(data.trendingProducts)
+        ? data.trendingProducts.slice(0, 5)
+        : [];
+    };
+
+    // Get total units sold for display
+    const getTotalUnitsSold = () => {
+      if (typeof data.totalUnitsSold === "object") {
+        // Return the allTime count if available, or sum all periods
+        return (
+          data.totalUnitsSold.allTime ||
+          Object.values(data.totalUnitsSold).reduce((sum, val) => sum + val, 0)
+        );
+      }
+      return data.totalUnitsSold || 0;
+    };
+
+    return {
+      ...data,
+      categoryBreakdown: Array.isArray(data.categoryBreakdown)
+        ? data.categoryBreakdown
+        : [],
+      genderBreakdown: Array.isArray(data.genderBreakdown)
+        ? data.genderBreakdown
+        : [],
+      trendingProducts: getTrendingProducts(),
+      coldProducts: Array.isArray(data.coldProducts)
+        ? data.coldProducts.slice(0, 5)
+        : [],
+      totalUnitsSold: getTotalUnitsSold(),
+    };
+  }, [data, trendingPeriod, coldPeriod]);
+
+  const {
+    totalProducts = 0,
+    totalVariants = 0,
+    totalUnitsSold = 0,
+    totalReviews = 0,
+    categoryBreakdown = [],
+    genderBreakdown = [],
+} = processedData || {};
+
+<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  {loadingSummary ? (
+    [...Array(4)].map((_, i) => <Skeleton key={i} height={80} />)
+  ) : (
+    <>
+<SummaryCard label="Total Products" value={processedData?.totalProducts || 0} />
+      <SummaryCard label="Total Variants" value={totalVariants} />
+      <SummaryCard label="Total Sold" value={totalUnitsSold} />
+      <SummaryCard label="Total Reviews" value={totalReviews} />
+    </>
+  )}
+</div>
+
 
   if (error) {
     return (
       <div className="p-4 bg-red-50 rounded-lg">
-        <h2 className="text-xl font-semibold text-red-600">Error Loading Analytics</h2>
+        <h2 className="text-xl font-semibold text-red-600">
+          Error Loading Analytics
+        </h2>
         <p className="text-red-500">{error}</p>
-        <button onClick={() => window.location.reload()} className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200">
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
+        >
           Retry
         </button>
       </div>
@@ -140,26 +194,24 @@ const processedData = useMemo(() => {
   if (!processedData) {
     return (
       <div className="p-4 bg-yellow-50 rounded-lg">
-        <h2 className="text-xl font-semibold text-yellow-600">No Data Available</h2>
-        <p className="text-yellow-700">There is no analytics data to display.</p>
+        <h2 className="text-xl font-semibold text-yellow-600">
+          No Data Available
+        </h2>
+        <p className="text-yellow-700">
+          There is no analytics data to display.
+        </p>
       </div>
     );
   }
-
-  const {
-    totalProducts = 0,
-    totalVariants = 0,
-    totalUnitsSold = 0,
-    totalReviews = 0,
-    categoryBreakdown = [],
-    genderBreakdown = [],
-  } = processedData;
 
   return (
     <div className="p-4 space-y-6 bg-white text-black">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Product Analytics</h2>
-        <button onClick={handleStockDetailsClick} className="px-4 py-2 bg-black text-white rounded hover:opacity-90 transition">
+        <button
+          onClick={handleStockDetailsClick}
+          className="px-4 py-2 bg-black text-white rounded hover:opacity-90 transition"
+        >
           View Stock Details
         </button>
       </div>
@@ -167,30 +219,40 @@ const processedData = useMemo(() => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <SummaryCard label="Total Products" value={totalProducts} />
         <SummaryCard label="Total Variants" value={totalVariants} />
-<SummaryCard label="Total Sold" value={totalUnitsSold} />
+        <SummaryCard label="Total Sold" value={totalUnitsSold} />
         <SummaryCard label="Total Reviews" value={totalReviews} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ChartCard title="Category Breakdown">
-          {categoryBreakdown.length > 0 ? (
+          {loadingCategory ? (
+            <Skeleton height={300} />
+          ) : categoryBreakdown.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
                   data={categoryBreakdown}
-                  cx="50%" cy="50%"
+                  cx="50%"
+                  cy="50%"
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
                   nameKey="name"
                   labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) =>
+                    `${name}: ${(percent * 100).toFixed(0)}%`
+                  }
                 >
                   {categoryBreakdown.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => [`${value} products`, "Count"]} />
+                <Tooltip
+                  formatter={(value) => [`${value} products`, "Count"]}
+                />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -202,13 +264,20 @@ const processedData = useMemo(() => {
         </ChartCard>
 
         <ChartCard title="Gender Breakdown">
-          {genderBreakdown.length > 0 ? (
+          {loadingGender ? (
+            <Skeleton height={300} />
+          ) : genderBreakdown.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={genderBreakdown}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="gender" tickFormatter={(v) => v.charAt(0).toUpperCase() + v.slice(1)} />
+                <XAxis
+                  dataKey="gender"
+                  tickFormatter={(v) => v.charAt(0).toUpperCase() + v.slice(1)}
+                />
                 <YAxis />
-                <Tooltip formatter={(value) => [`${value} products`, "Count"]} />
+                <Tooltip
+                  formatter={(value) => [`${value} products`, "Count"]}
+                />
                 <Bar dataKey="count" fill="#82ca9d" radius={[4, 4, 0, 0]} />
                 <Legend />
               </BarChart>
@@ -236,12 +305,21 @@ const processedData = useMemo(() => {
               <option value="year">This Year</option>
             </select>
           </div>
-          <ProductList 
-            products={processedData.trendingProducts} 
-            onClick={handleProductClick} 
-            backendUrl={backendUrl}
-            emptyMessage={`No trending products in the last ${trendingPeriod === 'today' ? 'day' : trendingPeriod}`}
-          />
+
+          {loadingTrending ? (
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} height={60} />
+              ))}
+            </div>
+          ) : (
+            <ProductList
+              products={processedData.trendingProducts}
+              onClick={handleProductClick}
+              backendUrl={backendUrl}
+              emptyMessage={`No trending products in the last ${trendingPeriod}`}
+            />
+          )}
         </div>
 
         <div className="bg-white shadow-md rounded-lg p-4">
@@ -257,12 +335,21 @@ const processedData = useMemo(() => {
               <option value="year">This Year</option>
             </select>
           </div>
-          <ProductList 
-            products={processedData.coldProducts} 
-            onClick={handleProductClick} 
-            backendUrl={backendUrl}
-            emptyMessage={`No cold products in the last ${coldPeriod}`}
-          />
+
+          {loadingCold ? (
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} height={60} />
+              ))}
+            </div>
+          ) : (
+            <ProductList
+              products={processedData.coldProducts}
+              onClick={handleProductClick}
+              backendUrl={backendUrl}
+              emptyMessage={`No cold products in the last ${coldPeriod}`}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -271,12 +358,20 @@ const processedData = useMemo(() => {
 
 // Sub-components (keep these the same as before)
 const SummaryCard = ({ label, value, icon, isWarning = false }) => (
-  <div className={`bg-white shadow-md rounded-lg p-4 ${isWarning ? "border-l-4 border-yellow-500" : ""}`}>
+  <div
+    className={`bg-white shadow-md rounded-lg p-4 ${
+      isWarning ? "border-l-4 border-yellow-500" : ""
+    }`}
+  >
     <div className="flex items-center justify-between">
       <p className="text-gray-500 text-sm">{label}</p>
       <span className="text-lg">{icon}</span>
     </div>
-    <h3 className={`text-xl font-semibold ${isWarning ? "text-yellow-600" : "text-gray-800"}`}>
+    <h3
+      className={`text-xl font-semibold ${
+        isWarning ? "text-yellow-600" : "text-gray-800"
+      }`}
+    >
       {value.toLocaleString()}
     </h3>
   </div>
@@ -289,13 +384,22 @@ const ChartCard = ({ title, children }) => (
   </div>
 );
 
-const ProductList = ({ title, products = [], emptyMessage = "No products found", onClick, backendUrl }) => (
+const ProductList = ({
+  title,
+  products = [],
+  emptyMessage = "No products found",
+  onClick,
+  backendUrl,
+}) => (
   <div>
     {title && <h4 className="font-medium text-gray-700 mb-3">{title}</h4>}
     <ul className="space-y-3">
       {products.length > 0 ? (
         products.map((p) => (
-          <li key={p._id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0 hover:bg-gray-50 p-2 rounded">
+          <li
+            key={p._id}
+            className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0 hover:bg-gray-50 p-2 rounded"
+          >
             <img
               src={formatImageUrl(p.image, backendUrl)}
               alt={p.name}
@@ -303,10 +407,16 @@ const ProductList = ({ title, products = [], emptyMessage = "No products found",
               onClick={() => onClick(p.slug)}
             />
             <div className="flex-1">
-              <p className="text-sm font-medium cursor-pointer hover:text-blue-600" onClick={() => onClick(p.slug)}>
+              <p
+                className="text-sm font-medium cursor-pointer hover:text-blue-600"
+                onClick={() => onClick(p.slug)}
+              >
                 {p.name}
               </p>
-              <p className="text-xs text-gray-400">{p.views?.toLocaleString() || 0} views • {p.sold?.toLocaleString() || 0} sold</p>
+              <p className="text-xs text-gray-400">
+                {p.views?.toLocaleString() || 0} views •{" "}
+                {p.sold?.toLocaleString() || 0} sold
+              </p>
             </div>
           </li>
         ))
@@ -332,14 +442,16 @@ ChartCard.propTypes = {
 
 ProductList.propTypes = {
   title: PropTypes.string,
-  products: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-    views: PropTypes.number,
-    sold: PropTypes.number,
-    slug: PropTypes.string,
-    image: PropTypes.string,
-  })),
+  products: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      views: PropTypes.number,
+      sold: PropTypes.number,
+      slug: PropTypes.string,
+      image: PropTypes.string,
+    })
+  ),
   emptyMessage: PropTypes.string,
   onClick: PropTypes.func.isRequired,
   backendUrl: PropTypes.string.isRequired,

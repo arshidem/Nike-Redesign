@@ -73,7 +73,7 @@ export default function Order() {
                   className="flex items-start gap-4 p-4 bg-white rounded-lg border hover:border-gray-300 shadow-sm transition"
                 >
                   <img
-                    src={formatImageUrl(order.items[0]?.product?.featuredImg)}
+                    src={formatImageUrl(order.items[0]?.image)}
                     alt="product"
                     className="w-20 h-20 object-contain rounded bg-gray-50"
                   />

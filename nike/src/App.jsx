@@ -5,7 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-
+import { io } from "socket.io-client";
 import Home from "./features/user/pages/Home";
 import { LogoLoader } from "./features/user/components/LogoLoader";
 import CategoryPage from "./features/user/pages/ModelPage";
@@ -34,13 +34,140 @@ import Order from "./features/user/pages/Order";
 import OrderDetails from "./features/user/pages/OrderDetails";
 
 import ProductListPage from "./features/user/pages/ProductListPage";
-
+import toast, { Toaster } from "react-hot-toast";
+const publicVapidKey = import.meta.env.VAPID_PUBLIC_KEY
 
 function App() {
-  const { user, isAuthenticated } = useAppContext();
+  const { user, isAuthenticated,backendUrl } = useAppContext();
+  console.log(backendUrl);
+
+
+   useEffect(() => {
+    const subscribeUser = async () => {
+      if (!("serviceWorker" in navigator)) {
+        console.warn("Service Worker not supported");
+        return;
+      }
+
+      try {
+        const registration = await navigator.serviceWorker.ready;
+
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
+        });
+
+        // Send subscription to backend
+        await fetch("/api/subscribe", {
+          method: "POST",
+          body: JSON.stringify(subscription),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        console.log("📩 User subscribed to push notifications");
+      } catch (error) {
+        console.error("❌ Failed to subscribe user:", error);
+      }
+    };
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+      const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+      const rawData = window.atob(base64);
+      return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+    }
+
+    subscribeUser();
+  }, []);
+  useEffect(() => {
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/service-worker.js")
+      .then((reg) => {
+        console.log("✅ Service Worker registered:", reg.scope);
+      })
+      .catch((err) => {
+        console.error("❌ Service Worker registration failed:", err);
+      });
+  });
+}
+
+}, []);
+
+ useEffect(() => {
+  if (!user || user.role !== "admin") {
+    console.log("🛑 Not an admin or user not logged in");
+    return;
+  }
+
+  console.log("✅ Admin detected, initializing socket...");
+  const socket = io(backendUrl); // Replace with your backend URL
+
+  socket.on("connect", () => {
+    console.log("🔌 Connected to Socket.IO server with ID:", socket.id);
+
+    // Identify this socket as admin
+    socket.emit("identify", { role: "admin", email: user.email });
+    console.log("📨 Sent 'identify' event as admin:", user.email);
+  });
+
+  // Ask for notification permission
+  if (Notification.permission !== "granted") {
+    console.log("🔔 Requesting notification permission...");
+    Notification.requestPermission().then((permission) => {
+      console.log("📝 Notification permission result:", permission);
+    });
+  } else {
+    console.log("✅ Notification permission already granted");
+  }
+
+  // Listen for new order events
+ socket.on("new-order", (orderData) => {
+  console.log("📦 New Order Received from server:", orderData);
+
+  if (Notification.permission === "granted") {
+    const notification = new Notification("🛒 New Order Received", {
+      body: `From: ${orderData.user.email}\nTotal: ₹${orderData.totalPrice}`,
+      icon: "/logo192.png",
+      vibrate: [200, 100, 200], // Note: This only works with Push API, not here
+    });
+
+    // Trigger manual vibration (Android only)
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 200]); // vibrate-pause-vibrate
+      console.log("📳 Vibrating device");
+    }
+
+    console.log("🔔 Notification shown");
+  } else {
+    console.warn("🚫 Notification permission not granted");
+  }
+
+  // Fallback toast
+  toast.success(`New order from ${orderData.user.email}`);
+});
+
+
+  socket.on("disconnect", () => {
+    console.warn("❌ Disconnected from socket server");
+  });
+
+  socket.on("connect_error", (err) => {
+    console.error("❗Socket connection error:", err.message);
+  });
+
+  return () => {
+    console.log("🔌 Cleaning up socket connection");
+    socket.disconnect();
+  };
+}, [user]);
 
   return (
     <> 
+     <Toaster position="top-right" />
      <AppRoutes user={user} isAuthenticated={isAuthenticated} />
        </>
   );

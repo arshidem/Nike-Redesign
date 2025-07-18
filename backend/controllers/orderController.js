@@ -103,6 +103,7 @@ exports.verifyPayment = async (req, res) => {
       razorpay_signature,
       email,
     } = req.body;
+    
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -126,49 +127,45 @@ exports.verifyPayment = async (req, res) => {
     const taxPrice = Math.round(itemsPrice * 0.05);
     const totalPrice = itemsPrice + shippingPrice + taxPrice;
 
-    // 3. Create order
-    const newOrder = await Order.create(
-      [
-        {
-          user: req.user._id,
-          items: req.body.items.map((item) => ({
-            product: item.product,
-            title: item.title,
-            image: item.image,
-            price: item.price,
-            quantity: item.quantity,
-            size: item.size,
-            color: item.color,
-            variantId: item.variantId,
-          })),
-          shippingAddress: req.body.address,
-          paymentMethod: "card",
-          paymentResult: {
-            id: razorpay_payment_id,
-            status: "completed",
-            update_time: new Date(),
-            email_address: email,
-          },
-          itemsPrice,
-          shippingPrice,
-          taxPrice,
-          totalPrice,
-          isPaid: true,
-          paidAt: new Date(),
-          status: "processing",
-        },
-      ],
-      { session }
-    );
+    // 3. Create order document
+    const orderData = {
+      user: req.user._id,
+      items: req.body.items.map((item) => ({
+        product: item.product,
+        title: item.title,
+        image: item.image,
+        price: item.price,
+        quantity: item.quantity,
+        size: item.size,
+        color: item.color,
+        variantId: item.variantId,
+      })),
+      shippingAddress: req.body.address,
+      paymentMethod: "card",
+      paymentResult: {
+        id: razorpay_payment_id,
+        status: "completed",
+        update_time: new Date(),
+        email_address: email,
+      },
+      itemsPrice,
+      shippingPrice,
+      taxPrice,
+      totalPrice,
+      isPaid: true,
+      paidAt: new Date(),
+      status: "processing",
+    };
 
-    // 4. Validate and update stock for all items
+    // 4. Create order in database
+    const newOrder = await Order.create([orderData], { session });
+
+    // 5. Validate and update stock for all items
     const stockUpdates = await Promise.all(
       req.body.items.map(async (item) => {
         try {
-          const product = await Product.findById(item.product).lean();
-          const variant = product?.variants?.find(
-            (v) => v.color === item.color
-          );
+          const product = await Product.findById(item.product).session(session).lean();
+          const variant = product?.variants?.find((v) => v.color === item.color);
           const sizeObj = variant?.sizes?.find((s) => s.size === item.size);
 
           if (!variant || !sizeObj || sizeObj.stock < item.quantity) {
@@ -207,7 +204,7 @@ exports.verifyPayment = async (req, res) => {
       })
     );
 
-    // 5. If any failed updates, abort
+    // 6. Check for failed stock updates
     const failedUpdates = stockUpdates.filter((update) => !update.success);
     if (failedUpdates.length > 0) {
       throw new Error(
@@ -216,23 +213,60 @@ exports.verifyPayment = async (req, res) => {
       );
     }
 
-    // 6. Commit transaction
-    // 6. Commit transaction
+    // 7. Commit transaction
+       // 7. Commit transaction
     await session.commitTransaction();
+console.log(orderData);
 
-    // 7. Send confirmation email (non-critical)
-    // 7. Send test email (non-critical)
+    // 8. Notify admins about new order
+    const io = req.app.get("io");
+    const { adminSockets } = require("../utils/socketState");
+console.log("🧠 All admin sockets:", adminSockets);
+
+    adminSockets.forEach((adminUser, socketId) => {
+      io.to(socketId).emit("new-order", {
+        orderId: newOrder[0]._id,
+        user: {
+          id: req.user._id,
+          name: req.user.name,
+          email: req.user.email,
+        },
+        totalPrice,
+        itemCount: req.body.items.length,
+        paidAt: orderData.paidAt,
+        status: orderData.status,
+      });
+    });
+
+    console.log('✅ Admin notified: New order placed');
+const sendPushNotification = require("../utils/push");
+
+// After new order is created:
+const payload = {
+  title: "🛒 New Order!",
+  body: `From: ${req.user.email} | Total: ₹${totalPrice}`,
+  fullUrl: `${process.env.FRONTEND_URL}/admin`,
+};
+
+await sendPushNotification(adminPushSubscription, payload);
+
+
+ 
+    // 9. Send order confirmation email (non-critical operation)
     try {
-      // Send to actual customer email with real order data
       await sendOrderConfirmation(
-        req.body.email, // Customer's email from request
-        newOrder[0] // The created order document
+        email,
+        {
+          ...newOrder[0].toObject(),
+          customerName: req.user.name
+        }
       );
-      console.log("Test email was sent successfully");
     } catch (emailError) {
-      console.error("Test email failed:", emailError);
+      console.error("Order confirmation email failed:", emailError);
+      // Not failing the request because email is non-critical
     }
-    // 8. Success response
+
+    // 10. Success response
     res.status(200).json({
       success: true,
       message: "Order placed successfully",
@@ -242,9 +276,11 @@ exports.verifyPayment = async (req, res) => {
         newStock: u.newStock,
       })),
     });
+
   } catch (error) {
     await session.abortTransaction();
     console.error("Order processing failed:", error);
+    
     res.status(500).json({
       success: false,
       message: "Order processing failed",
@@ -261,7 +297,6 @@ exports.verifyPayment = async (req, res) => {
     session.endSession();
   }
 };
-
 // Get user orders
 // Get user orders
 exports.getUserOrders = async (req, res) => {

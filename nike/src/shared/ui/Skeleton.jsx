@@ -210,7 +210,10 @@ export const OrderDetailsSkeleton = () => (
     <div className="bg-white p-4 rounded shadow-sm">
       <Skeleton width={100} height={18} className="mb-4" />
       {[...Array(2)].map((_, i) => (
-        <div key={i} className="flex items-center justify-between border-b py-3">
+        <div
+          key={i}
+          className="flex items-center justify-between border-b py-3"
+        >
           <Skeleton height={56} width={56} />
           <Skeleton height={16} width="50%" />
           <Skeleton height={16} width={60} />
@@ -249,7 +252,6 @@ export const ProfileSkeleton = () => (
     ))}
   </div>
 );
-
 
 export const AdminProductDetailsSkeleton = () => (
   <div className="max-w-7xl mx-auto sm:pt-14 pt-12 px-4">
@@ -394,9 +396,12 @@ export const UpdateProductSkeleton = () => {
           {/* Variants Section */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <Skeleton className="h-6 w-48 mb-4" />
-            
+
             {[...Array(2)].map((_, variantIndex) => (
-              <div key={variantIndex} className="mb-8 border-b pb-6 last:border-b-0">
+              <div
+                key={variantIndex}
+                className="mb-8 border-b pb-6 last:border-b-0"
+              >
                 <div className="flex justify-between items-center mb-4">
                   <Skeleton className="h-5 w-32" />
                   <Skeleton className="h-4 w-20" />
@@ -418,9 +423,12 @@ export const UpdateProductSkeleton = () => {
                     <Skeleton className="h-4 w-24" />
                     <Skeleton className="h-4 w-20" />
                   </div>
-                  
+
                   {[...Array(3)].map((_, sizeIndex) => (
-                    <div key={sizeIndex} className="grid grid-cols-3 gap-3 mb-3">
+                    <div
+                      key={sizeIndex}
+                      className="grid grid-cols-3 gap-3 mb-3"
+                    >
                       <Skeleton className="h-10" />
                       <Skeleton className="h-10" />
                       <Skeleton className="h-10" />
@@ -456,7 +464,6 @@ export const UpdateProductSkeleton = () => {
     </div>
   );
 };
-
 
 export const AccountDetailsSkeleton = () => {
   return (
@@ -536,7 +543,6 @@ export const AccountDetailsSkeleton = () => {
   );
 };
 
-
 export const DeliveryAddressesSkeleton = () => {
   return (
     <div className="p-6">
@@ -552,7 +558,7 @@ export const DeliveryAddressesSkeleton = () => {
           <div key={index} className="border p-4 rounded relative">
             {/* Default Badge */}
             <Skeleton className="absolute top-2 right-2 h-5 w-16 rounded" />
-            
+
             {/* Address Content */}
             <div className="space-y-2">
               <Skeleton className="h-5 w-40" />
@@ -561,71 +567,14 @@ export const DeliveryAddressesSkeleton = () => {
               <Skeleton className="h-4 w-56" />
               <Skeleton className="h-4 w-48" />
             </div>
-            
+
             {/* Edit Button */}
-            <Skeleton className="absolute bottom-2 right-2 h-5 w-5 rounded-full" />
           </div>
         ))}
-      </div>
-
-      {/* Empty State (commented out since we're showing skeleton addresses) */}
-      {/* <div className="text-center text-gray-500 mt-8 space-y-2">
-        <Skeleton className="h-5 w-64 mx-auto" />
-        <Skeleton className="h-4 w-80 mx-auto" />
-      </div> */}
-
-      {/* Form Modal Skeleton */}
-      <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center">
-        <div className="bg-white p-6 rounded-xl w-[90%] max-w-lg relative">
-          {/* Modal Header */}
-          <div className="flex justify-between items-center mb-4">
-            <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-6 w-6 rounded-full" />
-          </div>
-
-          {/* Form Fields */}
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Skeleton className="flex-1 h-10" />
-              <Skeleton className="flex-1 h-10" />
-            </div>
-            
-            <Skeleton className="w-full h-10" />
-            <Skeleton className="w-full h-10" />
-            <Skeleton className="w-full h-10" />
-            <Skeleton className="w-full h-10" />
-            <Skeleton className="w-full h-10" />
-            <Skeleton className="w-full h-10" />
-            
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-4 w-4" />
-              <Skeleton className="h-4 w-32" />
-            </div>
-
-            {/* Form Buttons */}
-            <div className="flex justify-between gap-3 pt-2">
-              <Skeleton className="flex-1 h-10" />
-              <Skeleton className="flex-1 h-10" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Delete Confirmation Modal */}
-      <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center">
-        <div className="bg-white p-6 rounded-xl w-[90%] max-w-md">
-          <Skeleton className="h-6 w-48 mb-2" />
-          <Skeleton className="h-4 w-64 mb-6" />
-          <div className="flex justify-end gap-3">
-            <Skeleton className="h-10 w-20" />
-            <Skeleton className="h-10 w-20" />
-          </div>
-        </div>
       </div>
     </div>
   );
 };
-
 
 export const FeaturedSkeleton = () => {
   return (
@@ -666,7 +615,7 @@ export const FeaturedSkeleton = () => {
         .featured-skeleton {
           padding: 20px;
         }
-        
+
         .featured-container-skeleton {
           position: relative;
           border-radius: 20px;
@@ -674,13 +623,13 @@ export const FeaturedSkeleton = () => {
           height: 500px;
           overflow: hidden;
         }
-        
+
         .shoe-card-skeleton {
           display: flex;
           height: 100%;
           position: relative;
         }
-        
+
         .text-side-skeleton {
           flex: 1;
           display: flex;
@@ -689,7 +638,7 @@ export const FeaturedSkeleton = () => {
           padding-right: 40px;
           z-index: 2;
         }
-        
+
         .image-side-skeleton {
           flex: 1;
           position: relative;
@@ -697,10 +646,10 @@ export const FeaturedSkeleton = () => {
           align-items: center;
           justify-content: center;
           z-index: 1;
-          background: rgba(0,0,0,0.05);
+          background: rgba(0, 0, 0, 0.05);
           border-radius: 10px;
         }
-        
+
         .big-nike-text-container-skeleton {
           position: absolute;
           top: 50%;
@@ -710,19 +659,19 @@ export const FeaturedSkeleton = () => {
           overflow: hidden;
           z-index: 0;
         }
-        
+
         .big-nike-text-skeleton {
           font-size: 120px;
           font-weight: 900;
-          color: rgba(0,0,0,0.03);
+          color: rgba(0, 0, 0, 0.03);
           line-height: 0.8;
           white-space: nowrap;
         }
-        
+
         .big-nike-text-skeleton.mirrored {
           transform: rotate(180deg) translateY(20px);
         }
-        
+
         .nav-buttons-skeleton {
           position: absolute;
           bottom: 30px;

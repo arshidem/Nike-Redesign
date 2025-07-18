@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useContext,
 } from "react";
+import { io } from 'socket.io-client';
 import { Link } from "react-router-dom";
 import useOrderServices from "../../user/services/orderServices";
 import Skeleton from "react-loading-skeleton";
@@ -61,7 +62,7 @@ export const AllOrders = () => {
     minTotalPrice: "",
     maxTotalPrice: "",
   });
-  const { backendUrl } = useAppContext(AppContext);
+  const { backendUrl,user } = useAppContext(AppContext);
   const [appliedFilters, setAppliedFilters] = useState({});
   // Bulk selection state
   const [selectMode, setSelectMode] = useState(false);
@@ -72,6 +73,7 @@ export const AllOrders = () => {
     delivered: "bg-green-100 text-green-600",
     cancelled: "bg-gray-200 text-gray-600",
   };
+
 
   const formatImageUrl = (imagePath) => {
     if (!imagePath || typeof imagePath !== "string") return "/placeholder.jpg";

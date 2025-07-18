@@ -26,6 +26,7 @@ export const OrderAnalytics = () => {
     getOrderTrends,
     getOrderStatusStats,
   } = useOrderServices();
+
   const { backendUrl } = useAppContext();
 
   const [summary, setSummary] = useState(null);
@@ -33,42 +34,89 @@ export const OrderAnalytics = () => {
   const [statusData, setStatusData] = useState([]);
   const [orderRange, setOrderRange] = useState("daily");
   const [statusRange, setStatusRange] = useState("month");
-  const [loading, setLoading] = useState(true);
 
-  const fetchDashboard = useCallback(async () => {
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [trendLoading, setTrendLoading] = useState(true);
+  const [statusLoading, setStatusLoading] = useState(true);
+
+  const fetchSummary = async () => {
     try {
-      setLoading(true);
-      const summaryRes = await getOrderSummary();
-      const trendsRes = await getOrderTrends(orderRange);
-      const statusRes = await getOrderStatusStats({ range: statusRange });
-
-      if (summaryRes.success) setSummary(summaryRes.data);
-      if (trendsRes.success) setDailyData(trendsRes.data);
-      if (statusRes.success) setStatusData(statusRes.data);
-    } catch (err) {
-      console.error("Error loading analytics", err);
+      setSummaryLoading(true);
+      const res = await getOrderSummary();
+      if (res.success) setSummary(res.data);
     } finally {
-      setLoading(false);
+      setSummaryLoading(false);
     }
-  }, [orderRange, statusRange]);
+  };
+
+  const fetchTrends = async () => {
+    try {
+      setTrendLoading(true);
+      const res = await getOrderTrends(orderRange);
+      if (res.success) setDailyData(res.data);
+    } finally {
+      setTrendLoading(false);
+    }
+  };
+
+  const fetchStatusStats = async () => {
+    try {
+      setStatusLoading(true);
+      const res = await getOrderStatusStats({ range: statusRange });
+      if (res.success) setStatusData(res.data);
+    } finally {
+      setStatusLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
+    fetchSummary();
+  }, []);
 
-  if (loading) {
-    return (
-      <div className="p-4 space-y-6">
-        <Skeleton height={32} width={200} />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} height={80} />)}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[...Array(2)].map((_, i) => <Skeleton key={i} height={300} />)}
-        </div>
+  useEffect(() => {
+    fetchTrends();
+  }, [orderRange]);
+
+  useEffect(() => {
+    fetchStatusStats();
+  }, [statusRange]);
+if (summaryLoading) {
+  return (
+    <div className="p-4 space-y-6">
+      {/* Summary Title Skeleton */}
+      <Skeleton height={32} width={200} />
+
+      {/* Summary Cards Skeleton */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <Skeleton key={i} height={80} />
+        ))}
       </div>
-    );
-  }
+
+      {/* Order Status Chart Skeleton */}
+      {statusLoading ? (
+        <Skeleton height={250} />
+      ) : statusData.length > 0 ? (
+        <ResponsiveContainer width="100%" height={250}>
+          {/* ...Your Status Chart Component... */}
+        </ResponsiveContainer>
+      ) : (
+        <div>No status data available.</div>
+      )}
+
+      {/* Trend Chart Skeleton */}
+      {trendLoading ? (
+        <Skeleton height={250} />
+      ) : dailyData.length > 0 ? (
+        <ResponsiveContainer width="100%" height={250}>
+          {/* ...Your Trend Chart Component... */}
+        </ResponsiveContainer>
+      ) : (
+        <div>No trend data available.</div>
+      )}
+    </div>
+  );
+}
 
   return (
     <div className="p-4 space-y-6 bg-white text-black">
@@ -77,12 +125,18 @@ export const OrderAnalytics = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <SummaryCard label="Today" value={`${summary.todayOrders} Orders`} subValue={formatCurrency(summary.todayRevenue)} />
-        <SummaryCard label="This Week" value={`${summary.weekOrders} Orders`} subValue={formatCurrency(summary.weekRevenue)} />
-        <SummaryCard label="This Month" value={`${summary.monthOrders} Orders`} subValue={formatCurrency(summary.monthRevenue)} />
-        <SummaryCard label="Total Revenue" value={`${summary.totalOrders} Orders`} subValue={formatCurrency(summary.totalRevenue)} />
-      </div>
+      {summaryLoading ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} height={80} />)}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <SummaryCard label="Today" value={`${summary.todayOrders} Orders`} subValue={formatCurrency(summary.todayRevenue)} />
+          <SummaryCard label="This Week" value={`${summary.weekOrders} Orders`} subValue={formatCurrency(summary.weekRevenue)} />
+          <SummaryCard label="This Month" value={`${summary.monthOrders} Orders`} subValue={formatCurrency(summary.monthRevenue)} />
+          <SummaryCard label="Total Revenue" value={`${summary.totalOrders} Orders`} subValue={formatCurrency(summary.totalRevenue)} />
+        </div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -99,7 +153,10 @@ export const OrderAnalytics = () => {
               <option value="yearly">Yearly</option>
             </select>
           </div>
-          {dailyData.length > 0 ? (
+
+          {trendLoading ? (
+            <Skeleton height={250} />
+          ) : dailyData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={dailyData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -139,7 +196,10 @@ export const OrderAnalytics = () => {
               <option value="year">This Year</option>
             </select>
           </div>
-          {statusData.length > 0 ? (
+
+          {statusLoading ? (
+            <Skeleton height={250} />
+          ) : statusData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
