@@ -24,8 +24,9 @@ self.addEventListener("notificationclick", function (event) {
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (clientList) {
       for (const client of clientList) {
-        if (client.url.includes(self.origin) && "focus" in client) {
-          return client.navigate(targetUrl).then((client) => client.focus());
+        // Check if it's the same origin and not already at the target
+        if (client.url === targetUrl && "focus" in client) {
+          return client.focus();
         }
       }
       if (clients.openWindow) {
@@ -34,4 +35,5 @@ self.addEventListener("notificationclick", function (event) {
     })
   );
 });
+
 
