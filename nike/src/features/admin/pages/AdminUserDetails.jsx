@@ -16,14 +16,18 @@ export const AdminUserDetails = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [error, setError] = useState(null);
 
+
   useEffect(() => {
     const loadUser = async () => {
       try {
         setLoading(true);
-        const userData = await fetchUserById(userId);
-        setUser(userData.data);
-      } catch (err) {
-        setError(err.message);
+    const userData = await fetchUserById(userId);
+if (userData?.data) {
+  setUser(userData.data);
+} else {
+  throw new Error("Invalid user data response");
+}
+
       } finally {
         setLoading(false);
       }
@@ -87,7 +91,7 @@ export const AdminUserDetails = () => {
           {/* Header */}
           <div className="flex items-center space-x-4 mb-6">
             <div className="h-16 w-16 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold text-2xl">
-              {user.name?.charAt(0).toUpperCase()}
+{typeof user.name === 'string' ? user.name.charAt(0).toUpperCase() : 'U'}
             </div>
             <div>
               <h1 className="text-xl font-bold text-black">{user.name}</h1>

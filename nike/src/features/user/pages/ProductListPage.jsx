@@ -20,6 +20,11 @@ const ProductListPage = ({ title }) => {
     const relativePath = match ? match[0].replace(/\\/g, '/') : imagePath;
     return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
   };
+useEffect(() => {
+  if (typeof title !== "string") {
+    console.error("🚨 title prop is not a string:", title);
+  }
+}, [title]);
 
   useEffect(() => {
     const loadProducts = async () => {

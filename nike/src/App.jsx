@@ -16,7 +16,7 @@ import SignIn from "./features/auth/pages/SignIn";
 import VerifyOtp from "./features/auth/pages/VerifyOtp";
 import CompleteRegister from "./features/auth/pages/CompleteRegister";
 import VerifyRegisterOtp from "./features/auth/pages/VerifyRegisterOtp";
-
+import {AdminUserDetails} from "./features/admin/pages/AdminUserDetails";
 // Lazy-loaded components
 const CategoryPage = lazy(() => import("./features/user/pages/ModelPage"));
 const ProductDetails = lazy(() => import("./features/user/pages/ProductDetails"));
@@ -26,7 +26,6 @@ const AdminDashboard = lazy(() => import("./features/admin/pages/AdminDashboard"
 const CreateProduct = lazy(() => import("./features/admin/pages/CreateProduct"));
 const UpdateProduct = lazy(() => import("./features/admin/pages/UpdateProduct"));
 const AdminProductDetails = lazy(() => import("./features/admin/pages/AdminProductDetailes"));
-const AdminUserDetails = lazy(() => import("./features/admin/pages/AdminUserDetails"));
 const Profile = lazy(() => import("./features/user/pages/Profile"));
 const AccountSettings = lazy(() => import("./features/user/AccountSettings/AccountSettings"));
 const Checkout = lazy(() => import("./features/user/pages/Checkout"));
@@ -35,7 +34,7 @@ const OrderDetails = lazy(() => import("./features/user/pages/OrderDetails"));
 const ProductListPage = lazy(() => import("./features/user/pages/ProductListPage"));
 
 import { AdminRoute } from "./features/admin/routes/AdminRoute";
-// Custom loading component
+// Custom loading componenti
 const Loading = () => (
   <div className="flex justify-center items-center h-screen">
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
@@ -83,13 +82,38 @@ function App() {
       socket.disconnect();
     };
   }, [user]);
+// ErrorBoundary.jsx (or at the top of App.jsx)
+class ErrorBoundary extends React.Component {
+  state = { hasError: false };
 
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Error caught by boundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 text-red-500">
+          <h2>Something went wrong.</h2>
+          <button onClick={() => window.location.reload()}>Reload</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
   return (
     <> 
-      <Toaster position="top-center" />
-      <Suspense fallback={<Loading />}>
-        <AppRoutes user={user} isAuthenticated={isAuthenticated} />
-      </Suspense>
+       <Toaster position="top-center" />
+      <ErrorBoundary> {/* 👈 Add here */}
+        <Suspense fallback={<Loading />}>
+          <AppRoutes user={user} isAuthenticated={isAuthenticated} />
+        </Suspense>
+      </ErrorBoundary>
     </>
   );
 }
