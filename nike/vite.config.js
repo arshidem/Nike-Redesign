@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         strategies: 'injectManifest',
         injectManifest: {
-          swSrc: 'src/service-worker.js',  // ✅ correct file inside src
+          swSrc: 'public/service-worker.js',
           swDest: 'service-worker.js'
         },
         manifest: {
@@ -48,7 +48,7 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       proxy: {
         '/api': {
-          target: env.VITE_BACKEND_URL,
+          target: env.VITE_BACKEND_URL, // ✅ FIXED HERE
           changeOrigin: true,
           secure: false
         }
