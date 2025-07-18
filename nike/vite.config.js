@@ -6,24 +6,24 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
-      manifest: {
-        name: 'My App',
-        short_name: 'App',
-        description: 'My Awesome App',
-        theme_color: '#ffffff',
-        icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
+     manifest: {
+    name: 'Nike App',
+    short_name: 'Nike',
+    description: 'Nike Store PWA',
+    theme_color: '#ffffff',
+    icons: [
+      {
+        src: '/assets/logo/nikeLogoRounded.png', // Path from public folder
+        sizes: '192x192', // Standard PWA size
+        type: 'image/png'
       },
+      {
+        src: '/assets/logo/nikeLogoRounded.png', // Same file or different size
+        sizes: '512x512', // Splash screen size
+        type: 'image/png'
+      }
+    ]
+  },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
