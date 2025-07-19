@@ -15,6 +15,8 @@ const {
   getProductAnalytics,
   bulkDeleteProducts,
   getBestSellers,
+  getSuggestedProducts,
+  searchProducts
 } = require("../controllers/productController");
 
 const { verifyAdmin } = require("../middleware/authMiddleware");
@@ -28,7 +30,7 @@ router.get("/analytics", verifyAdmin, getProductAnalytics); // ✅ Correct posit
 router.get("/featured", getFeaturedProducts);
 router.delete('/bulk-delete', verifyAdmin, bulkDeleteProducts);
 router.get("/products/best-sellers", getBestSellers);
-
+router.get('/search', searchProducts);
 router.get("/test", async (req, res) => {     // ✅ Move this up
   console.log("📦 /test route hit"); // 👈 add this
 
@@ -40,6 +42,8 @@ router.get("/test", async (req, res) => {     // ✅ Move this up
     console.error("❌ Error:", err);
     res.status(500).json({ error: "DB query failed" });
   }});
+  router.get("/:productSlug/suggestions", getSuggestedProducts);
+
 router.get("/:slug", getProductBySlug); // ✅ Should always be last among GET routes
 router.get("/", getAllProducts);
 

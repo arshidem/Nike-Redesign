@@ -10,12 +10,16 @@ import {
   BagIcon,
   MinusIcon,
   PlusIcon,
+  HeartIcon,
+  Spinner,
 } from "../../../shared/ui/Icons";
 import Loader from "../../../shared/ui/Loader";
 import useCartServices from "../services/cartServices";
 import ProductReviewSection from "../components/ProductReviewSection";
 import Footer from "../components/Footer";
 import { ProductDetailsSkeleton } from "../../../shared/ui/Skeleton";
+import ProductSuggestions from "../components/ProductSuggestions";
+import { useWishlistService } from "../services/wishlistServices";
 
 const AccordionItem = ({ title, children, isOpen, onClick }) => (
   <div className="border-t">
@@ -47,9 +51,13 @@ const ProductDetails = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [openAccordion, setOpenAccordion] = useState(null);
   const [showFullDesc, setShowFullDesc] = useState(false);
+  const [wishlistIds, setWishlistIds] = useState([]);
+  const [wishlistLoading, setIsWishlistLoading] = useState(false);
+
+  const { toggleWishlist, getWishlist } = useWishlistService();
 
   const { fetchProductBySlug } = useProductService();
-  const { backendUrl,token } = useAppContext();
+  const { backendUrl, token } = useAppContext();
   const { addToCart, updateItemQuantity, removeItemFromCart, getCart } =
     useCartServices();
 
@@ -61,7 +69,49 @@ const ProductDetails = () => {
     const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
     return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
   };
+  const isInWishlist = wishlistIds.includes(product?._id);
 
+  // Fetch wishlist on component mount
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      try {
+        const response = await getWishlist();
+        const wishlistProductIds = response.data.map((item) => item._id);
+        setWishlistIds(wishlistProductIds);
+      } catch (error) {
+        console.error("Failed to fetch wishlist", error);
+      }
+    };
+
+    if (token) fetchWishlist();
+  }, [token]);
+
+  // Handle wishlist toggle
+  const handleWishlistToggle = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setIsWishlistLoading(true);
+      const response = await toggleWishlist(product._id);
+      setWishlistIds(response.wishlist.map((item) => item._id));
+
+      toast.success(
+        response.action === "added"
+          ? "Added to wishlist!"
+          : "Removed from wishlist!"
+      );
+    } catch (err) {
+      toast.error(err.message || "Failed to update wishlist");
+    } finally {
+      setIsWishlistLoading(false);
+    }
+  };
   useEffect(() => {
     const loadProduct = async () => {
       try {
@@ -79,7 +129,7 @@ const ProductDetails = () => {
       const cart = await getCart();
       const map = {};
       cart.items.forEach((item) => {
-map[`${item.productId}-${item.variantId}-${item.size}`] = item;
+        map[`${item.productId}-${item.variantId}-${item.size}`] = item;
       });
       setCartMap(map);
     };
@@ -156,53 +206,52 @@ map[`${item.productId}-${item.variantId}-${item.size}`] = item;
       setIsProcessing(false);
     }
   };
-const handleQuantityChange = async (delta) => {
-  if (!cartItem || isProcessing) return;
+  const handleQuantityChange = async (delta) => {
+    if (!cartItem || isProcessing) return;
 
-  const newQty = cartItem.quantity + delta;
-  const isGuest = !token;
+    const newQty = cartItem.quantity + delta;
+    const isGuest = !token;
 
-  // For guests: use composite key; for logged-in: use item._id
-  const itemId = isGuest
-    ? cartItem.productId + cartItem.variantId + cartItem.size
-    : cartItem._id;
+    // For guests: use composite key; for logged-in: use item._id
+    const itemId = isGuest
+      ? cartItem.productId + cartItem.variantId + cartItem.size
+      : cartItem._id;
 
-  try {
-    setIsProcessing(true);
+    try {
+      setIsProcessing(true);
 
-    if (newQty < 1) {
-      const updatedCart = await removeItemFromCart(itemId);
-      const key = `${cartItem.productId}-${cartItem.variantId}-${cartItem.size}`;
-      setCartMap((prev) => {
-        const updated = { ...prev };
-        delete updated[key];
-        return updated;
-      });
-      setCartItem(null);
-    } else {
-      const updatedCart = await updateItemQuantity(itemId, newQty);
-      const key = `${cartItem.productId}-${cartItem.variantId}-${cartItem.size}`;
+      if (newQty < 1) {
+        const updatedCart = await removeItemFromCart(itemId);
+        const key = `${cartItem.productId}-${cartItem.variantId}-${cartItem.size}`;
+        setCartMap((prev) => {
+          const updated = { ...prev };
+          delete updated[key];
+          return updated;
+        });
+        setCartItem(null);
+      } else {
+        const updatedCart = await updateItemQuantity(itemId, newQty);
+        const key = `${cartItem.productId}-${cartItem.variantId}-${cartItem.size}`;
 
-      const updatedItem = updatedCart.items.find((item) => {
-        return isGuest
-          ? item.productId + item.variantId + item.size === itemId
-          : item._id === cartItem._id;
-      });
+        const updatedItem = updatedCart.items.find((item) => {
+          return isGuest
+            ? item.productId + item.variantId + item.size === itemId
+            : item._id === cartItem._id;
+        });
 
-      if (updatedItem) {
-        setCartMap((prev) => ({ ...prev, [key]: updatedItem }));
-        setCartItem(updatedItem);
+        if (updatedItem) {
+          setCartMap((prev) => ({ ...prev, [key]: updatedItem }));
+          setCartItem(updatedItem);
+        }
       }
+    } catch (err) {
+      toast.error(err.message || "Failed to update quantity");
+    } finally {
+      setIsProcessing(false);
     }
-  } catch (err) {
-    toast.error(err.message || "Failed to update quantity");
-  } finally {
-    setIsProcessing(false);
-  }
-};
+  };
 
-
-  if (!product) return <ProductDetailsSkeleton/>;
+  if (!product) return <ProductDetailsSkeleton />;
 
   const variant = product.variants[selectedVariantIndex];
   const thumbnails = variant.images?.map(formatImageUrl) || [];
@@ -214,32 +263,32 @@ const handleQuantityChange = async (delta) => {
     <div className="max-w-6xl mx-auto p-6">
       <Toaster position="top-center" />
 
-     <div className="fixed top-0 left-0 w-full z-30 bg-white shadow-md px-4 py-2 flex items-center">
-  <button
-    onClick={() => navigate(-1)}
-    className="flex items-center gap-1 px-3 py-2 border border-black rounded hover:bg-gray-100 transition sm:w-auto"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth="2"
-      stroke="currentColor"
-      className="w-4 h-4  rotate-180"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M8.25 4.5L15.75 12 8.25 19.5"
-      />
-    </svg>
-    <span className="text-sm font-medium">Back</span>
-  </button>
-</div>
+      <div className="fixed top-0 left-0 w-full z-30 bg-white shadow-md px-4 py-2 flex items-center">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1 px-3 py-2 border border-black rounded hover:bg-gray-100 transition sm:w-auto"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor"
+            className="w-4 h-4  rotate-180"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8.25 4.5L15.75 12 8.25 19.5"
+            />
+          </svg>
+          <span className="text-sm font-medium">Back</span>
+        </button>
+      </div>
 
       <div className="flex flex-col lg:flex-row gap-8 mt-10">
         {/* Image Section */}
-<div className="w-full lg:w-1/2 lg:sticky lg:top-24 lg:h-fit self-start">
+        <div className="w-full lg:w-1/2 lg:sticky lg:top-24 lg:h-fit self-start">
           <img
             src={selectedImage}
             className="w-full aspect-square object-cover rounded"
@@ -319,19 +368,23 @@ const handleQuantityChange = async (delta) => {
           </div>
 
           {/* Cart Buttons */}
-          <div className="mt-6">
+          {/* Cart Buttons */}
+          <div className="mt-6 flex gap-3">
+           
+
+            {/* Add to Cart Button */}
             {!cartItem ? (
               <button
                 onClick={handleAddToBag}
                 disabled={
                   !selectedSize || isProcessing || selectedSizeStock === 0
                 }
-                className="w-full py-3 bg-black text-white rounded-full hover:bg-gray-800 disabled:opacity-50"
+                className="flex-1 py-3 bg-black text-white rounded-full hover:bg-gray-800 disabled:opacity-50"
               >
                 {isProcessing ? "Adding..." : "Add to Bag"}
               </button>
             ) : (
-              <div className="flex items-center justify-between border border-black px-4 py-2 rounded-full">
+              <div className="flex-1 flex items-center justify-between border border-black px-4 py-2 rounded-full">
                 <button
                   onClick={() => handleQuantityChange(-1)}
                   disabled={isProcessing}
@@ -339,14 +392,62 @@ const handleQuantityChange = async (delta) => {
                   {cartItem.quantity === 1 ? <XIcon /> : <MinusIcon />}
                 </button>
                 <span>{cartItem.quantity}</span>
-            <button
-  onClick={() => handleQuantityChange(1)}
-  disabled={isProcessing || cartItem.quantity >= selectedSizeStock}
->
-  <PlusIcon />
-</button>
+                <button
+                  onClick={() => handleQuantityChange(1)}
+                  disabled={
+                    isProcessing || cartItem.quantity >= selectedSizeStock
+                  }
+                >
+                  <PlusIcon />
+                </button>
               </div>
             )}
+             {/* Wishlist Button */}
+            <button
+              onClick={handleWishlistToggle}
+              disabled={wishlistLoading}
+              className={`flex items-center justify-center p-3 rounded-full border ${
+                isInWishlist
+                  ? "border hover:bg-gray-200"
+                  : " border hover:bg-gray-200"
+              }`}
+              aria-label={
+                isInWishlist ? "Remove from wishlist" : "Add to wishlist"
+              }
+            >
+              {wishlistLoading ? (
+                <svg
+                  className="animate-spin h-5 w-5 text-gray-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              ) : (
+                <HeartIcon
+                  className={`h-6 w-6 ${
+                    isInWishlist
+                      ? "fill-red-600 stroke-none" // Fixed typo: strock-none → stroke-none
+                      : "fill-none stroke-black"
+                  }`}
+                  color={isInWishlist ? "red" : "none"} // Optional: can remove if using className
+                  stroke={isInWishlist ? "none" : "black"} // Optional: can remove if using className
+                />
+              )}
+            </button>
           </div>
 
           {/* Accordion Section */}
@@ -416,7 +517,8 @@ const handleQuantityChange = async (delta) => {
           </div>
         </div>
       </div>
-     <Footer/>
+      <ProductSuggestions productSlug={product.slug} />
+      <Footer />
     </div>
   );
 };

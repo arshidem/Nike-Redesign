@@ -174,6 +174,22 @@ const fetchFeaturedProducts = async () => {
       return null;
     }
   };
+
+const getProductSuggestions = async (productSlug, token) => {
+  try {
+    const res = await axios.get(`${backendUrl}/api/products/${productSlug}/suggestions`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.data;
+  } catch (err) {
+    console.error("Failed to fetch product suggestions", err);
+    return [];
+  }
+};
+
+
   return {
     fetchProducts,
     fetchProductBySlug,
@@ -185,6 +201,7 @@ const fetchFeaturedProducts = async () => {
     fetchFilterOptions,
     fetchProductById,
     fetchProductAnalytics,
-    bulkDeleteProducts
+    bulkDeleteProducts,
+    getProductSuggestions
   };
 };

@@ -23,6 +23,7 @@ const AdminDashboard = lazy(() => import("./features/admin/pages/AdminDashboard"
 const CreateProduct = lazy(() => import("./features/admin/pages/CreateProduct"));
 const UpdateProduct = lazy(() => import("./features/admin/pages/UpdateProduct"));
 const AdminProductDetails = lazy(() => import("./features/admin/pages/AdminProductDetailes"));
+const Wishlist = lazy(()=> import("./features/user/pages/Wishlist") )
 import { LogoLoader } from "./features/user/components/LogoLoader";
 
 const Loading = () => (
@@ -63,6 +64,7 @@ function AppRoutes() {
       <Route path="/model/:modelName" element={<ModelPage />} />
       <Route path="/product/:productSlug" element={<ProductDetails />} />
       <Route path="/bag" element={<Cart />} />
+      <Route path="/wishlist" element={<Wishlist />} />
       <Route path="/orders" element={<Order />} />
       <Route path="/orders/:orderId" element={<OrderDetails />} />
       <Route path="/checkout" element={<Checkout />} />

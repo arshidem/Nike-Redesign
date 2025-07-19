@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import {
@@ -8,9 +8,11 @@ import {
   BagIcon,
   ArrowIcon,
   XIcon,
+  NikeSwoosh,
 } from "../../../shared/ui/Icons";
 import "../../../css/navbar.css";
 import toast from "react-hot-toast";
+import { debounce } from "lodash";
 
 import { useAppContext } from "../../../context/AppContext";
 const getFromLocalStorageWithExpiry = (key) => {
@@ -35,9 +37,24 @@ export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [bagItemCount, setBagItemCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [recentSearches, setRecentSearches] = useState([]);
+  const searchInputRef = useRef(null);
   const { user, authReady, setUser, backendUrl, setToken } = useAppContext();
   const menuRef = useRef(null); // Step 1: ref for mobile menu
   // Step 2: Add click-outside listener
+
+  const formatImageUrl = (imagePath) => {
+    if (!imagePath) return "/placeholder.jpg";
+    const match = imagePath.match(
+      /uploads[\\/][\w\-.]+\.(jpg|jpeg|avif|png|webp)/i
+    );
+    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
+    return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -48,13 +65,13 @@ export function Navbar() {
     };
 
     if (menuOpen) {
-document.addEventListener("click", handleClickOutside);
+      document.addEventListener("click", handleClickOutside);
     } else {
-document.addEventListener("click", handleClickOutside);
+      document.addEventListener("click", handleClickOutside);
     }
 
     return () => {
-document.removeEventListener("click", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, [menuOpen]);
   useEffect(() => {
@@ -85,18 +102,17 @@ document.removeEventListener("click", handleClickOutside);
       setSearchOpen(false);
     }, 300); // match the duration in CSS
   };
-const toggleMenu = (e) => {
-  e.preventDefault();       // optional, good for safety
-  e.stopPropagation();      // prevent it from reaching document listener
-  setMenuOpen((prev) => {
-    if (prev) {
-      setSubmenuOpen(null);
-      setIsAnimating(false);
-    }
-    return !prev;
-  });
-};
-
+  const toggleMenu = (e) => {
+    e.preventDefault(); // optional, good for safety
+    e.stopPropagation(); // prevent it from reaching document listener
+    setMenuOpen((prev) => {
+      if (prev) {
+        setSubmenuOpen(null);
+        setIsAnimating(false);
+      }
+      return !prev;
+    });
+  };
 
   const handleSubmenu = (menuName) => {
     setSubmenuOpen(menuName); // Step 1: mount submenu off-screen
@@ -114,33 +130,131 @@ const toggleMenu = (e) => {
       setSubmenuOpen(null); // unmount submenu after animation
     }, 300);
   };
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    const query = searchQuery.trim();
+
+    if (!query || query.length < 2) {
+      toast("Please enter at least 2 characters");
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+      const response = await axios.get(`${backendUrl}/api/products/search`, {
+        params: { q: query },
+      });
+      setSearchResults(response.data.results);
+
+      // Add to recent searches
+      setRecentSearches((prev) =>
+        [query, ...prev.filter((item) => item !== query)].slice(0, 5)
+      );
+    } catch (error) {
+      console.error("Search failed:", error);
+      toast.error("Search failed. Please try again.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  // Add this at the top of your component
+
+  const debouncedSearch = useMemo(
+    () =>
+      debounce(async (query) => {
+        if (query.length < 2) {
+          setSearchResults([]);
+          return;
+        }
+        try {
+          setIsSearching(true);
+          const response = await axios.get(
+            `${backendUrl}/api/products/search`,
+            {
+              params: { q: query },
+            }
+          );
+          setSearchResults(response.data.results || []);
+        } catch (err) {
+          console.error("Search failed:", err);
+          toast.error("Search failed. Please try again.");
+        } finally {
+          setIsSearching(false);
+        }
+      }, 300),
+    [backendUrl]
+  );
+
+  // 2️⃣ Cleanup on unmount:
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
+
+  // 3️⃣ Handle input change
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    debouncedSearch(query);
+  };
+
+  // 4️⃣ Fallback “Enter”-key search
+  const handleSearchSubmit = async (e) => {
+    e.preventDefault();
+    debouncedSearch.cancel(); // cancel pending
+    await debouncedSearch(searchQuery);
+  };
 
   const menus = {
-  "New & Featured": [
-    { label: "New Arrivals", link: "/new/arrivals?newArrival=true" },
-    { label: "Best Sellers", link: "/new/best-sellers?bestSellers=true" },
-    { label: "Trending", link: "/new/trending?isTrending=true" },
-  ],
-  Men: [
-    { label: "New Arrivals", link: "/men/arrivals?gender=men&newArrival=true" },
-    { label: "Best Sellers", link: "/men/best-sellers?gender=men&bestSellers=true" },
-    { label: "Shoes", link: "/men/shoes?gender=men&category=shoes" },
-    { label: "Clothing", link: "/men/clothing?gender=men&category=clothing" },
-  ],
-  Women: [
-    { label: "New Arrivals", link: "/women/arrivals?gender=women&newArrival=true" },
-    { label: "Best Sellers", link: "/women/best-sellers?gender=women&bestSellers=true" },
-    { label: "Shoes", link: "/women/shoes?gender=women&category=shoes" },
-    { label: "Clothing", link: "/women/clothing?gender=women&category=clothing" },
-  ],
-  Kids: [
-    { label: "New Arrivals", link: "/kids/arrivals?gender=kids&newArrival=true" },
-    { label: "Best Sellers", link: "/kids/best-sellers?gender=kids&bestSellers=true" },
-    { label: "Shoes", link: "/kids/shoes?gender=kids&category=shoes" },
-    { label: "Clothing", link: "/kids/clothing?gender=kids&category=clothing" },
-    { label: "Kids By Age", link: "/kids/age" }, // for future use
-  ],
-
+    "New & Featured": [
+      { label: "New Arrivals", link: "/new/arrivals?newArrival=true" },
+      { label: "Best Sellers", link: "/new/best-sellers?bestSellers=true" },
+      { label: "Trending", link: "/new/trending?isTrending=true" },
+    ],
+    Men: [
+      {
+        label: "New Arrivals",
+        link: "/men/arrivals?gender=men&newArrival=true",
+      },
+      {
+        label: "Best Sellers",
+        link: "/men/best-sellers?gender=men&bestSellers=true",
+      },
+      { label: "Shoes", link: "/men/shoes?gender=men&category=shoes" },
+      { label: "Clothing", link: "/men/clothing?gender=men&category=clothing" },
+    ],
+    Women: [
+      {
+        label: "New Arrivals",
+        link: "/women/arrivals?gender=women&newArrival=true",
+      },
+      {
+        label: "Best Sellers",
+        link: "/women/best-sellers?gender=women&bestSellers=true",
+      },
+      { label: "Shoes", link: "/women/shoes?gender=women&category=shoes" },
+      {
+        label: "Clothing",
+        link: "/women/clothing?gender=women&category=clothing",
+      },
+    ],
+    Kids: [
+      {
+        label: "New Arrivals",
+        link: "/kids/arrivals?gender=kids&newArrival=true",
+      },
+      {
+        label: "Best Sellers",
+        link: "/kids/best-sellers?gender=kids&bestSellers=true",
+      },
+      { label: "Shoes", link: "/kids/shoes?gender=kids&category=shoes" },
+      {
+        label: "Clothing",
+        link: "/kids/clothing?gender=kids&category=clothing",
+      },
+      { label: "Kids By Age", link: "/kids/age" }, // for future use
+    ],
 
     Sale: [
       { label: "Shop All Sale", link: "/sale/shopAllSale" },
@@ -283,8 +397,8 @@ const toggleMenu = (e) => {
             <Link to="/user" className="icon-btn md:hidden">
               <UserIcon />
             </Link>
-            <Link to="/favourite" className="icon-btn">
-              <HeartIcon />
+            <Link to="/wishlist" className="icon-btn">
+              <HeartIcon className="fill-white stroke-black" />
             </Link>
             <Link to="/bag" className="icon-btn relative">
               <BagIcon />
@@ -302,11 +416,11 @@ const toggleMenu = (e) => {
               <SearchIcon />
             </button>
 
-            <Link to="/user" className="icon-btn">
+            <Link to="/profile" className="icon-btn">
               <UserIcon />
             </Link>
-            <Link to="/favourite" className="icon-btn">
-              <HeartIcon />
+            <Link to="/wishlist" className="icon-btn">
+              <HeartIcon className="fill-white stroke-black" />
             </Link>
             <Link to="/bag" className="icon-btn relative">
               <BagIcon />
@@ -448,39 +562,161 @@ const toggleMenu = (e) => {
         </div>
         {searchOpen && (
           <div className={`search-overlay ${isExiting ? "slide-out" : ""}`}>
-            <div className="search-overlay-content">
-              <div>
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg"
-                  alt="Nike Logo"
-                  className="nike-logo"
-                />
-              </div>
-              <div className="input-div">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="input-search-icon"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m21 21-5.197-5.197M15.803 15.803A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+            <div className="search-overlay-content ">
+              <div className="flex items-center justify-between ">
+                <NikeSwoosh />
+
+                <div className="input-div relative">
+                  <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    ref={searchInputRef}
+                    placeholder="Search for products, colors, etc."
+                    className="search-input w-full pl-10 pr-4 py-3 border-b border-black focus:outline-none focus:border-black"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    autoFocus
                   />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="search-input"
-                />
-              </div>
-              <div>
-                <button className="cancel-btn" onClick={closeSearch}>
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSearchResults([]);
+                      }}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <XIcon className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  className="cancel-btn text-black hover:text-gray-600 transition-colors"
+                  onClick={closeSearch}
+                >
                   Cancel
                 </button>
+              </div>
+
+              <div className="relative mt-6">
+                {/* Search results container */}
+                {searchQuery && (
+                  <div className="search-results-container mt-4 max-h-[60vh] overflow-y-auto px-4">
+                    {isSearching ? (
+                      <div className="flex justify-center py-8">
+                        <div className="animate-spin h-8 w-8 border-t-2 border-b-2 border-black rounded-full" />
+                      </div>
+                    ) : searchResults.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {searchResults.map((product) => (
+                          <Link
+                            key={product._id}
+                            to={`/product/${product.slug}`}
+                            className="flex gap-4 p-3 bg-white rounded-lg hover:shadow-lg transition"
+                            onClick={closeSearch}
+                          >
+                            <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded overflow-hidden">
+                              <img
+                                src={formatImageUrl(product.image)}
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) =>
+                                  (e.currentTarget.src = "/placeholder.jpg")
+                                }
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
+                                {product.name}
+                              </h4>
+                              <div className="flex items-baseline gap-2 mt-1">
+                                <span className="text-sm font-semibold text-black">
+                                  ₹{product.finalPrice?.toLocaleString()}
+                                </span>
+                                {product.discountPercentage > 0 && (
+                                  <>
+                                    <span className="text-xs line-through text-gray-400">
+                                      ₹{product.price?.toLocaleString()}
+                                    </span>
+                                    <span className="text-xs text-red-500">
+                                      {product.discountPercentage}% OFF
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                              {product.colors?.length > 0 && (
+                                <div className="mt-2">
+                                  <span className="text-xs text-gray-500">
+                                    Colors:
+                                  </span>
+                                  <div className="flex items-center gap-1 mt-1">
+                                    {product.colors
+                                      .slice(0, 3)
+                                      .map((color, i) => (
+                                        <span
+                                          key={i}
+                                          className="w-3 h-3 rounded-full border"
+                                          style={{
+                                            backgroundColor:
+                                              color.toLowerCase(),
+                                          }}
+                                          title={color}
+                                        />
+                                      ))}
+                                    {product.colors.length > 3 && (
+                                      <span className="text-xs text-gray-400">
+                                        +{product.colors.length - 3}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-8 text-center text-gray-500">
+                        <p>No results found for “{searchQuery}”</p>
+                        <p className="mt-1 text-sm">
+                          Try different keywords or{" "}
+                          <Link
+                            to="/products"
+                            className="underline text-black hover:text-gray-700"
+                            onClick={closeSearch}
+                          >
+                            browse featured products
+                          </Link>
+                          .
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Recent searches (optional) */}
+                {!searchQuery && recentSearches.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                      Recent Searches
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {recentSearches.map((search, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            setSearchQuery(search);
+                            handleSearch({ preventDefault: () => {} });
+                          }}
+                          className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-full transition-colors"
+                        >
+                          {search}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

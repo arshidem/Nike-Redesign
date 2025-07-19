@@ -56,6 +56,7 @@ const couponRoutes = require("./routes/couponRoutes");
 const addressRoutes = require("./routes/addressRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
+const wishlistRoutes =require( "./routes/wishlistRoutes.js");
 
 // Mount routes
 app.use("/api/products", productRouter);
@@ -66,6 +67,7 @@ app.use("/api/coupons", couponRoutes);
 app.use("/api/address", addressRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 
 // Error handlers
 app.use(notFound);
