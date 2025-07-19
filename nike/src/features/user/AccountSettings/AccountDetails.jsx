@@ -48,9 +48,7 @@ useEffect(() => {
   }
 }, [formData.country, countries]);
 
-
-  useEffect(() => {
-    const fetchUserDetails = async () => {
+ const fetchUserDetails = async () => {
       try {
         const data = await getMe();
         const userData = {
@@ -65,7 +63,9 @@ useEffect(() => {
         setInitialFormData(userData);
         setFormData(userData);
         setEmail(data.email);
-        setUser({ ...data, isAuthenticated: true });
+if (data && data._id) {
+  setUser((prev) => ({ ...prev, ...data }));
+}
       } catch (err) {
         toast.error("Failed to load user data");
       } finally {
@@ -73,6 +73,8 @@ useEffect(() => {
       }
     };
 
+  useEffect(() => {
+    fetchUserDetails();
   }, []);
 
   const handleChange = (e) => {
