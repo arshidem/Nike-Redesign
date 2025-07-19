@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, lazy, Suspense, useRef } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -17,6 +17,7 @@ import VerifyOtp from "./features/auth/pages/VerifyOtp";
 import CompleteRegister from "./features/auth/pages/CompleteRegister";
 import VerifyRegisterOtp from "./features/auth/pages/VerifyRegisterOtp";
 import {AdminUserDetails} from "./features/admin/pages/AdminUserDetails";
+import AccountSettings from "./features/user/AccountSettings/AccountSettings"
 // Lazy-loaded components
 const CategoryPage = lazy(() => import("./features/user/pages/ModelPage"));
 const ProductDetails = lazy(() => import("./features/user/pages/ProductDetails"));
@@ -27,7 +28,6 @@ const CreateProduct = lazy(() => import("./features/admin/pages/CreateProduct"))
 const UpdateProduct = lazy(() => import("./features/admin/pages/UpdateProduct"));
 const AdminProductDetails = lazy(() => import("./features/admin/pages/AdminProductDetailes"));
 const Profile = lazy(() => import("./features/user/pages/Profile"));
-const AccountSettings = lazy(() => import("./features/user/AccountSettings/AccountSettings"));
 const Checkout = lazy(() => import("./features/user/pages/Checkout"));
 const Order = lazy(() => import("./features/user/pages/Order"));
 const OrderDetails = lazy(() => import("./features/user/pages/OrderDetails"));
@@ -44,44 +44,42 @@ const Loading = () => (
 function App() {
   const { user, isAuthenticated, backendUrl } = useAppContext();
 
-  useEffect(() => {
-    if (!user || user.role !== "admin") {
-      console.log("🛑 Not an admin or user not logged in");
-      return;
-    }
+const socketRef = useRef(null);
 
-    const socket = io(backendUrl);
+useEffect(() => {
+  if (!user?.email || user.role !== "admin") return;
 
-    socket.on("connect", () => {
-      console.log("🔌 Connected to Socket.IO server with ID:", socket.id);
-      socket.emit("identify", { role: "admin", email: user.email });
-    });
+  if (socketRef.current) return; // Already connected
 
-    socket.on("new-order", (orderData) => {
-      console.log("📦 New Order Received from server:", orderData);
-      toast.success(`New order from ${orderData.user.email} - ₹${orderData.totalPrice}`, {
-        duration: 5000,
-        position: 'top-center',
-        style: {
-          background: '#333',
-          color: '#fff',
-        },
-      });
-    });
+  socketRef.current = io(backendUrl, {
+    transports: ["websocket"],
+  });
 
-    socket.on("disconnect", () => {
-      console.warn("❌ Disconnected from socket server");
-    });
+  const socket = socketRef.current;
 
-    socket.on("connect_error", (err) => {
-      console.error("❗Socket connection error:", err.message);
-    });
+  socket.on("connect", () => {
+    console.log("🔌 Connected to Socket.IO server with ID:", socket.id);
+    socket.emit("identify", { role: "admin", email: user.email });
+  });
 
-    return () => {
-      console.log("🔌 Cleaning up socket connection");
-      socket.disconnect();
-    };
-  }, [user]);
+  socket.on("new-order", (orderData) => {
+    toast.success(`New order from ${orderData.user.email} - ₹${orderData.totalPrice}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.warn("❌ Disconnected from socket server");
+  });
+
+  socket.on("connect_error", (err) => {
+    console.error("❗Socket connection error:", err.message);
+  });
+
+  return () => {
+    socket.disconnect();
+    socketRef.current = null;
+  };
+}, [user?.email, backendUrl]);
+
 // ErrorBoundary.jsx (or at the top of App.jsx)
 class ErrorBoundary extends React.Component {
   state = { hasError: false };

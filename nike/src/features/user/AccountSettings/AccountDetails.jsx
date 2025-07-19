@@ -36,15 +36,18 @@ const AccountDetails = () => {
     setCountries(countryList);
   }, []);
 
-  useEffect(() => {
-    const selected = countries.find((c) => c.name === formData.country);
-    if (selected) {
-      const stateList = State.getStatesOfCountry(selected.code).map((s) => s.name);
-      setStates(stateList);
-    } else {
-      setStates([]);
-    }
-  }, [formData.country, countries]);
+useEffect(() => {
+  if (!formData.country || countries.length === 0) return;
+
+  const selected = countries.find((c) => c.name === formData.country);
+  if (selected) {
+    const stateList = State.getStatesOfCountry(selected.code).map((s) => s.name);
+    setStates(stateList);
+  } else {
+    setStates([]);
+  }
+}, [formData.country, countries]);
+
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -70,7 +73,6 @@ const AccountDetails = () => {
       }
     };
 
-    fetchUserDetails();
   }, []);
 
   const handleChange = (e) => {
