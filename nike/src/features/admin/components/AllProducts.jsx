@@ -5,7 +5,7 @@ import { useAppContext } from "../../../context/AppContext";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import toast from "react-hot-toast";
-import { ConfirmModal } from "../../../shared/ui/Icons";
+import { CheckIcon, ConfirmModal } from "../../../shared/ui/Icons";
 
 import {
   DeleteIcon,
@@ -80,30 +80,34 @@ export const AllProducts = () => {
   const handleRefresh = () => {
     setRefreshTrigger((prev) => !prev);
   };
-const handleBulkDelete = async () => {
-  setShowConfirmDelete(false); // Close modal immediately
-  
-  try {
-    // Optimistically update UI
-    setProducts(prevProducts => 
-      prevProducts.filter(product => !selectedIds.includes(product._id))
-    );
-    
-    const { deletedCount, message } = await bulkDeleteProducts(selectedIds);
-    toast.success(message);
-    
-    // Refresh data in background
-    setRefreshTrigger(prev => !prev);
-  } catch (err) {
-    // Revert UI if error occurs
-    setRefreshTrigger(prev => !prev);
-    toast.error(err.response?.data?.error || "Bulk delete failed");
-  } finally {
-    setSelectedIds([]);
-    setSelectMode(false);
-  }
-};
+  const handleBulkDelete = async () => {
+    setShowConfirmDelete(false); // Close modal immediately
 
+    try {
+      // Optimistically update UI
+      setProducts((prevProducts) =>
+        prevProducts.filter((product) => !selectedIds.includes(product._id))
+      );
+
+      const { deletedCount, message } = await bulkDeleteProducts(selectedIds);
+      toast.success(message);
+
+      // Refresh data in background
+      setRefreshTrigger((prev) => !prev);
+    } catch (err) {
+      // Revert UI if error occurs
+      setRefreshTrigger((prev) => !prev);
+      toast.error(err.response?.data?.error || "Bulk delete failed");
+    } finally {
+      setSelectedIds([]);
+      setSelectMode(false);
+    }
+  };
+  useEffect(() => {
+    if (selectedIds.length === 0) {
+      setSelectMode(false);
+    }
+  }, [selectedIds]);
 
   // Toggle select all
   const toggleSelectAll = () => {
@@ -114,6 +118,31 @@ const handleBulkDelete = async () => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
+  };
+
+  const handleRightClick = (e, productId) => {
+    e.preventDefault(); // Prevent browser context menu
+    setSelectMode(true); // Enable select mode
+
+    setSelectedIds((prev) => {
+      // If already selected, just keep it (or optionally toggle)
+      if (prev.includes(productId)) return prev;
+      // Otherwise, add it
+      return [...prev, productId];
+    });
+  };
+
+  let pressTimer;
+
+  const handleTouchStart = (productId) => {
+    pressTimer = setTimeout(() => {
+      setSelectMode(true);
+      toggleSelect(productId); // Select the first item
+    }, 600); // 600ms = long press
+  };
+
+  const handleTouchEnd = () => {
+    clearTimeout(pressTimer);
   };
 
   useEffect(() => {
@@ -134,7 +163,7 @@ const handleBulkDelete = async () => {
       }
     };
     loadFilterOptions();
-  }, [fetchFilterOptions]);
+  }, []);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -157,6 +186,8 @@ const handleBulkDelete = async () => {
         size: selectedSize,
         sortBy: sortKey || undefined,
         page: currentPage,
+         limit: 10 // Add this line to request 10 products per page
+
       };
 
       const res = await fetchProducts(filters);
@@ -187,7 +218,7 @@ const handleBulkDelete = async () => {
     setSortKey("");
     setSelectedColor("");
     setSelectedSize("");
-    setCurrentPage(1); // important
+    setCurrentPage(); // important
     handleRefresh();
   };
 
@@ -243,97 +274,95 @@ const handleBulkDelete = async () => {
   return (
     <>
       <div className="p-4">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 w-full">
-          {/* Search + Filter group */}
-          <div className="flex gap-2 w-full">
-            {/* Search Input */}
-            <div className="relative flex-grow">
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && loadProducts()}
-                onClick={() => {
-                  setCurrentPage(1);
-                  loadProducts();
-                }}
-                className="w-full text-sm pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 h-10"
-              />
-              <button
-                onClick={loadProducts}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
-                <SearchIcon />
-              </button>
-            </div>
+              <h1 className="text-2xl font-bold mb-4">Product Management</h1>
+<div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 w-full">
+  {/* Left: Search + Icons */}
+  <div className="flex w-full items-center gap-2">
+    {/* Search Input */}
+    <div className="relative flex-grow">
+      <input
+        type="text"
+        placeholder="Search products..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && loadProducts()}
+        onClick={() => {
+          setCurrentPage(1);
+          loadProducts();
+        }}
+        className="w-full text-sm pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 h-10"
+      />
+      <button
+        onClick={loadProducts}
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+      >
+        <SearchIcon />
+      </button>
+    </div>
 
-            {/* Filter Button */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="h-10 px-3 rounded-lg  hover:bg-gray-200 transition"
-            >
-              <FilterIcon />
-            </button>
+    {/* Action Icons */}
+    {selectMode ? (
+      <>
+        <button
+          onClick={toggleSelectAll}
+          className="h-10 px-2 sm:px-3 border rounded-lg flex items-center gap-1 bg-white hover:bg-gray-200 text-sm transition"
+        >
+          <CheckIcon className="w-4 h-4" />
+          <span className="hidden md:inline">
+            {selectedIds.length === products.length ? "Deselect All" : "Select All"}
+          </span>
+        </button>
 
-            {/* Refresh Button */}
-            <button
-              onClick={handleRefresh}
-              className="h-10 px-3 rounded-lg hover:bg-gray-200 flex items-center gap-2 transition"
-            >
-              <RefreshIcon />
-            </button>
-          </div>
-          <button
-            onClick={() => setSelectMode((m) => !m)}
-            className="h-10 flex items-center justify-center bg-black gap-2 border border-black rounded-lg hover:bg-gray-700 transition w-full sm:w-44 text-sm text-white"
-          >
-            {selectMode ? "Cancel Select" : "Select Products"}
-          </button>
-          {/* New Product Button */}
-          <button
-            onClick={() => navigate("/admin/create-product")}
-            className="h-10 flex items-center justify-center bg-black gap-2 border border-black rounded-lg hover:bg-gray-700 transition w-full sm:w-44 text-sm text-white"
-          >
-            <span>New Product</span>
-          </button>
-        </div>
-        {selectMode && (
-          <div className="flex flex-wrap items-center justify-between mb-4">
-            <button
-              onClick={toggleSelectAll}
-              className="px-3 py-1 border rounded"
-            >
-              {selectedIds.length === products.length
-                ? "Deselect All"
-                : "Select All"}
-            </button>
+        <button
+          onClick={() => setShowConfirmDelete(true)}
+          className="h-10 px-2 sm:px-3 rounded-lg bg-white hover:bg-gray-200 flex items-center gap-1 text-sm transition"
+        >
+          <DeleteIcon className="w-4 h-4" />
+          <span className="hidden md:inline">Delete</span>
+        </button>
+      </>
+    ) : (
+      <>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="h-10 px-2 sm:px-3 rounded-lg hover:bg-gray-200 flex items-center gap-1 text-sm transition"
+        >
+          <FilterIcon className="w-4 h-4" />
+          <span className="hidden sm:inline">Filter</span>
+        </button>
 
-            {selectedIds.length > 0 && (
-              <>
-              <button
-  onClick={() => setShowConfirmDelete(true)}
-  className="px-3 py-1  rounded bg-white hover:bg-gray-200 flex items-center gap-1"
->
-  <DeleteIcon />
-  <span>Delete</span>
-</button>
+        <button
+          onClick={handleRefresh}
+          className="h-10 px-2 sm:px-3 rounded-lg hover:bg-gray-200 flex items-center gap-1 text-sm transition"
+        >
+          <RefreshIcon className="w-4 h-4" />
+          <span className="hidden sm:inline">Refresh</span>
+        </button>
+      </>
+    )}
+  </div>
 
-              </>
-            )}
-          </div>
+  {/* New Product Button */}
+  <button
+    onClick={() => navigate("/admin/create-product")}
+    className="h-10 flex items-center justify-center bg-black gap-2 border border-black rounded-lg hover:bg-gray-700 transition w-full sm:w-44 text-sm text-white"
+  >
+    <span>New Product</span>
+  </button>
+</div>
+
+
+        {showConfirmDelete && (
+          <ConfirmModal
+            open={showConfirmDelete}
+            onClose={() => setShowConfirmDelete(false)}
+            onConfirm={handleBulkDelete}
+            title={`Delete ${selectedIds.length} product(s)?`}
+            message={`Are you sure you want to permanently delete the selected products? This action cannot be undone.`}
+            confirmText="Delete"
+            cancelText="Cancel"
+          />
         )}
-{showConfirmDelete && (
-  <ConfirmModal
-    open={showConfirmDelete}
-    onClose={() => setShowConfirmDelete(false)}
-    onConfirm={handleBulkDelete}
-    title={`Delete ${selectedIds.length} product(s)?`}
-    message={`Are you sure you want to permanently delete the selected products? This action cannot be undone.`}
-    confirmText="Delete"
-    cancelText="Cancel"
-  />
-)}
 
         {/* Filters Modal */}
         {showFilters && (
@@ -627,202 +656,161 @@ const handleBulkDelete = async () => {
           </div>
         )}
         {/* Product Table */}
-        <div className="overflow-x-auto border rounded-lg">
-          <table className="min-w-full bg-white border border-gray-200">
-            <thead className="bg-gray-50 text-xs sm:text-sm">
-              <tr>
-                {selectMode && (
-                  <th className="px-6 py-3 text-center align-middle">
-                    <input
-                      type="checkbox"
-                      checked={
-                        selectedIds.length === products.length &&
-                        products.length > 0
-                      }
-                      onChange={toggleSelectAll}
-                    />
-                  </th>
-                )}
-                <th
-                  className="px-4 py-3 text-left font-medium text-gray-700 cursor-pointer"
-                  onClick={() => handleSort("name")}
-                >
-                  Product {getSortIcon("name")}
-                </th>
-                <th
-                  className="px-4 py-3 text-left font-medium text-gray-700 cursor-pointer"
-                  onClick={() => handleSort("gender")}
-                >
-                  Gender {getSortIcon("gender")}
-                </th>
-                <th
-                  className="px-4 py-3 text-left font-medium text-gray-700 cursor-pointer"
-                  onClick={() => handleSort("price")}
-                >
-                  Price {getSortIcon("price")}
-                </th>
-                <th
-                  className="px-4 py-3 text-left font-medium text-gray-700 cursor-pointer"
-                  onClick={() => handleSort("finalPrice")}
-                >
-                  Final Price {getSortIcon("finalPrice")}
-                </th>
-                <th
-                  className="px-4 py-3 text-left font-medium text-gray-700 cursor-pointer"
-                  onClick={() => handleSort("rating")}
-                >
-                  Rating {getSortIcon("rating")}
-                </th>
-                <th
-                  className="px-4 py-3 text-left font-medium text-gray-700 cursor-pointer"
-                  onClick={() => handleSort("sold")}
-                >
-                  Sold {getSortIcon("sold")}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-700">
-                  Variants
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {products.length > 0 ? (
-                products.map((product) => {
-                  const isSelected = selectedIds.includes(product._id);
-                  const handleRowClick = () => {
-                    if (selectMode) {
-                      toggleSelect(product._id);
-                    } else {
-                      handleProductClick(product.slug);
-                    }
-                  };
 
-                  return (
-                    <tr
-                      key={product._id}
-                      onClick={handleRowClick}
-                      className="hover:bg-gray-50 cursor-pointer"
-                    >
-                      {selectMode && (
-                        <td
-                          className="px-6 py-4 text-center align-middle"
-                          onClick={(e) => e.stopPropagation()} // prevent double toggle
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleSelect(product._id)}
-                          />
-                        </td>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-auto max-h-[100vh]">
+  <div className="w-full overflow-x-auto">
+    <table className="min-w-[900px] w-full text-sm border-separate border-spacing-0">
+      <thead className="bg-black text-white sticky top-0 z-10">
+        <tr>
+          <th className="px-4 py-3 text-sm cursor-pointer" onClick={() => handleSort("name")}>
+            Product {getSortIcon("name")}
+          </th>
+          <th className="px-4 py-3 text-sm cursor-pointer" onClick={() => handleSort("gender")}>
+            Gender {getSortIcon("gender")}
+          </th>
+          <th className="px-4 py-3 text-sm cursor-pointer" onClick={() => handleSort("price")}>
+            Price {getSortIcon("price")}
+          </th>
+          <th className="px-6 py-3 text-sm cursor-pointer" onClick={() => handleSort("finalPrice")}>
+            Final Price {getSortIcon("finalPrice")}
+          </th>
+          <th className="px-4 py-3 text-sm cursor-pointer" onClick={() => handleSort("rating")}>
+            Rating {getSortIcon("rating")}
+          </th>
+          <th className="px-4 py-3 cursor-pointer text-sm" onClick={() => handleSort("sold")}>
+            Sold {getSortIcon("sold")}
+          </th>
+          <th className="px-4 py-3 text-sm">Variants</th>
+        </tr>
+      </thead>
+
+      <tbody className="divide-y divide-gray-200">
+        {products.length > 0 ? (
+          products.map((product) => {
+            const isSelected = selectedIds.includes(product._id);
+
+            const handleRowClick = () => {
+              if (selectMode) toggleSelect(product._id);
+              else handleProductClick(product.slug);
+            };
+
+            return (
+              <tr
+                key={product._id}
+                onClick={handleRowClick}
+                onTouchStart={() => handleTouchStart(product._id)}
+                onTouchEnd={handleTouchEnd}
+                onContextMenu={(e) => handleRightClick(e, product._id)}
+                className={`hover:bg-gray-100 cursor-pointer ${
+                  isSelected ? "bg-gray-100" : ""
+                }`}
+              >
+                <td className="px-4 py-3">
+                  <div className="relative flex items-center">
+                    {selectMode && isSelected && (
+                      <div className="absolute -top-1 -left-1 z-10 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center shadow">
+                        ✓
+                      </div>
+                    )}
+                    <div className="flex-shrink-0 h-16 w-16 rounded-md overflow-hidden border border-gray-200">
+                      <img
+                        src={getProductImage(product)}
+                        alt={product.name}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.target.src = "/placeholder.jpg";
+                          e.target.className = "h-full w-full object-contain p-2 bg-gray-100";
+                        }}
+                      />
+                    </div>
+                    <div className="ml-3">
+                      <div className="text-sm font-medium text-gray-900 line-clamp-1">
+                        {product.name}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">ID: {product._id}</div>
+                      {product.model && (
+                        <div className="text-xs text-gray-500 mt-1">Model: {product.model}</div>
                       )}
-                      <td className="px-4 py-3">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-16 w-16 rounded-md overflow-hidden border border-gray-200">
-                            <img
-                              src={getProductImage(product)}
-                              alt={product.name}
-                              className="h-full w-full object-cover"
-                              onError={(e) => {
-                                e.target.src = "/placeholder.jpg";
-                                e.target.className =
-                                  "h-full w-full object-contain p-2 bg-gray-100";
-                              }}
-                            />
-                          </div>
-                          <div className="ml-3">
-                            <div className="text-sm font-medium text-gray-900 line-clamp-1">
-                              {product.name}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              ID: {product._id}
-                            </div>
-                            {product.model && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                Model: {product.model}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700 capitalize">
-                        {product.gender}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">
-                        ₹{product.price?.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-700">
-                        ₹{product.finalPrice?.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">
-                        <div className="flex items-center">
-                          <div className="font-medium">
-                            {product.rating.average?.toFixed(1) || "0.0"}
-                          </div>
-                          <div className="ml-1">
-                            <StarIcon />
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">
-                        {product.sold?.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <div className="flex flex-nowrap gap-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
-                          {product.variants?.map((variant, i) => (
-                            <img
-                              key={i}
-                              src={formatImageUrl(variant.images?.[0])}
-                              alt={variant.color}
-                              title={variant.color}
-                              className="w-8 h-8 rounded-md border border-gray-300 object-cover flex-shrink-0"
-                              onError={(e) => {
-                                e.target.src = "/placeholder.jpg";
-                                e.target.className =
-                                  "w-8 h-8 object-contain p-1 bg-gray-100 border border-gray-300 rounded";
-                              }}
-                            />
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td
-                    colSpan={selectMode ? 8 : 7}
-                    className="px-4 py-6 text-center text-sm text-gray-500"
-                  >
-                    No products found. Try adjusting your filters.
-                    <button
-                      onClick={resetFilters}
-                      className="ml-2 text-blue-600 hover:underline"
-                    >
-                      Clear filters
-                    </button>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
+                </td>
 
-          {pagination?.totalPages > 1 && (
-            <div className="flex justify-center mt-4 gap-2 text-sm">
-              {[...Array(pagination.totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 border rounded ${
-                    i + 1 === pagination.currentPage
-                      ? "bg-black text-white"
-                      : "bg-white text-black"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+                <td className="px-4 py-3 text-sm text-gray-700 capitalize">
+                  {product.gender}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700">
+                  ₹{product.price?.toLocaleString()}
+                </td>
+                <td className="px-4 py-3 text-sm font-medium text-gray-700">
+                  ₹{product.finalPrice?.toLocaleString()}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700">
+                  <div className="flex items-center">
+                    <span className="font-medium">{product.rating.average?.toFixed(1) || "0.0"}</span>
+                    <span className="ml-1"><StarIcon /></span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700">
+                  {product.sold?.toLocaleString()}
+                </td>
+                <td className="px-4 py-3 text-sm">
+                  <div className="flex flex-nowrap gap-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
+                    {product.variants?.map((variant, i) => (
+                      <img
+                        key={i}
+                        src={formatImageUrl(variant.images?.[0])}
+                        alt={variant.color}
+                        title={variant.color}
+                        className="w-8 h-8 rounded-md border border-gray-300 object-cover flex-shrink-0"
+                        onError={(e) => {
+                          e.target.src = "/placeholder.jpg";
+                          e.target.className =
+                            "w-8 h-8 object-contain p-1 bg-gray-100 border border-gray-300 rounded";
+                        }}
+                      />
+                    ))}
+                  </div>
+                </td>
+              </tr>
+            );
+          })
+        ) : (
+          <tr>
+            <td
+              colSpan={selectMode ? 8 : 7}
+              className="px-4 py-6 text-center text-sm text-gray-500"
+            >
+              No products found. Try adjusting your filters.
+              <button onClick={resetFilters} className="ml-2 text-blue-600 hover:underline">
+                Clear filters
+              </button>
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+
+  {/* Pagination */}
+  {pagination?.totalPages > 1 && (
+    <div className="flex justify-center mt-4 gap-2 text-sm px-4">
+      {[...Array(pagination.totalPages)].map((_, i) => (
+        <button
+          key={i}
+          onClick={() => setCurrentPage(i + 1)}
+          className={`px-3 py-1 border rounded ${
+            i + 1 === pagination.currentPage
+              ? "bg-black text-white"
+              : "bg-white text-black"
+          }`}
+        >
+          {i + 1}
+        </button>
+      ))}
+    </div>
+  )}
+</div>
+
       </div>
     </>
   );

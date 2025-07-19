@@ -7,7 +7,7 @@ const userController = require('../controllers/userController');
 
 // @route   GET /api/admin/users
 // @desc    Get all users (Admin only)
-router.get('/users', verifyAdmin, userController.getUsers);
+router.get('/users', verifyAdmin, userController.getAllUsers);
 
 // @route   GET /api/admin/users/activity/stats
 // @desc    Get user activity statistics (Admin only)

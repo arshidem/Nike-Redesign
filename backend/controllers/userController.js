@@ -24,154 +24,57 @@ const formatUserResponse = (user) => ({
 // @desc    Get all users with filtering, sorting, and pagination
 // @route   GET /api/admin/users
 // @access  Private/Admin
-exports.getUsers = asyncHandler(async (req, res) => {
-  try {
-    // Extract and validate query parameters
-    const { 
-      page = 1, 
-      limit = 10, 
-      search, 
-      role, 
-      gender, 
-      status, // New status filter (active/inactive/pending)
-      sortBy = 'createdAt:desc',
-      hasOtp,
-      verified,
-      createdAfter,
-      createdBefore,
-      isActive // New isActive filter
-    } = req.query;
+// @desc    Get all users (admin only)
+// @route   GET /api/users
+// @access  Private/Admin
+exports.getAllUsers = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10, search, sortBy, role, gender, status, isActive } = req.query;
 
-    // Validate pagination parameters
-    const pageNum = Math.max(1, parseInt(page));
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+  const query = {};
 
-    // Build filter object
-    const filter = {};
-    
-    // Text search
-    if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { phoneNumber: { $regex: search, $options: 'i' } } // Added phone number search
-      ];
-    }
-    
-    // Exact match filters
-    if (role) filter.role = role;
-    if (gender) filter.gender = gender;
-    if (isActive !== undefined) filter.isActive = isActive === 'true';
-    
-    // Status filter (active/inactive/pending)
-    if (status) {
-      if (status === 'active') {
-        filter.isActive = true;
-        filter.$and = [
-          { name: { $exists: true, $ne: null } },
-          { gender: { $exists: true, $ne: null } }
-        ];
-      } else if (status === 'inactive') {
-        filter.isActive = false;
-      } else if (status === 'pending') {
-        filter.$or = [
-          { name: { $exists: false } },
-          { name: null },
-          { gender: { $exists: false } },
-          { gender: null }
-        ];
-      }
-    }
-    
-    // OTP status filter
-    if (hasOtp === 'true') {
-      filter.otp = { $exists: true, $ne: null };
-    } else if (hasOtp === 'false') {
-      filter.otp = { $exists: false };
-    }
-
-    // Verification status filter
-    if (verified === 'true') {
-      filter.$and = [
-        { name: { $exists: true, $ne: null } },
-        { gender: { $exists: true, $ne: null } }
-      ];
-    } else if (verified === 'false') {
-      filter.$or = [
-        { name: { $exists: false } },
-        { name: null },
-        { gender: { $exists: false } },
-        { gender: null }
-      ];
-    }
-
-    // Date range filters
-    const dateFilters = {};
-    if (createdAfter) dateFilters.$gte = new Date(createdAfter);
-    if (createdBefore) dateFilters.$lte = new Date(createdBefore);
-    if (Object.keys(dateFilters).length) filter.createdAt = dateFilters;
-
-    // Last activity filters
-    if (req.query.lastLoginAfter) {
-      filter.lastLogin = { $gte: new Date(req.query.lastLoginAfter) };
-    }
-    if (req.query.lastLoginBefore) {
-      filter.lastLogin = { ...filter.lastLogin, $lte: new Date(req.query.lastLoginBefore) };
-    }
-
-    // Parse sorting
-    const [sortField, sortOrder] = sortBy.split(':');
-    const sort = {};
-    const validSortFields = ['createdAt', 'name', 'email', 'updatedAt', 'lastLogin', 'lastLogout'];
-    const validOrder = ['asc', 'desc'];
-    
-    if (validSortFields.includes(sortField) && validOrder.includes(sortOrder)) {
-      sort[sortField] = sortOrder === 'desc' ? -1 : 1;
-    } else {
-      sort.createdAt = -1; // Default sort
-    }
-
-    // Get total count and paginated results in parallel
-    const [total, users] = await Promise.all([
-      User.countDocuments(filter),
-      User.find(filter)
-        .select('-otp -otpExpires -__v -password')
-        .skip((pageNum - 1) * limitNum)
-        .limit(limitNum)
-        .sort(sort)
-        .lean()
-    ]);
-
-    // Format response
-    const response = {
-      success: true,
-      count: users.length,
-      total,
-      page: pageNum,
-      pages: Math.ceil(total / limitNum),
-      data: users.map(formatUserResponse)
-    };
-
-    res.set('Cache-Control', 'public, max-age=60');
-    res.status(200).json(response);
-
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid query parameters',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: 'Server error while fetching users',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+  // Search by name or email
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+    ];
   }
+
+  // Apply filters
+  if (role) query.role = role;
+  if (gender) query.gender = gender;
+  if (status) query.status = status;
+  if (isActive !== undefined) query.isActive = isActive === "true";
+
+  // Sorting
+  let sort = {};
+  if (sortBy) {
+    const [field, order] = sortBy.split(":");
+    sort[field] = order === "desc" ? -1 : 1;
+  } else {
+    sort.createdAt = -1; // Default sort
+  }
+
+  const skip = (Number(page) - 1) * Number(limit);
+  const totalDocs = await User.countDocuments(query);
+  const users = await User.find(query)
+    .sort(sort)
+    .skip(skip)
+    .limit(Number(limit))
+    .select("-password") // Exclude password
+    .lean(); // Faster query
+
+  res.status(200).json({
+    success: true,
+    data: users,
+    pagination: {
+      totalDocs,
+      totalPages: Math.ceil(totalDocs / limit),
+      currentPage: Number(page),
+      hasNextPage: skip + users.length < totalDocs,
+      hasPrevPage: skip > 0,
+    },
+  });
 });
 
 // @desc    Get single user by ID

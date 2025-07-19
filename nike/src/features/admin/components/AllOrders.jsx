@@ -4,8 +4,9 @@ import React, {
   useCallback,
   useMemo,
   useContext,
+  useRef,
 } from "react";
-import { io } from 'socket.io-client';
+import { io } from "socket.io-client";
 import { Link } from "react-router-dom";
 import useOrderServices from "../../user/services/orderServices";
 import Skeleton from "react-loading-skeleton";
@@ -23,6 +24,8 @@ import {
   RefreshIcon,
   PrinterIcon,
   ExportIcon,
+  StatusIcon,
+  CheckIcon,
 } from "../../../shared/ui/Icons";
 import AppContext, { useAppContext } from "../../../context/AppContext";
 import { formatDate, formatCurrency } from "../../../utils/dateUtils";
@@ -62,7 +65,7 @@ export const AllOrders = () => {
     minTotalPrice: "",
     maxTotalPrice: "",
   });
-  const { backendUrl,user } = useAppContext(AppContext);
+  const { backendUrl, user } = useAppContext(AppContext);
   const [appliedFilters, setAppliedFilters] = useState({});
   // Bulk selection state
   const [selectMode, setSelectMode] = useState(false);
@@ -73,7 +76,6 @@ export const AllOrders = () => {
     delivered: "bg-green-100 text-green-600",
     cancelled: "bg-gray-200 text-gray-600",
   };
-
 
   const formatImageUrl = (imagePath) => {
     if (!imagePath || typeof imagePath !== "string") return "/placeholder.jpg";
@@ -116,6 +118,8 @@ export const AllOrders = () => {
       );
       setSelectMode(false);
       setSelectedIds([]);
+      setSelectedIds([]); // This will trigger the useEffect
+
       fetchOrders();
       fetchDashboard();
     } else {
@@ -123,15 +127,70 @@ export const AllOrders = () => {
     }
   };
 
+  useEffect(() => {
+    if (selectedIds.length === 0) {
+      setSelectMode(false);
+    }
+  }, [selectedIds]);
   // Toggle select all
   const toggleSelectAll = () => {
-    if (selectedIds.length === orders.length) setSelectedIds([]);
-    else setSelectedIds(orders.map((o) => o._id));
+    setSelectedIds((prev) => {
+      const newIds =
+        prev.length === orders.length ? [] : orders.map((o) => o._id);
+
+      // Automatically exit select mode when deselecting all
+      if (newIds.length === 0) {
+        setSelectMode(false);
+      }
+
+      return newIds;
+    });
   };
   const toggleSelect = (id) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
+    setSelectedIds((prev) => {
+      const newIds = prev.includes(id)
+        ? prev.filter((i) => i !== id)
+        : [...prev, id];
+
+      // Automatically exit select mode when deselecting the last item
+      if (newIds.length === 0) {
+        setSelectMode(false);
+      }
+
+      return newIds;
+    });
+  };
+
+  let pressTimer;
+
+  const handleTouchStart = (orderId) => {
+  pressTimer = setTimeout(() => {
+    // Vibrate the device for 50ms
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+
+    setSelectMode(true);
+    toggleSelect(orderId);
+  }, 600); // 600ms = long press
+};
+
+  const handleTouchEnd = () => {
+    clearTimeout(pressTimer);
+  };
+
+  const handleRightClick = (e, orderId) => {
+    e.preventDefault(); // Prevent browser context menu
+
+    // If not in select mode, enter select mode and select this order
+    if (!selectMode) {
+      setSelectMode(true);
+      setSelectedIds([orderId]);
+    }
+    // If already in select mode, just toggle this order's selection
+    else {
+      toggleSelect(orderId);
+    }
   };
 
   const fetchOrders = useCallback(async () => {
@@ -1111,96 +1170,87 @@ export const AllOrders = () => {
 
       {/* Header / Toolbar */}
       <h1 className="text-2xl font-bold mb-4">Order Management</h1>
+<div className="flex items-center gap-2 w-full overflow-x-auto pb-1">
+  {/* Search Input with Icon */}
+  <div className="relative flex-grow min-w-[150px]">
+    <input
+      type="text"
+      placeholder="Search orders..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+      onClick={() => {
+        setCurrentPage(1);
+        handleSearch();
+      }}
+      className="w-full text-sm pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 h-9"
+    />
+    <button
+      onClick={handleSearch}
+      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+      aria-label="Search"
+    >
+      <SearchIcon className="w-4 h-4" />
+    </button>
+  </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-        {/* -- Search Bar -- */}
-        <div className="relative flex-1">
-          <input
-            type="text"
-            placeholder="Search orders..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="w-full h-10 pl-4 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-sm"
-          />
-          <button
-            onClick={handleSearch}
-            aria-label="Search orders"
-            className="absolute top-1/2 right-3 -translate-y-1/2"
-          >
-            <SearchIcon className="w-5 h-5 text-gray-500 hover:text-black" />
-          </button>
-        </div>
+  {/* Action Buttons (Conditional by selectMode) */}
+  {selectMode ? (
+    <>
+      <button
+        onClick={toggleSelectAll}
+        className="h-9 px-2 rounded-lg border bg-white hover:bg-gray-100 flex items-center gap-1 text-sm whitespace-nowrap"
+      >
+        <CheckIcon className="w-3 h-3" />
+        <span className="hidden sm:inline">
+          {selectedIds.length === orders.length ? "Deselect All" : "Select All"}
+        </span>
+      </button>
 
-        {/* -- Filter, Refresh & Select Toggle -- */}
-        <div className="flex items-center space-x-3">
-          {/* Filter */}
-          <button
-            onClick={() => setShowFilters(true)}
-            aria-label="Open filters"
-            className="w-10 h-10 flex items-center justify-center  rounded-lg hover:bg-gray-100 transition"
-          >
-            <FilterIcon className="w-5 h-5 text-gray-600" />
-          </button>
+      <button
+        onClick={() => setShowStatusModal(true)}
+        className="h-9 px-2 rounded-lg bg-white hover:bg-gray-100 flex items-center gap-1 text-sm whitespace-nowrap"
+      >
+        <StatusIcon className="w-4 h-4" />
+        <span className="hidden sm:inline">Status</span>
+      </button>
 
-          {/* Refresh */}
-          <button
-            onClick={() => {
-              fetchOrders();
-              fetchDashboard();
-            }}
-            aria-label="Refresh data"
-            className="w-10 h-10 flex items-center justify-center  rounded-lg hover:bg-gray-100 transition"
-          >
-            <RefreshIcon className="w-5 h-5 text-gray-600" />
-          </button>
+      <button
+        onClick={() => setShowExportModal(true)}
+        className="h-9 px-2 rounded-lg bg-white hover:bg-gray-100 flex items-center gap-1 text-sm whitespace-nowrap"
+      >
+        <ExportIcon className="w-4 h-4" />
+        <span className="hidden sm:inline">Export</span>
+      </button>
+    </>
+  ) : (
+    <>
+      <button
+        onClick={() => setShowFilters(true)}
+        className="h-9 px-2 rounded-lg bg-white hover:bg-gray-100 flex items-center gap-1 text-sm whitespace-nowrap"
+      >
+        <FilterIcon className="w-4 h-4" />
+        <span className="hidden sm:inline">Filters</span>
+      </button>
 
-          {/* Select Mode Toggle */}
-          <button
-            onClick={() => setSelectMode((m) => !m)}
-            className="h-10 px-4 bg-black text-white rounded-lg hover:bg-gray-800 text-sm"
-          >
-            {selectMode ? "Cancel Select" : "Select Orders"}
-          </button>
-        </div>
-      </div>
+      <button
+        onClick={() => {
+          fetchOrders();
+          fetchDashboard();
+        }}
+        className="h-9 px-2 rounded-lg bg-white hover:bg-gray-100 flex items-center gap-1 text-sm whitespace-nowrap"
+      >
+        <RefreshIcon className="w-4 h-4" />
+        <span className="hidden sm:inline">Refresh</span>
+      </button>
+    </>
+  )}
+</div>
 
-      {selectMode && (
-        <div className="flex  items-center gap-2 mb-4 justify-between">
-          <div>
-     <button
-            onClick={toggleSelectAll}
-            className="px-3 py-1 border rounded"
-          >
-            {selectedIds.length === orders.length
-              ? "Deselect All"
-              : "Select All"}
-          </button>
-          </div>
-          <div className="flex items-center gap-2">
- {selectedIds.length > 0 && (
-            <>
-              <button
-                onClick={() => setShowStatusModal(true)}
-                className="px-3 py-1  rounded bg-white hover:bg-gray-200 flex items-center gap-1"
-              >
-                Change Status
-              </button>
 
-              <button
-                onClick={() => setShowExportModal(true)}
-                className="px-3 py-1  rounded bg-white hover:bg-gray-200 flex items-center gap-1"
-              >
-                <span>Export</span>
-              </button>
-            </>
-          )}
-          </div>
-     
 
-         
-        </div>
-      )}
+
+
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         {orders.length === 0 && !loading ? (
@@ -1212,19 +1262,12 @@ export const AllOrders = () => {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            <div className="overflow-auto max-h-[100vh]">
+              {" "}
+              {/* scrollable container */}
+              <table className="w-full text-sm border-separate border-spacing-0">
+                <thead className="bg-black text-white sticky top-0 z-10">
                   <tr>
-                    {selectMode && (
-                      <th className="px-6 py-3 text-center align-middle">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.length === orders.length}
-                          onChange={toggleSelectAll}
-                        />
-                      </th>
-                    )}
                     <th className="px-6 py-3 text-center align-middle">
                       Order ID
                     </th>
@@ -1252,36 +1295,33 @@ export const AllOrders = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {orders.map((order) => {
                     const isSelected = selectedIds.includes(order._id);
+                    const handleRowClick = () => {
+                      if (selectMode) {
+                        toggleSelect(order._id);
+                      } else {
+                        setSelectedOrder(order);
+                        setShowModal(true);
+                      }
+                    };
 
                     return (
                       <tr
                         key={order._id}
-                        className={`hover:bg-gray-50 cursor-pointer ${
-                          selectMode && isSelected ? "bg-gray-100" : ""
-                        }`}
-                        onClick={() => {
-                          if (selectMode) {
-                            toggleSelect(order._id);
-                          } else {
-                            setSelectedOrder(order);
-                            setShowModal(true);
-                          }
-                        }}
+                        onClick={() => handleRowClick(order)}
+                        onContextMenu={(e) => handleRightClick(e, order._id)}
+                        onTouchStart={() => handleTouchStart(e, order._id)}
+                        onTouchEnd={handleTouchEnd}
+                        className={`hover:bg-gray-100 cursor-pointer relative transition-colors ${
+                          selectedIds.includes(order._id) ? "bg-gray-100" : ""
+                        } `}
                       >
-                        {selectMode && (
-                          <td
-                            className="px-6 py-4 text-center align-middle"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => toggleSelect(order._id)}
-                            />
-                          </td>
-                        )}
-
-                        <td className="px-6 py-4 text-center align-middle text-sm font-medium">
+                        <td className="px-8 py-4 text-center align-middle text-sm font-medium">
+                          {/* ✅ Checkmark overlay */}
+                          {selectMode && isSelected && (
+                            <div className="absolute -top-50% left-1 z-8 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center shadow">
+                              ✓
+                            </div>
+                          )}
                           #{order._id.slice(-6).toUpperCase()}
                         </td>
                         <td className="px-6 py-4 text-center align-middle text-sm text-gray-500">

@@ -20,51 +20,49 @@ export const PlusIconWhite = () => {
     </svg>
   );
 };
-export const PlusIcon = () => {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      color="none"
-      stroke-width="1.5"
-      stroke="currentColor"
-      class="size-5"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="M12 4.5v15m7.5-7.5h-15"
-      />
-    </svg>
-  );
-};
-
-export const SearchIcon = () => (
+export const PlusIcon = ({ size = 5, color = "currentColor", className = "" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
     strokeWidth="1.5"
-    stroke="currentColor"
-    className="size-5"
+    stroke={color}
+    className={`size-${size} ${className}`}
   >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
-      d="m21 21-5.197-5.197M15.803 15.803A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+      d="M12 4.5v15m7.5-7.5h-15"
     />
   </svg>
 );
 
-export const HeartIcon = () => (
+// SearchIcon with customization
+export const SearchIcon = ({ size = 5, color = "currentColor", className = "" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
     strokeWidth="1.5"
-    stroke="currentColor"
-    className="size-5"
+    stroke={color}
+    className={`size-${size} ${className}`}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+    />
+  </svg>
+);
+
+export const HeartIcon = ({ size = 5, color = "currentColor", className = "" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth="1.5"
+    stroke={color}
+    className={`size-${size} ${className}`}
   >
     <path
       strokeLinecap="round"
@@ -106,22 +104,37 @@ export const UserIcon = () => (
     />
   </svg>
 );
-export const ArrowIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth="1.5"
-    stroke="currentColor"
-    className="size-6"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="m8.25 4.5 7.5 7.5-7.5 7.5"
-    />
-  </svg>
-);
+// ArrowIcon with direction prop
+export const ArrowIcon = ({ 
+  direction = "right", // 'right' | 'left' | 'up' | 'down'
+  size = 6, 
+  color = "currentColor", 
+  className = "" 
+}) => {
+  const rotation = {
+    right: "rotate-0",
+    left: "rotate-180",
+    up: "rotate-90",
+    down: "rotate-270",
+  }[direction];
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="1.5"
+      stroke={color}
+      className={`size-${size} ${rotation} ${className}`}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m8.25 4.5 7.5 7.5-7.5 7.5"
+      />
+    </svg>
+  );
+};
 export const XIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -221,11 +234,11 @@ export const ArrowIconDown = () => (
   </svg>
 );
 
-export const DeleteIcon = ({
-  size = 24,
-  color = "currentColor",
-  className = "",
-  onClick,
+export const DeleteIcon = ({ 
+  size = 24, 
+  color = "currentColor", 
+  className = "", 
+  onClick 
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -246,44 +259,53 @@ export const DeleteIcon = ({
   </svg>
 );
 
-export const MinusIcon = () => (
+export const MinusIcon = ({ className = "size-5" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    strokeWidth="1.5"
     stroke="currentColor"
-    class="size-5"
+    className={className}
   >
-    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
   </svg>
 );
 
-export const HomeIcon = () => (
+export const HomeIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
     viewBox="0 0 24 24"
     fill="currentColor"
+    className={className}
   >
     <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z" />
   </svg>
 );
-export const ChartIcon = () => (
- <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
-</svg>
-
-);
-
-export const DashboardIcon = () => (
+export const ChartIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
-    viewBox="0 0 22 22"
+    viewBox="0 0 24 24"
+    strokeWidth="1.5"
     stroke="currentColor"
-    className="w-5 h-5"
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"
+    />
+  </svg>
+);
+
+export const DashboardIcon = ({ className = "size-6" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    className={className}
   >
     <path
       strokeLinecap="round"
@@ -294,25 +316,24 @@ export const DashboardIcon = () => (
   </svg>
 );
 
-export const ProductsIcon = () => (
+export const ProductsIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="currentColor"
-    width="22"
-    height="24"
     viewBox="0 0 22 22"
+    className={className}
   >
     <path d="M21,12H18.335L18,6.934A1,1,0,0,0,17,6H15A5,5,0,0,0,5,6H3a1,1,0,0,0-1,.934l-1,15A1,1,0,0,0,2,23H22a1,1,0,0,0,.994-1.11l-1-9A1,1,0,0,0,21,12ZM10,3a3,3,0,0,1,3,3H7A3,3,0,0,1,10,3ZM3.069,21,3.935,8H5v2a1,1,0,0,0,2,0V8h6v2a1,1,0,0,0,2,0V8h1.064l.867,13Zm15.866,0-.466-7h1.636l.778,7Z" />
   </svg>
 );
 
-export const OrdersIcon = () => (
+export const OrdersIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="22"
-    height="26"
-    viewBox="0 0 24 24"
     fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    className={className}
   >
     <rect
       x="4"
@@ -320,86 +341,56 @@ export const OrdersIcon = () => (
       width="18"
       height="22"
       rx="2"
-      stroke="currentColor"
       strokeWidth="2"
     />
     <path
       d="M9 9H15"
-      stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
     />
     <path
       d="M9 13H15"
-      stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
     />
     <path
       d="M9 17H13"
-      stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
     />
   </svg>
 );
-
-export const UsersIcon = () => (
+export const UsersIcon = ({ className = "size-6" }) => (
   <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    className={className}
   >
     <path
-      d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88"
-      stroke="currentColor"
+      d="M17 21V19a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2M12 3a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4z"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
   </svg>
 );
-
-export const ReportsIcon = () => (
+export const ReportsIcon = ({ className = "size-6" }) => (
   <svg
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    className={className}
   >
     <path
       d="M3 3V19H21"
-      stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
     />
     <path
       d="M7 15L10 9L13 13L17 7"
-      stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -410,33 +401,37 @@ export const ReportsIcon = () => (
     <circle cx="7" cy="15" r="1" fill="currentColor" />
   </svg>
 );
-export const CouponIcon = ({ size = 24, color = "currentColor" }) => (
+
+
+export const CouponIcon = ({ className = "size-6", color = "currentColor" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
     viewBox="0 0 24 24"
     fill="none"
+    className={className}
   >
-    <path fill="none" d="M0 0h24v24H0z" />
     <path
       fill={color}
       d="M2 9.5V4a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v5.5a2.5 2.5 0 1 0 0 5V20a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-5.5a2.5 2.5 0 1 0 0-5zM14 5H4v2.968a4.5 4.5 0 0 1 0 8.064V19h10V5zm2 0v14h4v-2.968a4.5 4.5 0 0 1 0-8.064V5h-4z"
     />
   </svg>
 );
-export const EditIcon = (props) => (
+export const EditIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 1844.88 1844.88"
-    fill="currentColor"
-    {...props}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    className={className}
   >
-    <path d="M1714.29 773.45c-39.45 0-71.43 31.98-71.43 71.43v475.5c-.24 210.68-170.97 381.41-381.64 381.64h-736.71c-210.68-.24-381.41-170.97-381.64-381.64v-736.71c.24-210.68 170.97-381.41 381.64-381.64h475.5c39.45 0 71.43-31.98 71.43-71.43s-31.98-71.43-71.43-71.43h-475.5C234.96 59.48.31 294.12 0 583.66v736.71c.31 289.54 234.96 524.19 524.5 524.5h736.71c289.54-.31 524.19-234.96 524.5-524.5v-475.5c0-39.45-31.98-71.43-71.43-71.43Z" />
-    <path d="M714.29 773.45v285.71c0 39.45 31.98 71.43 71.43 71.43h285.71c18.94 0 37.11-7.53 50.5-20.93l642.86-642.86c106.79-106.79 106.79-279.93 0-386.71-106.79-106.79-279.93-106.79-386.71 0l-642.86 642.86c-13.4 13.39-20.92 31.56-20.93 50.5Zm764.78-592.36c49.91-52.1 132.61-53.88 184.71-3.97 52.1 49.91 53.88 132.61 3.97 184.71a131.6 131.6 0 0 1-3.97 3.97l-20.93 20.93-184.71-184.71 20.93-20.93Zm-622.65 621.93 500-500 184.71 184.71-500 500h-184.71V803.02Z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+    />
   </svg>
 );
-
 // Nike Swoosh SVG Component
 export const NikeSwoosh = () => (
   <svg
@@ -449,150 +444,172 @@ export const NikeSwoosh = () => (
     <path d="M245.8075 717.62406c-29.79588-1.1837-54.1734-9.3368-73.23459-24.4796-3.63775-2.8928-12.30611-11.5663-15.21427-15.2245-7.72958-9.7193-12.98467-19.1785-16.48977-29.6734-10.7857-32.3061-5.23469-74.6989 15.87753-121.2243 18.0765-39.8316 45.96932-79.3366 94.63252-134.0508 7.16836-8.0511 28.51526-31.5969 28.65302-31.5969.051 0-1.11225 2.0153-2.57652 4.4694-12.65304 21.1938-23.47957 46.158-29.37751 67.7703-9.47448 34.6785-8.33163 64.4387 3.34693 87.5151 8.05611 15.898 21.86731 29.6684 37.3979 37.2806 27.18874 13.3214 66.9948 14.4235 115.60699 3.2245 3.34694-.7755 169.19363-44.801 368.55048-97.8366 199.35686-53.0408 362.49439-96.4029 362.51989-96.3672.056.046-463.16259 198.2599-703.62654 301.0914-38.08158 16.2806-48.26521 20.3928-66.16827 26.6785-45.76525 16.0714-86.76008 23.7398-119.89779 22.4235z" />
   </svg>
 );
-export const PencilIcon = () => (
+export const PencilIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    strokeWidth="1.5"
     stroke="currentColor"
-    class="size-6"
+    className={className}
   >
     <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
     />
   </svg>
 );
-export const StarIcon = () => (
+export const StarIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    strokeWidth="1.5"
     stroke="currentColor"
-    class="size-6"
+    className={className}
   >
     <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"
     />
   </svg>
 );
-export const CheckIcon = () => (
+// In your Icons.jsx
+export const CheckIcon = ({ className = "" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    strokeWidth="1.5"
     stroke="currentColor"
-    class="size-6"
+    className={`w-6 h-6 ${className}`} // Default size is w-6 h-6 (24px)
   >
     <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       d="m4.5 12.75 6 6 9-13.5"
     />
   </svg>
 );
-export const TruckIcon = () => (
+export const TruckIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    strokeWidth="1.5"
     stroke="currentColor"
-    class="size-6"
+    className={className}
   >
     <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"
     />
   </svg>
 );
-export const BoxIcon = () => (
+export const BoxIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    strokeWidth="1.5"
     stroke="currentColor"
-    class="size-6"
+    className={className}
   >
     <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
     />
   </svg>
 );
-export const SortAscIcon = () => (
+export const SortAscIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="32"
-    height="32"
     viewBox="0 0 24 24"
     fill="none"
+    stroke="currentColor"
+    className={className}
   >
     <path
-      stroke="#FF8A65"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-miterlimit="10"
-      stroke-width="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeMiterlimit="10"
+      strokeWidth="1.5"
       d="M18.07 9.57L12 3.5 5.93 9.57M12 20.5V3.67"
-    ></path>
+    />
   </svg>
 );
-export const BellIcon = () => (
+export const BellIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    strokeWidth="1.5"
     stroke="currentColor"
-    class="size-6"
+    className={className}
   >
     <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
     />
   </svg>
 );
-export const WarningIcon = () => (
+
+export const WarningIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    strokeWidth="1.5"
     stroke="currentColor"
-    class="size-6"
+    className={className}
   >
     <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
     />
   </svg>
 );
-export const RefreshIcon = () => (
+export const RefreshIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    strokeWidth="1.5"
     stroke="currentColor"
-    class="size-6"
+    className={className}
   >
     <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
     />
+  </svg>
+);
+
+export const StatusIcon = ({ 
+  className = "size-6",
+  strokeWidth = 1.5,
+  strokeColor = "#FF8A65" // Default to your brand color
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={strokeColor}
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M22 15c0 3.87-3.13 7-7 7l1.05-1.75M2 9c0-3.87 3.13-7 7-7L7.95 3.75M13.7 4.45l3.98 2.3 3.94-2.29M17.68 10.82V6.74" />
+    <path d="m16.74 2.21-2.4 1.33c-.54.3-.99 1.06-.99 1.68v2.54c0 .62.44 1.38.99 1.68l2.4 1.33c.51.29 1.35.29 1.87 0l2.4-1.33c.54-.3.99-1.06.99-1.68V5.22c0-.62-.44-1.38-.99-1.68l-2.4-1.33c-.51-.28-1.35-.28-1.87 0ZM2.35 15.45l3.97 2.3 3.95-2.29M6.32 21.82v-4.08" />
+    <path d="m5.39 13.21-2.4 1.33c-.54.3-.99 1.06-.99 1.68v2.54c0 .62.44 1.38.99 1.68l2.4 1.33c.51.29 1.35.29 1.87 0l2.4-1.33c.54-.3.99-1.06.99-1.68v-2.54c0-.62-.44-1.38-.99-1.68l-2.4-1.33c-.52-.28-1.36-.28-1.87 0Z" />
   </svg>
 );
 export const PrinterIcon = () => (
@@ -611,77 +628,160 @@ export const PrinterIcon = () => (
     />
   </svg>
 );
-export const ExportIcon = () => (
- <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"><path stroke="#FF8A65" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="1.5" d="M9.32 6.5l2.56-2.56 2.56 2.56M11.88 14.18V4.01M4 12c0 4.42 3 8 8 8s8-3.58 8-8"></path></svg>
-);
-export const LayerIcon = () => (
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"><path stroke="#FF8A65" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.01 2.92l5.9 2.62c1.7.75 1.7 1.99 0 2.74l-5.9 2.62c-.67.3-1.77.3-2.44 0l-5.9-2.62c-1.7-.75-1.7-1.99 0-2.74l5.9-2.62c.67-.3 1.77-.3 2.44 0z"></path><path stroke="#FF8A65" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 11c0 .84.63 1.81 1.4 2.15l6.79 3.02c.52.23 1.11.23 1.62 0l6.79-3.02c.77-.34 1.4-1.31 1.4-2.15"></path><path stroke="#FF8A65" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16c0 .93.55 1.77 1.4 2.15l6.79 3.02c.52.23 1.11.23 1.62 0l6.79-3.02c.85-.38 1.4-1.22 1.4-2.15"></path></svg>);
-export const ProductIcon = () => (
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M3.17 7.44 12 12.55l8.77-5.08M12 21.61v-9.07" stroke="#FF8A65" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.93 2.48 4.59 5.45c-1.21.67-2.2 2.35-2.2 3.73v5.65c0 1.38.99 3.06 2.2 3.73l5.34 2.97c1.14.63 3.01.63 4.15 0l5.34-2.97c1.21-.67 2.2-2.35 2.2-3.73V9.18c0-1.38-.99-3.06-2.2-3.73l-5.34-2.97c-1.15-.64-3.01-.64-4.15 0Z" stroke="#FF8A65" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M17 13.24V9.58L7.51 4.1" stroke="#FF8A65" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>);
-export const TrendIcon = () => (
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
-</svg>
-);
-export const DownloadIcon = () => (
+export const ExportIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    fill="none"
     stroke="currentColor"
-    class="size-6"
-  >
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-    />
-  </svg>
-);
-export const NoOrdersIcon = ({ className }) => (
-  <svg
     className={className}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
   >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
-      strokeWidth={1.5}
-      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+      strokeMiterlimit="10"
+      strokeWidth="1.5"
+      d="M9.32 6.5l2.56-2.56 2.56 2.56M11.88 14.18V4.01M4 12c0 4.42 3 8 8 8s8-3.58 8-8"
     />
   </svg>
 );
-export const SortDescIcon = () => (
+export const LayerIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="32"
-    height="32"
     viewBox="0 0 24 24"
     fill="none"
+    stroke="currentColor"
+    className={className}
   >
     <path
-      stroke="#FF8A65"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-miterlimit="10"
-      stroke-width="1.5"
-      d="M18.07 14.43L12 20.5l-6.07-6.07M12 3.5v16.83"
-    ></path>
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="M13.01 2.92l5.9 2.62c1.7.75 1.7 1.99 0 2.74l-5.9 2.62c-.67.3-1.77.3-2.44 0l-5.9-2.62c-1.7-.75-1.7-1.99 0-2.74l5.9-2.62c.67-.3 1.77-.3 2.44 0z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="M3 11c0 .84.63 1.81 1.4 2.15l6.79 3.02c.52.23 1.11.23 1.62 0l6.79-3.02c.77-.34 1.4-1.31 1.4-2.15"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      d="M3 16c0 .93.55 1.77 1.4 2.15l6.79 3.02c.52.23 1.11.23 1.62 0l6.79-3.02c.85-.38 1.4-1.22 1.4-2.15"
+    />
   </svg>
 );
-
-export const FilterIcon = () => (
+export const ProductIcon = ({ className = "size-6" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    className={className}
+  >
+    <path
+      d="M3.17 7.44 12 12.55l8.77-5.08M12 21.61v-9.07"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M9.93 2.48 4.59 5.45c-1.21.67-2.2 2.35-2.2 3.73v5.65c0 1.38.99 3.06 2.2 3.73l5.34 2.97c1.14.63 3.01.63 4.15 0l5.34-2.97c1.21-.67 2.2-2.35 2.2-3.73V9.18c0-1.38-.99-3.06-2.2-3.73l-5.34-2.97c-1.15-.64-3.01-.64-4.15 0Z"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M17 13.24V9.58L7.51 4.1"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+export const TrendIcon = ({ className = "size-6" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
     strokeWidth="1.5"
     stroke="currentColor"
-    className="size-5"
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941"
+    />
+  </svg>
+);
+export const DownloadIcon = ({ className = "size-6", strokeWidth = 1.5 }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={strokeWidth}
+    stroke="currentColor"
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+    />
+  </svg>
+);
+export const NoOrdersIcon = ({ 
+  className = "size-6",
+  strokeWidth = 1.5,
+  strokeColor = "currentColor" 
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke={strokeColor}
+    strokeWidth={strokeWidth}
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+    />
+  </svg>
+);
+export const SortDescIcon = ({ 
+  className = "size-6",
+  strokeWidth = 1.5,
+  strokeColor = "currentColor"
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={strokeColor}
+    strokeWidth={strokeWidth}
+    strokeMiterlimit="10"
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M18.07 14.43L12 20.5l-6.07-6.07M12 3.5v16.83"
+    />
+  </svg>
+);
+export const FilterIcon = ({ className = "" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className={`size-5 ${className}`} // Default size-5 with customizable classes
   >
     <path
       strokeLinecap="round"
