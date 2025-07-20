@@ -13,7 +13,7 @@ export default function Featured() {
   const [index, setIndex] = useState(0);
   const [animationType, setAnimationType] = useState("enter");
   const [bgColor, setBgColor] = useState("#ffffff");
-  const [isLoading, setIsLoading] = useState(false);
+  const [preloadedImages, setPreloadedImages] = useState({}); // Stores preloaded images
   const imgRef = useRef(null);
   const { backendUrl } = useAppContext();
 
@@ -21,8 +21,6 @@ export default function Featured() {
 
   const formatImageUrl = (imagePath) => {
     if (!imagePath || typeof imagePath !== "string") return "/placeholder.jpg";
-
-    // If it's a full URL, return as-is
     if (imagePath.startsWith("http")) return imagePath;
 
     const match = imagePath.match(/uploads[\\/][\w\-.]+\.(jpg|jpeg|avif|png|webp)/i);
@@ -31,10 +29,22 @@ export default function Featured() {
     return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
   };
 
+  // Preload all images when shoes data is fetched
+  useEffect(() => {
+    if (shoes.length > 0) {
+      const preloadImages = {};
+      shoes.forEach((shoe) => {
+        const img = new Image();
+        img.src = formatImageUrl(shoe.featuredImg);
+        preloadImages[shoe.slug] = img; // Store in object for quick access
+      });
+      setPreloadedImages(preloadImages);
+    }
+  }, [shoes]);
+
   useEffect(() => {
     fetchFeaturedProducts()
       .then((data) => {
-        console.log("🟢 Featured products fetched:", data);
         if (Array.isArray(data)) {
           setShoes(data);
           setError("");
@@ -43,7 +53,7 @@ export default function Featured() {
         }
       })
       .catch((err) => {
-        console.error("❌ Failed to fetch featured shoes:", err);
+        console.error("Failed to fetch featured shoes:", err);
         setError("Something went wrong while fetching featured shoes.");
       });
   }, []);
@@ -56,7 +66,6 @@ export default function Featured() {
 
   const onImageLoad = () => {
     extractColor();
-    setIsLoading(false); // Image loaded, clear loading state
   };
 
   const hexToRgba = (hex, alpha = 0.3) => {
@@ -70,10 +79,8 @@ export default function Featured() {
     try {
       const img = imgRef.current;
       if (!img || !img.complete || img.naturalWidth === 0 || img.src.includes("placeholder.jpg")) {
-        console.warn("⚠️ Skipping color extraction: image not ready or placeholder");
         return;
       }
-
       const fac = new FastAverageColor();
       const color = fac.getColor(img);
       const rgbaColor = hexToRgba(color.hex, 0.25);
@@ -85,11 +92,7 @@ export default function Featured() {
   };
 
   const changeIndex = (direction) => {
-    if (isLoading) return; // Prevent rapid clicks during loading
-
-    setIsLoading(true); // Set loading state
     setAnimationType("exit");
-
     setTimeout(() => {
       setIndex((prev) => {
         if (direction === "next") return (prev + 1) % shoes.length;
@@ -162,18 +165,28 @@ export default function Featured() {
           <button
             className="p-2 bg-transparent rounded-full shadow-md hover:bg-gray-50 transition"
             onClick={() => changeIndex("prev")}
-            disabled={isLoading}
           >
             <ArrowIconLeft />
           </button>
           <button
             className="p-2 rounded-full shadow-md hover:bg-gray-100 transition"
             onClick={() => changeIndex("next")}
-            disabled={isLoading}
           >
             <ArrowIconRight />
           </button>
         </div>
+      </div>
+
+      {/* Hidden preloaded images (ensures they're cached) */}
+      <div style={{ display: "none" }}>
+        {shoes.map((shoe) => (
+          <img
+            key={shoe.slug}
+            src={formatImageUrl(shoe.featuredImg)}
+            alt={`Preloaded ${shoe.name}`}
+            crossOrigin="anonymous"
+          />
+        ))}
       </div>
     </div>
   );
