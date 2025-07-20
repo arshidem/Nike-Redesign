@@ -58,14 +58,8 @@ router.post(
 );
 router.put(
   "/:slug",
-  // 1. First verify admin status
   verifyAdmin,
-  
-  // 2. Use upload.fields() instead of upload.any()
   upload.any(),
-
-  
-  // 3. Process the update
   updateProduct,
   
   // 4. Error handling middleware (will catch errors from both upload and updateProduct)

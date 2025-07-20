@@ -256,11 +256,13 @@ export function Navbar() {
       { label: "Kids By Age", link: "/kids/age" }, // for future use
     ],
 
-    Sale: [
-      { label: "Shop All Sale", link: "/sale/shopAllSale" },
-      { label: "Best Sellers", link: "/sale/best-sellers" },
-      { label: "Last Chance", link: "/sale/lastChance" },
-    ],
+Sale: [
+  { label: "Shop All Sale", link: "/sale/shopAllSale?minDiscount=1" },
+  { label: "Best Sellers", link: "/sale/best-sellers?bestSellers=true&minDiscount=1" },
+  { label: "Last Chance", link: "/sale/last-chance?minDiscount=40&lastChance=true" },
+],
+
+
     user: [
       { label: "Profile", link: "/profile" },
       { label: "Orders", link: "/orders" },

@@ -196,6 +196,10 @@ exports.getAllProducts = async (req, res) => {
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
       query.releaseDate = { $gte: oneMonthAgo };
     }
+ if (req.query.lastChance === 'true') {
+  query.discountPercentage = { $gte: 40 }; // Only filter by high discount
+}
+
     if (req.query.color) {
       query["variants.color"] = {
         $regex: new RegExp(`^${req.query.color}$`, "i"),
@@ -219,33 +223,36 @@ exports.getAllProducts = async (req, res) => {
     };
 
     let sortOption = { createdAt: -1 };
+let bestSellerIds = null;
+if (req.query.bestSellers === "true") {
+  const oneMonthAgo = new Date();
+  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
-    // 🟡 Best sellers logic
-    let bestSellerIds = null;
-    if (req.query.bestSellers === "true") {
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+  const orders = await Order.find({ createdAt: { $gte: oneMonthAgo } })
+    .select("items")
+    .lean();
 
-      const orders = await Order.find({ createdAt: { $gte: oneMonthAgo } })
-        .select("items")
-        .lean();
-
-      const salesMap = {};
-      for (const order of orders) {
-        for (const item of order.items) {
-          const id = item.product.toString();
-          salesMap[id] = (salesMap[id] || 0) + item.quantity;
-        }
-      }
-
-      bestSellerIds = Object.entries(salesMap)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 20)
-        .map(([id]) => id);
-
-      query._id = { $in: bestSellerIds };
-      // Note: You can preserve the order later
+  const salesMap = {};
+  for (const order of orders) {
+    for (const item of order.items) {
+      const id = item.product.toString();
+      salesMap[id] = (salesMap[id] || 0) + item.quantity;
     }
+  }
+
+  bestSellerIds = Object.entries(salesMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([id]) => id);
+
+  query._id = { $in: bestSellerIds };
+}
+
+// 🎯 Optional: Handle discount filter as well
+if (req.query.minDiscount) {
+  query.discount = { $gte: Number(req.query.minDiscount) };
+}
+
 
     // Sorting
     if (req.query.sortBy === "sold") sortOption = { sold: -1 };
@@ -549,54 +556,48 @@ exports.getProductById = async (req, res) => {
 
 // @desc    Update a product
 // @route   PUT /api/products/:
+// @desc    Update a product
+// @route   PUT /api/products/:slug
 exports.updateProduct = async (req, res) => {
-  console.log("Update request received:", {
-    body: req.body,
-    files: req.files,
-    params: req.params,
-  });
-
   try {
-    const {
-      name,
-      productDetails,
-      price,
-      description,
-      category,
-      model,
-      gender,
-      activityType,
-      sportType,
-      isFeatured,
-      isTrending,
-      variants,
-      metaTitle,
-      metaDescription,
-      tags,
-      badges,
-      videoUrl,
-      discountPercentage,
-      removeFeaturedImg,
-    } = req.body;
-
-    const existingProduct = await Product.findOne({ slug: req.params.slug });
+    const { slug } = req.params;
+    const existingProduct = await Product.findOne({ slug });
+    
     if (!existingProduct) {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    if (name && !name.trim()) {
-      return res.status(400).json({ error: "Product name cannot be empty" });
-    }
-
-    if (gender && !["men", "women", "kids", "unisex"].includes(gender)) {
-      return res.status(400).json({ error: "Invalid gender value" });
-    }
-
-    // Helper: Convert file path to relative
+    // Helper to get relative path (matches create controller)
     const getRelPath = (filePath) =>
       path.relative(process.cwd(), filePath).replace(/\\/g, "/");
 
-    // --- Handle variant images ---
+    // --- Handle featured image ---
+    let featuredImg = existingProduct.featuredImg;
+    if (req.body.removeFeaturedImg === "true") {
+      // Delete old featured image if exists
+      if (featuredImg) {
+        const oldPath = path.join(process.cwd(), featuredImg);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+      featuredImg = null;
+    } else if (req.files?.featuredImg?.[0]) {
+      // Delete old featured image if exists
+      if (featuredImg) {
+        const oldPath = path.join(process.cwd(), featuredImg);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+      featuredImg = getRelPath(req.files.featuredImg[0].path);
+    }
+
+    // --- Parse variants (matches create controller logic) ---
+    let parsedVariants = [];
+    try {
+      parsedVariants = req.body.variants ? JSON.parse(req.body.variants) : existingProduct.variants;
+    } catch (err) {
+      return res.status(400).json({ error: "Invalid variants format" });
+    }
+
+    // --- Handle variant images (matches create controller) ---
     const variantImagesMap = {};
     (req.files || []).forEach((file) => {
       const match = file.fieldname.match(/^variant_(\d+)_images$/);
@@ -609,137 +610,127 @@ exports.updateProduct = async (req, res) => {
       }
     });
 
-    // --- Parse variants ---
-    let parsedVariants = [];
-    try {
-      parsedVariants = variants
-        ? JSON.parse(variants)
-        : existingProduct.variants;
-    } catch (err) {
-      return res.status(400).json({ error: "Invalid variants format" });
-    }
-
-    // --- Handle featured image ---
-    const newFeaturedImg = req.files?.featuredImg?.[0];
-    let featuredImg = existingProduct.featuredImg;
-
-    if (removeFeaturedImg === "true") {
-      featuredImg = null;
-    } else if (newFeaturedImg) {
-      featuredImg = getRelPath(newFeaturedImg.path);
-    }
-
-    // --- Delete removed variant images ---
-    parsedVariants.forEach((variant) => {
-      const removedImages = variant.imagesToRemove || [];
-      removedImages.forEach((url) => {
-        const filePath = path.join(process.cwd(), url);
-        fs.unlink(filePath, (err) => {
-          if (err) {
-            console.warn("Failed to delete file:", filePath);
-          } else {
-            console.log("Deleted old variant image:", filePath);
-          }
-        });
-      });
-    });
-
-    // --- Process variants ---
+    // --- Process variants (enhanced version of create controller logic) ---
     const processedVariants = parsedVariants.map((variant, index) => {
-      const existingImages =
-        variant.images
-          ?.filter((img) => img.isExisting)
-          .map((img) => img.url)
-          .filter((url) => !variant.imagesToRemove?.includes(url)) || [];
+      // Validate color (matches create controller)
+      if (!variant.color || !variant.color.trim()) {
+        throw new Error(`Variant at position ${index} must have a color`);
+      }
 
+      // Handle existing images (new for update controller)
+      const existingImages = variant.images
+        ?.filter(img => img.isExisting)
+        ?.map(img => img.url)
+        ?.filter(url => !variant.imagesToRemove?.includes(url)) || [];
+
+      // Get new uploaded images (matches create controller)
       const newImages = variantImagesMap[index] || [];
 
+      // Combine existing and new images
       const combinedImages = [...existingImages, ...newImages];
 
+      // Validate minimum images (matches create controller)
       if (combinedImages.length < 2) {
         throw new Error(
           `Variant "${variant.color}" must have at least 2 images`
         );
       }
 
+      // Process sizes (matches create controller)
+      const processedSizes = (variant.sizes || []).map((size, sizeIndex) => {
+        if (!size.size) {
+          throw new Error(
+            `Variant "${variant.color}", size ${
+              sizeIndex + 1
+            } must have a size value`
+          );
+        }
+        return {
+          size: String(size.size),
+          stock: Math.max(0, parseInt(size.stock) || 0),
+        };
+      });
+
       return {
-        color: variant.color,
-        images: combinedImages,
-        sizes:
-          variant.sizes?.map((size) => ({
-            size: String(size.size),
-            stock: Math.max(0, parseInt(size.stock) || 0),
-          })) || [],
+        color: variant.color.trim(),
+        images: combinedImages, // Changed from newImages to combinedImages
+        sizes: processedSizes,
       };
     });
 
-    // --- Price and discount ---
-    const numericPrice = price ? parseFloat(price) : existingProduct.price;
-    const discount = discountPercentage
-      ? Math.min(100, Math.max(0, parseFloat(discountPercentage)))
+    // --- Price and discount (matches create controller) ---
+    const numericPrice = req.body.price ? parseFloat(req.body.price) : existingProduct.price;
+    const discount = req.body.discountPercentage
+      ? Math.min(100, Math.max(0, parseFloat(req.body.discountPercentage)))
       : existingProduct.discountPercentage || 0;
     const finalPrice = Math.round((numericPrice * (100 - discount)) / 100);
 
-    // --- Parse tags & badges ---
-    const parsedTags = tags
-      ? typeof tags === "string"
-        ? JSON.parse(tags)
-        : tags
-      : existingProduct.tags;
-    const parsedBadges = badges
-      ? typeof badges === "string"
-        ? JSON.parse(badges)
-        : badges
-      : existingProduct.badges;
+    // --- Parse tags & badges (matches create controller) ---
+    const parsedTags = req.body.tags
+      ? typeof req.body.tags === "string"
+        ? JSON.parse(req.body.tags)
+        : req.body.tags
+      : existingProduct.tags || [];
+    const parsedBadges = req.body.badges
+      ? typeof req.body.badges === "string"
+        ? JSON.parse(req.body.badges)
+        : req.body.badges
+      : existingProduct.badges || [];
 
-    // --- Update product fields ---
-    existingProduct.set({
-      name: name?.trim() || existingProduct.name,
-      productDetails: productDetails?.trim() || existingProduct.productDetails,
+    // Clean up removed variant images (new for update controller)
+    parsedVariants.forEach(variant => {
+      (variant.imagesToRemove || []).forEach(url => {
+        const filePath = path.join(process.cwd(), url);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      });
+    });
+
+    // Prepare update data (matches create controller fields)
+    const updateData = {
+      name: req.body.name?.trim() || existingProduct.name,
+      productDetails: req.body.productDetails?.trim() || existingProduct.productDetails,
       price: numericPrice,
       discountPercentage: discount,
       finalPrice,
-      description: description?.trim() || existingProduct.description,
-      category: category?.trim() || existingProduct.category,
-      model: model?.trim() || existingProduct.model,
-      gender: gender || existingProduct.gender,
-      activityType: activityType || existingProduct.activityType,
-      sportType: sportType || existingProduct.sportType,
-      isFeatured: ["true", true, "1", 1].includes(isFeatured)
-        ? true
-        : isFeatured === undefined
-        ? existingProduct.isFeatured
-        : false,
-      isTrending: ["true", true, "1", 1].includes(isTrending)
-        ? true
-        : isTrending === undefined
-        ? existingProduct.isTrending
-        : false,
+      description: req.body.description?.trim() || existingProduct.description,
+      category: req.body.category?.trim() || existingProduct.category,
+      model: req.body.model?.trim() || existingProduct.model,
+      gender: req.body.gender || existingProduct.gender,
+      activityType: req.body.activityType || existingProduct.activityType,
+      sportType: req.body.sportType || existingProduct.sportType,
+      isFeatured: ["true", true, "1", 1].includes(req.body.isFeatured),
+      isTrending: ["true", true, "1", 1].includes(req.body.isTrending),
       featuredImg,
-      metaTitle: metaTitle?.trim() || existingProduct.metaTitle,
-      metaDescription:
-        metaDescription?.trim() || existingProduct.metaDescription,
+      metaTitle: req.body.metaTitle?.trim() || existingProduct.metaTitle,
+      metaDescription: req.body.metaDescription?.trim() || existingProduct.metaDescription,
       tags: parsedTags,
       badges: parsedBadges,
-      videoUrl: videoUrl?.trim() || existingProduct.videoUrl,
+      videoUrl: req.body.videoUrl?.trim() || existingProduct.videoUrl,
       variants: processedVariants,
-    });
+    };
 
-    const updatedProduct = await existingProduct.save();
+    // Update the product
+    const updatedProduct = await Product.findOneAndUpdate(
+      { slug },
+      updateData,
+      { new: true, runValidators: true }
+    );
 
     res.json({
       success: true,
       product: updatedProduct,
     });
+
   } catch (err) {
     console.error("Error updating product:", err);
 
+    // Clean up uploaded files on error (matches create controller)
     if (req.files) {
       Object.values(req.files)
         .flat()
         .forEach((file) => {
-          if (file.path) {
-            fs.unlink(file.path, () => {});
+          if (file.path && fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path);
           }
         });
     }
@@ -750,7 +741,6 @@ exports.updateProduct = async (req, res) => {
     });
   }
 };
-
 // @desc    Delete a product
 // @route   DELETE /api/products/:id
 exports.deleteProduct = async (req, res) => {

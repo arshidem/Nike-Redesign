@@ -515,7 +515,7 @@ const CreateProduct = () => {
                 />
                 {formData.finalPrice && (
                   <p className="text-xs sm:text-xs sm:text-md text-green-600 mt-1">
-                    Final Price: ${formData.finalPrice.toFixed(2)}
+                    Final Price: ₹{formData.finalPrice.toFixed(2)}
                   </p>
                 )}
               </div>

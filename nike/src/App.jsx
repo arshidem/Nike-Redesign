@@ -10,7 +10,7 @@ import VerifyRegisterOtp from "./features/auth/pages/VerifyRegisterOtp";
 import AccountSettings from "./features/user/AccountSettings/AccountSettings";
 import { AdminUserDetails } from "./features/admin/pages/AdminUserDetails";
 import { AdminRoute } from "./features/admin/routes/AdminRoute";
-
+import ProductListPage from "./features/user/pages/ProductListPage"
 const ModelPage = lazy(() => import("./features/user/pages/ModelPage"));
 const ProductDetails = lazy(() => import("./features/user/pages/ProductDetails"));
 const Cart = lazy(() => import("./features/user/pages/Cart"));
@@ -18,7 +18,6 @@ const Checkout = lazy(() => import("./features/user/pages/Checkout"));
 const Profile = lazy(() => import("./features/user/pages/Profile"));
 const Order = lazy(() => import("./features/user/pages/Order"));
 const OrderDetails = lazy(() => import("./features/user/pages/OrderDetails"));
-const ProductListPage = lazy(() => import("./features/user/pages/ProductListPage"));
 const AdminDashboard = lazy(() => import("./features/admin/pages/AdminDashboard"));
 const CreateProduct = lazy(() => import("./features/admin/pages/CreateProduct"));
 const UpdateProduct = lazy(() => import("./features/admin/pages/UpdateProduct"));
@@ -75,10 +74,27 @@ function AppRoutes() {
       <Route path="/complete-register" element={<CompleteRegister />} />
       <Route path="/verify-register-otp" element={<VerifyRegisterOtp />} />
 
-      {/* Product list pages */}
       <Route path="/new/arrivals" element={<ProductListPage title="New Arrivals" />} />
+      <Route path="/new/best-sellers" element={<ProductListPage title="Best Sellers" />} />
+      <Route path="/new/trending" element={<ProductListPage title="Trending" />} />
+      <Route path="/men/arrivals" element={<ProductListPage title="Men - New Arrivals" />} />
+      <Route path="/men/best-sellers" element={<ProductListPage title="Men - Best Sellers" />} />
       <Route path="/men/shoes" element={<ProductListPage title="Men - Shoes" />} />
-      {/* ... other categories ... */}
+      <Route path="/men/clothing" element={<ProductListPage title="Men - Clothing" />} />
+      <Route path="/women/arrivals" element={<ProductListPage title="Women - New Arrivals" />} />
+      <Route path="/women/best-sellers" element={<ProductListPage title="Women - Best Sellers" />} />
+      <Route path="/women/shoes" element={<ProductListPage title="Women - Shoes" />} />
+      <Route path="/women/clothing" element={<ProductListPage title="Women - Clothing" />} />
+      <Route path="/kids/arrivals" element={<ProductListPage title="Kids - New Arrivals" />} />
+      <Route path="/kids/best-sellers" element={<ProductListPage title="Kids - Best Sellers" />} />
+      <Route path="/kids/shoes" element={<ProductListPage title="Kids - Shoes" />} />
+      <Route path="/kids/clothing" element={<ProductListPage title="Kids - Clothing" />} />
+      <Route path="/kids/age" element={<ProductListPage title="Shop by Age" />} />
+      <Route path="/sale/shopAllSale" element={<ProductListPage title="Shop All Sale" />} />
+      <Route path="/sale/best-sellers" element={<ProductListPage title="Best Sellers" />} />
+      <Route path="/sale/last-chance" element={<ProductListPage title="Last Chance" />} />
+
+
 
       {/* Admin */}
       <Route
