@@ -13,6 +13,7 @@ export default function Featured() {
   const [index, setIndex] = useState(0);
   const [animationType, setAnimationType] = useState("enter");
   const [bgColor, setBgColor] = useState("#ffffff");
+  const [isLoading, setIsLoading] = useState(false);
   const imgRef = useRef(null);
   const { backendUrl } = useAppContext();
 
@@ -55,6 +56,7 @@ export default function Featured() {
 
   const onImageLoad = () => {
     extractColor();
+    setIsLoading(false); // Image loaded, clear loading state
   };
 
   const hexToRgba = (hex, alpha = 0.3) => {
@@ -64,27 +66,30 @@ export default function Featured() {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   };
 
- const extractColor = () => {
-  try {
-    const img = imgRef.current;
-    if (!img || !img.complete || img.naturalWidth === 0 || img.src.includes("placeholder.jpg")) {
-      console.warn("⚠️ Skipping color extraction: image not ready or placeholder");
-      return;
+  const extractColor = () => {
+    try {
+      const img = imgRef.current;
+      if (!img || !img.complete || img.naturalWidth === 0 || img.src.includes("placeholder.jpg")) {
+        console.warn("⚠️ Skipping color extraction: image not ready or placeholder");
+        return;
+      }
+
+      const fac = new FastAverageColor();
+      const color = fac.getColor(img);
+      const rgbaColor = hexToRgba(color.hex, 0.25);
+      setBgColor(rgbaColor);
+    } catch (error) {
+      console.error("Error extracting color:", error);
+      setBgColor("#ffffff");
     }
-
-    const fac = new FastAverageColor();
-    const color = fac.getColor(img);
-    const rgbaColor = hexToRgba(color.hex, 0.25);
-    setBgColor(rgbaColor);
-  } catch (error) {
-    console.error("Error extracting color:", error);
-    setBgColor("#ffffff");
-  }
-};
-
+  };
 
   const changeIndex = (direction) => {
+    if (isLoading) return; // Prevent rapid clicks during loading
+
+    setIsLoading(true); // Set loading state
     setAnimationType("exit");
+
     setTimeout(() => {
       setIndex((prev) => {
         if (direction === "next") return (prev + 1) % shoes.length;
@@ -95,17 +100,13 @@ export default function Featured() {
   };
 
   if (!error && shoes.length === 0) {
-    return (
-     <FeaturedSkeleton/>
-    );
+    return <FeaturedSkeleton />;
   }
 
-  // 🔴 Error fallback
   if (error) {
     return <div className="text-red-500 text-center mt-8">{error}</div>;
   }
 
-  // ✅ Ensure valid index
   const currentShoe = shoes[index] || {};
 
   return (
@@ -161,12 +162,14 @@ export default function Featured() {
           <button
             className="p-2 bg-transparent rounded-full shadow-md hover:bg-gray-50 transition"
             onClick={() => changeIndex("prev")}
+            disabled={isLoading}
           >
             <ArrowIconLeft />
           </button>
           <button
             className="p-2 rounded-full shadow-md hover:bg-gray-100 transition"
             onClick={() => changeIndex("next")}
+            disabled={isLoading}
           >
             <ArrowIconRight />
           </button>
