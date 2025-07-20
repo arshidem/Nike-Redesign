@@ -1,5 +1,6 @@
 import React from "react";
 import { NikeSwoosh } from "../../../shared/ui/Icons"; // Adjust the path if needed
+import Search from "./Search";
 
 const Footer = () => {
   return (
@@ -70,6 +71,7 @@ const Footer = () => {
           </div>
         </div>
       </div>
+      <Search/>
     </footer>
   );
 };

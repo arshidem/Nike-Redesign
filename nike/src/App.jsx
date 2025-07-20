@@ -1,7 +1,7 @@
 import React, { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-
+import Search from "./features/user/components/Search";
 import Home from "./features/user/pages/Home";
 import SignIn from "./features/auth/pages/SignIn";
 import VerifyOtp from "./features/auth/pages/VerifyOtp";
@@ -73,6 +73,8 @@ function AppRoutes() {
       <Route path="/verify-otp" element={<VerifyOtp />} />
       <Route path="/complete-register" element={<CompleteRegister />} />
       <Route path="/verify-register-otp" element={<VerifyRegisterOtp />} />
+
+        <Route path="/search" element={<Search isOpen={true} onClose={() => { window.history.back(); }} />} />
 
       <Route path="/new/arrivals" element={<ProductListPage title="New Arrivals" />} />
       <Route path="/new/best-sellers" element={<ProductListPage title="Best Sellers" />} />

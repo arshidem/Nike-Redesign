@@ -340,7 +340,7 @@ exports.searchProducts = async (req, res) => {
   try {
     const { q } = req.query;
     
-    if (!q || q.trim().length < 2) {
+    if (!q || q.trim().length < 1) {
       return res.status(400).json({
         success: false,
         message: 'Search query must be at least 2 characters'
@@ -558,6 +558,8 @@ exports.getProductById = async (req, res) => {
 // @route   PUT /api/products/:
 // @desc    Update a product
 // @route   PUT /api/products/:slug
+// @desc    Update a product
+// @route   PUT /api/products/:slug
 exports.updateProduct = async (req, res) => {
   try {
     const { slug } = req.params;
@@ -567,21 +569,19 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    // Helper to get relative path (matches create controller)
-    const getRelPath = (filePath) =>
+    // Helper to get relative path
+    const getRelPath = (filePath) => 
       path.relative(process.cwd(), filePath).replace(/\\/g, "/");
 
     // --- Handle featured image ---
     let featuredImg = existingProduct.featuredImg;
     if (req.body.removeFeaturedImg === "true") {
-      // Delete old featured image if exists
       if (featuredImg) {
         const oldPath = path.join(process.cwd(), featuredImg);
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
       }
       featuredImg = null;
     } else if (req.files?.featuredImg?.[0]) {
-      // Delete old featured image if exists
       if (featuredImg) {
         const oldPath = path.join(process.cwd(), featuredImg);
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -589,124 +589,97 @@ exports.updateProduct = async (req, res) => {
       featuredImg = getRelPath(req.files.featuredImg[0].path);
     }
 
-    // --- Parse variants (matches create controller logic) ---
-    let parsedVariants = [];
+    // --- Parse variants ---
+    let variantsData = [];
     try {
-      parsedVariants = req.body.variants ? JSON.parse(req.body.variants) : existingProduct.variants;
+      variantsData = req.body.variants ? JSON.parse(req.body.variants) : existingProduct.variants;
     } catch (err) {
       return res.status(400).json({ error: "Invalid variants format" });
     }
 
-    // --- Handle variant images (matches create controller) ---
+    // --- Handle variant images ---
     const variantImagesMap = {};
-    (req.files || []).forEach((file) => {
-      const match = file.fieldname.match(/^variant_(\d+)_images$/);
-      if (match) {
-        const index = parseInt(match[1]);
-        if (!variantImagesMap[index]) {
-          variantImagesMap[index] = [];
+    if (req.files) {
+      // Convert req.files object to array of files
+      const filesArray = Object.entries(req.files)
+        .filter(([fieldName]) => fieldName.startsWith('variant_'))
+        .flatMap(([_, files]) => files);
+
+      filesArray.forEach((file) => {
+        const match = file.fieldname.match(/^variant_(\d+)_images$/);
+        if (match) {
+          const index = parseInt(match[1]);
+          variantImagesMap[index] = variantImagesMap[index] || [];
+          variantImagesMap[index].push(getRelPath(file.path));
         }
-        variantImagesMap[index].push(getRelPath(file.path));
-      }
-    });
+      });
+    }
 
-    // --- Process variants (enhanced version of create controller logic) ---
-    const processedVariants = parsedVariants.map((variant, index) => {
-      // Validate color (matches create controller)
-      if (!variant.color || !variant.color.trim()) {
-        throw new Error(`Variant at position ${index} must have a color`);
-      }
-
-      // Handle existing images (new for update controller)
+    // --- Process variants ---
+    const processedVariants = variantsData.map((variant, index) => {
+      // Handle existing images
       const existingImages = variant.images
         ?.filter(img => img.isExisting)
         ?.map(img => img.url)
-        ?.filter(url => !variant.imagesToRemove?.includes(url)) || [];
+        ?.filter(url => !(variant.imagesToRemove || []).includes(url)) || [];
 
-      // Get new uploaded images (matches create controller)
+      // Get new uploaded images for this variant
       const newImages = variantImagesMap[index] || [];
 
-      // Combine existing and new images
+      // Combine images
       const combinedImages = [...existingImages, ...newImages];
 
-      // Validate minimum images (matches create controller)
       if (combinedImages.length < 2) {
-        throw new Error(
-          `Variant "${variant.color}" must have at least 2 images`
-        );
+        throw new Error(`Variant "${variant.color}" must have at least 2 images`);
       }
 
-      // Process sizes (matches create controller)
-      const processedSizes = (variant.sizes || []).map((size, sizeIndex) => {
-        if (!size.size) {
-          throw new Error(
-            `Variant "${variant.color}", size ${
-              sizeIndex + 1
-            } must have a size value`
-          );
-        }
-        return {
-          size: String(size.size),
-          stock: Math.max(0, parseInt(size.stock) || 0),
-        };
-      });
-
       return {
-        color: variant.color.trim(),
-        images: combinedImages, // Changed from newImages to combinedImages
-        sizes: processedSizes,
+        color: variant.color,
+        images: combinedImages,
+        sizes: variant.sizes?.map(size => ({
+          size: String(size.size),
+          stock: Math.max(0, parseInt(size.stock) || 0)
+        })) || []
       };
     });
 
-    // --- Price and discount (matches create controller) ---
-    const numericPrice = req.body.price ? parseFloat(req.body.price) : existingProduct.price;
-    const discount = req.body.discountPercentage
+    // --- Price calculations ---
+    const price = req.body.price ? parseFloat(req.body.price) : existingProduct.price;
+    const discountPercentage = req.body.discountPercentage
       ? Math.min(100, Math.max(0, parseFloat(req.body.discountPercentage)))
       : existingProduct.discountPercentage || 0;
-    const finalPrice = Math.round((numericPrice * (100 - discount)) / 100);
+    const finalPrice = Math.round(price * (100 - discountPercentage) / 100);
 
-    // --- Parse tags & badges (matches create controller) ---
-    const parsedTags = req.body.tags
-      ? typeof req.body.tags === "string"
-        ? JSON.parse(req.body.tags)
-        : req.body.tags
-      : existingProduct.tags || [];
-    const parsedBadges = req.body.badges
-      ? typeof req.body.badges === "string"
-        ? JSON.parse(req.body.badges)
-        : req.body.badges
-      : existingProduct.badges || [];
-
-    // Clean up removed variant images (new for update controller)
-    parsedVariants.forEach(variant => {
+    // --- Clean up removed images ---
+    variantsData.forEach(variant => {
       (variant.imagesToRemove || []).forEach(url => {
         const filePath = path.join(process.cwd(), url);
         if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       });
     });
 
-    // Prepare update data (matches create controller fields)
+    // Prepare update data
     const updateData = {
-      name: req.body.name?.trim() || existingProduct.name,
-      productDetails: req.body.productDetails?.trim() || existingProduct.productDetails,
-      price: numericPrice,
-      discountPercentage: discount,
+      name: req.body.name || existingProduct.name,
+      productDetails: req.body.productDetails || existingProduct.productDetails,
+      price,
+      discountPercentage,
       finalPrice,
-      description: req.body.description?.trim() || existingProduct.description,
-      category: req.body.category?.trim() || existingProduct.category,
-      model: req.body.model?.trim() || existingProduct.model,
+      description: req.body.description || existingProduct.description,
+      category: req.body.category || existingProduct.category,
+      model: req.body.model || existingProduct.model,
       gender: req.body.gender || existingProduct.gender,
       activityType: req.body.activityType || existingProduct.activityType,
       sportType: req.body.sportType || existingProduct.sportType,
       isFeatured: ["true", true, "1", 1].includes(req.body.isFeatured),
       isTrending: ["true", true, "1", 1].includes(req.body.isTrending),
       featuredImg,
-      metaTitle: req.body.metaTitle?.trim() || existingProduct.metaTitle,
-      metaDescription: req.body.metaDescription?.trim() || existingProduct.metaDescription,
-      tags: parsedTags,
-      badges: parsedBadges,
-      videoUrl: req.body.videoUrl?.trim() || existingProduct.videoUrl,
-      variants: processedVariants,
+      metaTitle: req.body.metaTitle || existingProduct.metaTitle,
+      metaDescription: req.body.metaDescription || existingProduct.metaDescription,
+      tags: req.body.tags ? JSON.parse(req.body.tags) : existingProduct.tags,
+      badges: req.body.badges ? JSON.parse(req.body.badges) : existingProduct.badges,
+      videoUrl: req.body.videoUrl || existingProduct.videoUrl,
+      variants: processedVariants
     };
 
     // Update the product
@@ -718,26 +691,25 @@ exports.updateProduct = async (req, res) => {
 
     res.json({
       success: true,
-      product: updatedProduct,
+      product: updatedProduct
     });
 
   } catch (err) {
     console.error("Error updating product:", err);
-
-    // Clean up uploaded files on error (matches create controller)
+    
+    // Clean up uploaded files on error
     if (req.files) {
-      Object.values(req.files)
-        .flat()
-        .forEach((file) => {
-          if (file.path && fs.existsSync(file.path)) {
-            fs.unlinkSync(file.path);
-          }
-        });
+      const files = Object.values(req.files).flat();
+      files.forEach(file => {
+        if (file.path && fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+      });
     }
 
-    res.status(err.name === "ValidationError" ? 422 : 400).json({
+    res.status(400).json({
       error: err.message || "Failed to update product",
-      ...(err.errors && { details: err.errors }),
+      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
   }
 };

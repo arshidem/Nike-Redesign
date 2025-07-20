@@ -469,97 +469,74 @@ const handleSubmit = async (e) => {
   try {
     const formDataToSend = new FormData();
 
-    // 1. Handle featured image
-    if (formData.featuredImage?.file) {
-      formDataToSend.append("featuredImg", formData.featuredImage.file);
-    } else if (formData.featuredImage === null) {
-      formDataToSend.append("removeFeaturedImg", "true");
-    }
-
-      // 2. Append simple fields with proper value handling
-      const simpleFields = {
-        name: formData.name,
-        productDetails: formData.productDetails,
-        price: formData.price,
-        discountPercentage: formData.discountPercentage,
-        description: formData.description,
-        category: formData.category,
-        model: formData.model,
-        gender: formData.gender,
-        activityType: formData.activityType,
-        sportType: formData.sportType,
-        isFeatured: formData.isFeatured,
-        isTrending: formData.isTrending,
-        metaTitle: formData.metaTitle,
-        metaDescription: formData.metaDescription,
-        videoUrl: formData.videoUrl,
-      };
-
-      Object.entries(simpleFields).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        formDataToSend.append(key, value);
+    // Append simple fields
+    const fields = [
+      'name', 'productDetails', 'price', 'discountPercentage', 
+      'description', 'category', 'model', 'gender',
+      'activityType', 'sportType', 'isFeatured', 'isTrending',
+      'metaTitle', 'metaDescription', 'videoUrl'
+    ];
+    
+    fields.forEach(field => {
+      if (formData[field] !== undefined) {
+        formDataToSend.append(field, formData[field]);
       }
     });
 
-    // 3. Handle arrays
+    // Handle featured image
+    if (formData.featuredImage?.file) {
+      formDataToSend.append('featuredImg', formData.featuredImage.file);
+    } else if (formData.featuredImage === null) {
+      formDataToSend.append('removeFeaturedImg', 'true');
+    }
+
+    // Prepare variants data
+    const variantsData = formData.variants.map(variant => ({
+      color: variant.color,
+      sizes: variant.sizes,
+      images: variant.images.map(img => ({
+        url: img.url,
+        isExisting: img.isExisting
+      })),
+      imagesToRemove: variant.imagesToRemove || []
+    }));
+
+    formDataToSend.append('variants', JSON.stringify(variantsData));
+
+    // Append variant images with correct field names
+    formData.variants.forEach((variant, index) => {
+      variant.images.forEach(img => {
+        if (img.file && !img.isExisting) {
+          formDataToSend.append(`variant_${index}_images`, img.file);
+        }
+      });
+    });
+
+    // Append tags and badges if they exist
     if (formData.tags?.length > 0) {
-      formDataToSend.append("tags", JSON.stringify(formData.tags));
+      formDataToSend.append('tags', JSON.stringify(formData.tags));
     }
     if (formData.badges?.length > 0) {
-      formDataToSend.append("badges", JSON.stringify(formData.badges));
+      formDataToSend.append('badges', JSON.stringify(formData.badges));
     }
 
-    // 4. Prepare and append variants data
-    // In your handleSubmit function, modify how you prepare the variants data:
-const variantsData = formData.variants.map((variant) => {
-  const images = variant.images.map(img => {
-    if (img.isExisting) {
-      // For existing images, just keep the URL
-      return { url: img.url, isExisting: true };
-    } else {
-      // For new images, include the file name and mark as new
-      return { 
-        filename: img.file.name,
-        isNew: true 
-      };
-    }
-  });
+    // Send the request
+    const response = await axios.put(
+      `${backendUrl}/api/products/${slug}`,
+      formDataToSend,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
 
-  return {
-    color: variant.color,
-    sizes: variant.sizes,
-    images,
-    imagesToRemove: variant.imagesToRemove || []
-  };
-});
-
-formDataToSend.append("variants", JSON.stringify(variantsData));
-
-// Append files with their variant index
-// Change how you append variant images:
-formData.variants.forEach((variant, index) => {
-  variant.images.forEach((img) => {
-    if (!img.isExisting) {
-      // Use index-based field names
-      formDataToSend.append(`variant_${index}_images`, img.file);
-    }
-  });
-});
-
-
-    // 6. Send the request
-    const updatedProduct = await updateProduct(slug, formDataToSend, token);
-
-    // 7. Handle successful response
     navigate(`/admin/product/${slug}`, {
-      state: { success: "Product updated successfully" },
+      state: { success: "Product updated successfully" }
     });
   } catch (err) {
-    const errorMessage =
-      err.response?.data?.error ||
-      err.response?.data?.message ||
-      "Failed to update product";
-    setError(errorMessage);
+    setError(err.response?.data?.error || "Failed to update product");
   } finally {
     setLoading(false);
   }

@@ -57,36 +57,13 @@ router.post(
   createProduct
 );
 router.put(
-  "/:slug",
+  '/:slug',
   verifyAdmin,
-  upload.any(),
-  updateProduct,
-  
-  // 4. Error handling middleware (will catch errors from both upload and updateProduct)
-  (err, req, res, next) => {
-    console.error('Request error:', err);
-    
-    // Clean up any uploaded files
-    if (req.files) {
-      const files = Object.values(req.files).flat();
-      files.forEach(file => {
-        if (file.path) {
-          fs.unlink(file.path, () => {});
-        }
-      });
-    }
-    
-    // Handle different error types
-    const statusCode = err instanceof multer.MulterError ? 400 : 500;
-    const message = err instanceof multer.MulterError 
-      ? `File upload error: ${err.message}` 
-      : 'Product update failed';
-    
-    res.status(statusCode).json({ 
-      error: message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
-  }
+  upload.fields([
+    { name: 'featuredImg', maxCount: 1 },
+    { name: 'variant_*_images' }
+  ]),
+  updateProduct
 );
   
   // 3. Use Multer's built-in error handling with your cleanup
