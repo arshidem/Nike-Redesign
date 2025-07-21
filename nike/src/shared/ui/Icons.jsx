@@ -20,7 +20,11 @@ export const PlusIconWhite = () => {
     </svg>
   );
 };
-export const PlusIcon = ({ size = 5, color = "currentColor", className = "" }) => (
+export const PlusIcon = ({
+  size = 5,
+  color = "currentColor",
+  className = "",
+}) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
@@ -38,7 +42,11 @@ export const PlusIcon = ({ size = 5, color = "currentColor", className = "" }) =
 );
 
 // SearchIcon with customization
-export const SearchIcon = ({ size = 5, color = "currentColor", className = "" }) => (
+export const SearchIcon = ({
+  size = 5,
+  color = "currentColor",
+  className = "",
+}) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
@@ -56,11 +64,11 @@ export const SearchIcon = ({ size = 5, color = "currentColor", className = "" })
 );
 
 // Updated HeartIcon component
-export const HeartIcon = ({ 
-  size = 5, 
-  stroke = "currentColor", 
-  color = "currentColor", 
-  className = "" 
+export const HeartIcon = ({
+  size = 5,
+  stroke = "currentColor",
+  color = "currentColor",
+  className = "",
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -109,11 +117,11 @@ export const UserIcon = () => (
   </svg>
 );
 // ArrowIcon with direction prop
-export const ArrowIcon = ({ 
+export const ArrowIcon = ({
   direction = "right", // 'right' | 'left' | 'up' | 'down'
-  size = 6, 
-  color = "currentColor", 
-  className = "" 
+  size = 6,
+  color = "currentColor",
+  className = "",
 }) => {
   const rotation = {
     right: "rotate-0",
@@ -238,11 +246,11 @@ export const ArrowIconDown = () => (
   </svg>
 );
 
-export const DeleteIcon = ({ 
-  size = 24, 
-  color = "currentColor", 
-  className = "", 
-  onClick 
+export const DeleteIcon = ({
+  size = 24,
+  color = "currentColor",
+  className = "",
+  onClick,
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -339,29 +347,10 @@ export const OrdersIcon = ({ className = "size-6" }) => (
     stroke="currentColor"
     className={className}
   >
-    <rect
-      x="4"
-      y="2"
-      width="18"
-      height="22"
-      rx="2"
-      strokeWidth="2"
-    />
-    <path
-      d="M9 9H15"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M9 13H15"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M9 17H13"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
+    <rect x="4" y="2" width="18" height="22" rx="2" strokeWidth="2" />
+    <path d="M9 9H15" strokeWidth="2" strokeLinecap="round" />
+    <path d="M9 13H15" strokeWidth="2" strokeLinecap="round" />
+    <path d="M9 17H13" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
 export const UsersIcon = ({ className = "size-6" }) => (
@@ -388,11 +377,7 @@ export const ReportsIcon = ({ className = "size-6" }) => (
     stroke="currentColor"
     className={className}
   >
-    <path
-      d="M3 3V19H21"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
+    <path d="M3 3V19H21" strokeWidth="2" strokeLinecap="round" />
     <path
       d="M7 15L10 9L13 13L17 7"
       strokeWidth="2"
@@ -406,8 +391,10 @@ export const ReportsIcon = ({ className = "size-6" }) => (
   </svg>
 );
 
-
-export const CouponIcon = ({ className = "size-6", color = "currentColor" }) => (
+export const CouponIcon = ({
+  className = "size-6",
+  color = "currentColor",
+}) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -596,10 +583,10 @@ export const RefreshIcon = ({ className = "size-6" }) => (
   </svg>
 );
 
-export const StatusIcon = ({ 
+export const StatusIcon = ({
   className = "size-6",
   strokeWidth = 1.5,
-  strokeColor = "#FF8A65" // Default to your brand color
+  strokeColor = "#FF8A65", // Default to your brand color
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -737,10 +724,10 @@ export const DownloadIcon = ({ className = "size-6", strokeWidth = 1.5 }) => (
     />
   </svg>
 );
-export const NoOrdersIcon = ({ 
+export const NoOrdersIcon = ({
   className = "size-6",
   strokeWidth = 1.5,
-  strokeColor = "currentColor" 
+  strokeColor = "currentColor",
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -757,10 +744,10 @@ export const NoOrdersIcon = ({
     />
   </svg>
 );
-export const SortDescIcon = ({ 
+export const SortDescIcon = ({
   className = "size-6",
   strokeWidth = 1.5,
-  strokeColor = "currentColor"
+  strokeColor = "currentColor",
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -824,25 +811,25 @@ export const BackNavigate = () => {
 
 export const Spinner = () => {
   <svg
-                        className="animate-spin h-5 w-5 text-gray-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
+    className="animate-spin h-5 w-5 text-gray-400"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+  >
+    <circle
+      className="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      strokeWidth="4"
+    ></circle>
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    ></path>
+  </svg>;
 };
 export const ConfirmModal = ({
   title = "Are you sure?",

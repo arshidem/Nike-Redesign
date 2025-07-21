@@ -174,6 +174,8 @@ exports.createProduct = async (req, res) => {
 // @desc    Get all products (filter by category or gender)
 // @route   GET /api/products
 exports.getAllProducts = async (req, res) => {
+  console.log("🔍 Incoming filters:", req.query);
+
   try {
     const query = {};
 
@@ -192,22 +194,47 @@ exports.getAllProducts = async (req, res) => {
     if (req.query.minDiscount)
       query.discountPercentage = { $gte: Number(req.query.minDiscount) };
     if (req.query.newArrival === "true") {
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      query.releaseDate = { $gte: oneMonthAgo };
+      const twoMonthsAgo = new Date();
+      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 1); // Subtract 2 months from current date
+      query.createdAt = { $gte: twoMonthsAgo };
     }
- if (req.query.lastChance === 'true') {
-  query.discountPercentage = { $gte: 40 }; // Only filter by high discount
-}
+    if (req.query.lastChance === "true") {
+      query.discountPercentage = { $gte: 40 }; // Only filter by high discount
+    }
+    // In your getAllProducts controller
 
     if (req.query.color) {
+      console.log(`Filtering by color: ${req.query.color}`);
       query["variants.color"] = {
-        $regex: new RegExp(`^${req.query.color}$`, "i"),
+        $regex: new RegExp(req.query.color, "i"),
+      };
+      console.log("Color filter query:", query["variants.color"]);
+    }
+    // if (req.query.size) {
+    //   query["variants.sizes"] = {
+    //     $elemMatch: {
+    //       size: req.query.size,
+    //       stock: { $gt: 0 },
+    //     },
+    //   };
+    // }
+
+    if (req.query.size) {
+      query.variants = {
+        $elemMatch: {
+          // each matched variant must have a sizes[] entry where:
+          sizes: {
+            $elemMatch: {
+              size: req.query.size,
+              stock: { $gt: 1 },
+            },
+          },
+        },
       };
     }
-    if (req.query.size) {
-      query["variants.sizes"] = { $elemMatch: { size: req.query.size } };
-    }
+    console.log("🔍 Mongo filter:", JSON.stringify(query, null, 2));
+
+
     if (req.query.search) {
       query.name = { $regex: req.query.search, $options: "i" };
     }
@@ -223,36 +250,35 @@ exports.getAllProducts = async (req, res) => {
     };
 
     let sortOption = { createdAt: -1 };
-let bestSellerIds = null;
-if (req.query.bestSellers === "true") {
-  const oneMonthAgo = new Date();
-  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    let bestSellerIds = null;
+    if (req.query.bestSellers === "true") {
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
-  const orders = await Order.find({ createdAt: { $gte: oneMonthAgo } })
-    .select("items")
-    .lean();
+      const orders = await Order.find({ createdAt: { $gte: oneMonthAgo } })
+        .select("items")
+        .lean();
 
-  const salesMap = {};
-  for (const order of orders) {
-    for (const item of order.items) {
-      const id = item.product.toString();
-      salesMap[id] = (salesMap[id] || 0) + item.quantity;
+      const salesMap = {};
+      for (const order of orders) {
+        for (const item of order.items) {
+          const id = item.product.toString();
+          salesMap[id] = (salesMap[id] || 0) + item.quantity;
+        }
+      }
+
+      bestSellerIds = Object.entries(salesMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 20)
+        .map(([id]) => id);
+
+      query._id = { $in: bestSellerIds };
     }
-  }
 
-  bestSellerIds = Object.entries(salesMap)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 20)
-    .map(([id]) => id);
-
-  query._id = { $in: bestSellerIds };
-}
-
-// 🎯 Optional: Handle discount filter as well
-if (req.query.minDiscount) {
-  query.discount = { $gte: Number(req.query.minDiscount) };
-}
-
+    // 🎯 Optional: Handle discount filter as well
+    if (req.query.minDiscount) {
+      query.discount = { $gte: Number(req.query.minDiscount) };
+    }
 
     // Sorting
     if (req.query.sortBy === "sold") sortOption = { sold: -1 };
@@ -339,21 +365,21 @@ if (req.query.minDiscount) {
 exports.searchProducts = async (req, res) => {
   try {
     const { q } = req.query;
-    
+
     if (!q || q.trim().length < 1) {
       return res.status(400).json({
         success: false,
-        message: 'Search query must be at least 2 characters'
+        message: "Search query must be at least 2 characters",
       });
     }
 
     const searchQuery = {
       $or: [
-        { name: { $regex: q, $options: 'i' } },
-        { description: { $regex: q, $options: 'i' } },
-        { 'variants.color': { $regex: q, $options: 'i' } },
-        { tags: { $regex: q, $options: 'i' } }
-      ]
+        { name: { $regex: q, $options: "i" } },
+        { description: { $regex: q, $options: "i" } },
+        { "variants.color": { $regex: q, $options: "i" } },
+        { tags: { $regex: q, $options: "i" } },
+      ],
     };
 
     // Apply similar filters as getAllProducts if needed
@@ -362,12 +388,14 @@ exports.searchProducts = async (req, res) => {
 
     // Get products with basic fields needed for search results
     const products = await Product.find(searchQuery)
-      .select('name slug price finalPrice discountPercentage variants.images variants.color')
+      .select(
+        "name slug price finalPrice discountPercentage variants.images variants.color"
+      )
       .limit(10) // Limit results for better performance
       .lean();
 
     // Format results for frontend
-    const results = products.map(product => ({
+    const results = products.map((product) => ({
       _id: product._id,
       name: product.name,
       slug: product.slug,
@@ -377,20 +405,19 @@ exports.searchProducts = async (req, res) => {
       // Get first available image
       image: product.variants?.[0]?.images?.[0],
       // Get available colors
-      colors: [...new Set(product.variants.map(v => v.color))]
+      colors: [...new Set(product.variants.map((v) => v.color))],
     }));
 
     res.json({
       success: true,
       count: results.length,
-      results
+      results,
     });
-
   } catch (err) {
-    console.error('Search error:', err);
+    console.error("Search error:", err);
     res.status(500).json({
       success: false,
-      message: 'Search failed'
+      message: "Search failed",
     });
   }
 };
@@ -564,13 +591,13 @@ exports.updateProduct = async (req, res) => {
   try {
     const { slug } = req.params;
     const existingProduct = await Product.findOne({ slug });
-    
+
     if (!existingProduct) {
       return res.status(404).json({ error: "Product not found" });
     }
 
     // Helper to get relative path
-    const getRelPath = (filePath) => 
+    const getRelPath = (filePath) =>
       path.relative(process.cwd(), filePath).replace(/\\/g, "/");
 
     // --- Handle featured image ---
@@ -592,7 +619,9 @@ exports.updateProduct = async (req, res) => {
     // --- Parse variants ---
     let variantsData = [];
     try {
-      variantsData = req.body.variants ? JSON.parse(req.body.variants) : existingProduct.variants;
+      variantsData = req.body.variants
+        ? JSON.parse(req.body.variants)
+        : existingProduct.variants;
     } catch (err) {
       return res.status(400).json({ error: "Invalid variants format" });
     }
@@ -602,7 +631,7 @@ exports.updateProduct = async (req, res) => {
     if (req.files) {
       // Convert req.files object to array of files
       const filesArray = Object.entries(req.files)
-        .filter(([fieldName]) => fieldName.startsWith('variant_'))
+        .filter(([fieldName]) => fieldName.startsWith("variant_"))
         .flatMap(([_, files]) => files);
 
       filesArray.forEach((file) => {
@@ -618,10 +647,12 @@ exports.updateProduct = async (req, res) => {
     // --- Process variants ---
     const processedVariants = variantsData.map((variant, index) => {
       // Handle existing images
-      const existingImages = variant.images
-        ?.filter(img => img.isExisting)
-        ?.map(img => img.url)
-        ?.filter(url => !(variant.imagesToRemove || []).includes(url)) || [];
+      const existingImages =
+        variant.images
+          ?.filter((img) => img.isExisting)
+          ?.map((img) => img.url)
+          ?.filter((url) => !(variant.imagesToRemove || []).includes(url)) ||
+        [];
 
       // Get new uploaded images for this variant
       const newImages = variantImagesMap[index] || [];
@@ -630,29 +661,34 @@ exports.updateProduct = async (req, res) => {
       const combinedImages = [...existingImages, ...newImages];
 
       if (combinedImages.length < 2) {
-        throw new Error(`Variant "${variant.color}" must have at least 2 images`);
+        throw new Error(
+          `Variant "${variant.color}" must have at least 2 images`
+        );
       }
 
       return {
         color: variant.color,
         images: combinedImages,
-        sizes: variant.sizes?.map(size => ({
-          size: String(size.size),
-          stock: Math.max(0, parseInt(size.stock) || 0)
-        })) || []
+        sizes:
+          variant.sizes?.map((size) => ({
+            size: String(size.size),
+            stock: Math.max(0, parseInt(size.stock) || 0),
+          })) || [],
       };
     });
 
     // --- Price calculations ---
-    const price = req.body.price ? parseFloat(req.body.price) : existingProduct.price;
+    const price = req.body.price
+      ? parseFloat(req.body.price)
+      : existingProduct.price;
     const discountPercentage = req.body.discountPercentage
       ? Math.min(100, Math.max(0, parseFloat(req.body.discountPercentage)))
       : existingProduct.discountPercentage || 0;
-    const finalPrice = Math.round(price * (100 - discountPercentage) / 100);
+    const finalPrice = Math.round((price * (100 - discountPercentage)) / 100);
 
     // --- Clean up removed images ---
-    variantsData.forEach(variant => {
-      (variant.imagesToRemove || []).forEach(url => {
+    variantsData.forEach((variant) => {
+      (variant.imagesToRemove || []).forEach((url) => {
         const filePath = path.join(process.cwd(), url);
         if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       });
@@ -675,11 +711,14 @@ exports.updateProduct = async (req, res) => {
       isTrending: ["true", true, "1", 1].includes(req.body.isTrending),
       featuredImg,
       metaTitle: req.body.metaTitle || existingProduct.metaTitle,
-      metaDescription: req.body.metaDescription || existingProduct.metaDescription,
+      metaDescription:
+        req.body.metaDescription || existingProduct.metaDescription,
       tags: req.body.tags ? JSON.parse(req.body.tags) : existingProduct.tags,
-      badges: req.body.badges ? JSON.parse(req.body.badges) : existingProduct.badges,
+      badges: req.body.badges
+        ? JSON.parse(req.body.badges)
+        : existingProduct.badges,
       videoUrl: req.body.videoUrl || existingProduct.videoUrl,
-      variants: processedVariants
+      variants: processedVariants,
     };
 
     // Update the product
@@ -691,16 +730,15 @@ exports.updateProduct = async (req, res) => {
 
     res.json({
       success: true,
-      product: updatedProduct
+      product: updatedProduct,
     });
-
   } catch (err) {
     console.error("Error updating product:", err);
-    
+
     // Clean up uploaded files on error
     if (req.files) {
       const files = Object.values(req.files).flat();
-      files.forEach(file => {
+      files.forEach((file) => {
         if (file.path && fs.existsSync(file.path)) {
           fs.unlinkSync(file.path);
         }
@@ -709,7 +747,7 @@ exports.updateProduct = async (req, res) => {
 
     res.status(400).json({
       error: err.message || "Failed to update product",
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      details: process.env.NODE_ENV === "development" ? err.stack : undefined,
     });
   }
 };
@@ -1224,8 +1262,6 @@ exports.getProductAnalytics = async (req, res) => {
 
 // controllers/productController.js
 
-
-
 exports.getSuggestedProducts = async (req, res) => {
   try {
     const { productSlug } = req.params;
@@ -1256,4 +1292,3 @@ exports.getSuggestedProducts = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch suggestions" });
   }
 };
-
