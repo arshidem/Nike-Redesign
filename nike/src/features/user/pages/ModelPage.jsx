@@ -706,7 +706,7 @@ console.log(products);
                         {product.tag}
                       </span>
                       <h2 className="text-sm font-semibold">{product.name}</h2>
-                      <p className="text-gray-500 text-sm">{product.gender}</p>
+                      <p className="text-gray-500 text-sm">{product.gender.charAt(0).toUpperCase()+product.gender.slice(1)}</p>
 
                       {/* Rating display */}
                       {product.rating && product.rating.total > 0 && (
