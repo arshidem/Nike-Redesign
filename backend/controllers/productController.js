@@ -210,14 +210,7 @@ exports.getAllProducts = async (req, res) => {
       };
       console.log("Color filter query:", query["variants.color"]);
     }
-    // if (req.query.size) {
-    //   query["variants.sizes"] = {
-    //     $elemMatch: {
-    //       size: req.query.size,
-    //       stock: { $gt: 0 },
-    //     },
-    //   };
-    // }
+
 
     if (req.query.size) {
       query.variants = {
@@ -275,11 +268,7 @@ exports.getAllProducts = async (req, res) => {
       query._id = { $in: bestSellerIds };
     }
 
-    // 🎯 Optional: Handle discount filter as well
-    if (req.query.minDiscount) {
-      query.discount = { $gte: Number(req.query.minDiscount) };
-    }
-
+  
     // Sorting
     if (req.query.sortBy === "sold") sortOption = { sold: -1 };
     if (req.query.sortBy === "priceAsc") sortOption = { finalPrice: 1 };

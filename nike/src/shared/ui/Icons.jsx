@@ -87,17 +87,25 @@ export const HeartIcon = ({
 export const BagIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    fill="none"
+    width="18"
+    height="18"
     viewBox="0 0 24 24"
-    strokeWidth="1.5"
-    stroke="currentColor"
-    className="size-4"
+    fill="none"
   >
     <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5M19.606 8.507l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
-    />
+      d="M8.4 6.5h7.2c3.4 0 3.74 1.59 3.97 3.53l.9 7.5C20.76 19.99 20 22 16.5 22H7.51C4 22 3.24 19.99 3.54 17.53l.9-7.5C4.66 8.09 5 6.5 8.4 6.5Z"
+      stroke="#000000"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    ></path>
+    <path
+      d="M8 8V4.5C8 3 9 2 10.5 2h3C15 2 16 3 16 4.5V8M20.41 17.03H8"
+      stroke="#000000"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    ></path>
   </svg>
 );
 export const UserIcon = () => (

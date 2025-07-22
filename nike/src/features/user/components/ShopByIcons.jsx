@@ -109,7 +109,7 @@ const ShopByIcons = () => {
                   <img
                     src={product.image}
                     alt={product.model}
-                    className="w-[150px] h-[150px] md:w-[200px] md:h-[200px] lg:w-[250px] lg:h-[250px] object-cover mb-3"
+                    className="w-[200px] h-[200px] md:w-[240px] md:h-[240px] lg:w-[250px] lg:h-[250px] object-cover mb-3"
                     loading="lazy"
                   />
                   <h3 className="font-extrabold text-md">
