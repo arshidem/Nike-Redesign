@@ -87,31 +87,59 @@ const ProductDetails = () => {
   }, [token]);
 
   // Handle wishlist toggle
-  const handleWishlistToggle = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+const handleWishlistToggle = async (e) => {
+  e.preventDefault();
+  e.stopPropagation();
 
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+  if (!token) {
+    // Custom toast for not logged in users
+    toast.custom(
+      (t) => (
+        <div
+          className={`${
+            t.visible ? "animate-enter" : "animate-leave"
+          } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+        >
+          <div className="p-4 flex items-center justify-between w-full">
+            <span className="text-sm font-medium text-gray-900">
+              Please login to add items to your wishlist
+            </span>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id); // close toast manually
+                navigate("/signin"); // redirect
+              }}
+              className="px-3 py-1 bg-black text-white text-sm rounded hover:bg-gray-800"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: 3000, // 3 seconds
+      }
+    );
+    return; // Stop execution if user not logged in
+  }
 
-    try {
-      setIsWishlistLoading(true);
-      const response = await toggleWishlist(product._id);
-      setWishlistIds(response.wishlist.map((item) => item._id));
+  try {
+    setIsWishlistLoading(true);
+    const response = await toggleWishlist(product._id);
+    setWishlistIds(response.wishlist.map((item) => item._id));
 
-      toast.success(
-        response.action === "added"
-          ? "Added to wishlist!"
-          : "Removed from wishlist!"
-      );
-    } catch (err) {
-      toast.error(err.message || "Failed to update wishlist");
-    } finally {
-      setIsWishlistLoading(false);
-    }
-  };
+    toast.success(
+      response.action === "added"
+        ? "Added to wishlist!"
+        : "Removed from wishlist!"
+    );
+  } catch (err) {
+    toast.error(err.message || "Failed to update wishlist");
+  } finally {
+    setIsWishlistLoading(false);
+  }
+};
+
   useEffect(() => {
     const loadProduct = async () => {
       try {

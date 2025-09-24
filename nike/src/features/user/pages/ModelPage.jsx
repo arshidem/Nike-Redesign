@@ -87,7 +87,7 @@ const ModelPage = () => {
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
-console.log(products);
+  console.log(products);
 
   // Extract available colors from products
   useEffect(() => {
@@ -215,35 +215,63 @@ console.log(products);
     return wishlistIds.includes(productId);
   };
 
-  const handleWishlistToggle = async (productId, e) => {
-    e.preventDefault();
-    e.stopPropagation();
+const handleWishlistToggle = async (productId, e) => {
+  e.preventDefault();
+  e.stopPropagation();
 
-    if (!user) {
-      navigate("/login");
-      return;
-    }
+  if (!user) {
+    // Custom toast with button to Sign In
+ toast.custom(
+  (t) => (
+    <div
+      className={`${
+        t.visible ? "animate-enter" : "animate-leave"
+      } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+    >
+      <div className="p-4 flex items-center justify-between w-full">
+        <span className="text-sm font-medium text-gray-900">
+          Please login to add items to your wishlist
+        </span>
+        <button
+          onClick={() => {
+            toast.dismiss(t.id); // close toast manually
+            navigate("/signin"); // redirect
+          }}
+          className="px-3 py-1 bg-black text-white text-sm rounded hover:bg-gray-800"
+        >
+          Sign In
+        </button>
+      </div>
+    </div>
+  ),
+  {
+    duration: 3000, // 5 seconds
+  }
+);
 
-    try {
-      setWishlistLoading((prev) => ({ ...prev, [productId]: true }));
-      const response = await toggleWishlist(productId);
-      const updatedWishlistIds = response.wishlist.map(
-        (product) => product._id
-      );
-      setWishlistIds(updatedWishlistIds);
+    return; // stop execution if user is not logged in
+  }
 
-      toast.success(
-        response.action === "added"
-          ? "Added to wishlist!"
-          : "Removed from wishlist!"
-      );
-    } catch (err) {
-      console.error("Failed to toggle wishlist", err);
-      toast.error(err.message || "Failed to update wishlist");
-    } finally {
-      setWishlistLoading((prev) => ({ ...prev, [productId]: false }));
-    }
-  };
+  try {
+    setWishlistLoading((prev) => ({ ...prev, [productId]: true }));
+
+    const response = await toggleWishlist(productId);
+    const updatedWishlistIds = response.wishlist.map((product) => product._id);
+    setWishlistIds(updatedWishlistIds);
+
+    toast.success(
+      response.action === "added"
+        ? "Added to wishlist!"
+        : "Removed from wishlist!"
+    );
+  } catch (err) {
+    console.error("Failed to toggle wishlist", err);
+    toast.error(err.message || "Failed to update wishlist");
+  } finally {
+    setWishlistLoading((prev) => ({ ...prev, [productId]: false }));
+  }
+};
+
 
   // Render star rating display
   const renderStars = (rating) => {
@@ -535,15 +563,14 @@ console.log(products);
           <FilterIcon className="w-5 h-5" />
           <span>Filters</span>
         </button>
-    {!isMobile && (
-  <button
-    className="flex items-center gap-2 p-2 border rounded-lg mt-10 bg-white shadow-sm hover:bg-gray-50"
-    onClick={toggleFilters}
-  >
-    {showFilters ? "Hide Filters" : "Show Filters"}
-  </button>
-)}
-
+        {!isMobile && (
+          <button
+            className="flex items-center gap-2 p-2 border rounded-lg mt-10 bg-white shadow-sm hover:bg-gray-50"
+            onClick={toggleFilters}
+          >
+            {showFilters ? "Hide Filters" : "Show Filters"}
+          </button>
+        )}
       </div>
 
       {/* Mobile Filter Drawer */}
@@ -578,34 +605,19 @@ console.log(products);
       </div>
 
       {/* Desktop Filter Sidebar */}
-{!isMobile && (
-  <div
-    className={`hidden md:block fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-20 p-6 overflow-y-auto transform transition-transform duration-300 ease-in-out
-      ${showFilters ? 'translate-x-0' : '-translate-x-full'}
+      {!isMobile && (
+        <div
+          className={`hidden md:block fixed left-0 top-0 h-full w-64 bg-white shadow-lg z-20 p-6 overflow-y-auto transform transition-transform duration-300 ease-in-out
+      ${showFilters ? "translate-x-0" : "-translate-x-full"}
     `}
-  >
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl mt-14 font-bold">Filters</h2>
-    </div>
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl mt-14 font-bold">Filters</h2>
+          </div>
 
-    <FilterSection />
-  </div>
-)}
-
-
-
-   
-
-
-
-
-
-
-
-
-
-
-
+          <FilterSection />
+        </div>
+      )}
 
       {/* Main Content */}
       <div
@@ -706,7 +718,10 @@ console.log(products);
                         {product.tag}
                       </span>
                       <h2 className="text-sm font-semibold">{product.name}</h2>
-                      <p className="text-gray-500 text-sm">{product.gender.charAt(0).toUpperCase()+product.gender.slice(1)}</p>
+                      <p className="text-gray-500 text-sm">
+                        {product.gender.charAt(0).toUpperCase() +
+                          product.gender.slice(1)}
+                      </p>
 
                       {/* Rating display */}
                       {product.rating && product.rating.total > 0 && (
