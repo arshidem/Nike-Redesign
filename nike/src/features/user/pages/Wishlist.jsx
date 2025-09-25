@@ -2,24 +2,22 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../../context/AppContext";
 import { useWishlistService } from "../services/wishlistServices";
-import useCartServices from "../services/cartServices";
 import { BackBar, HeartIcon, BagIcon } from "../../../shared/ui/Icons";
 import Footer from "../components/Footer";
 import { ModelSkeleton } from "../../../shared/ui/Skeleton";
 import { toast } from "react-hot-toast";
+import useCartServices from "../services/cartServices";
 
 const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [wishlistLoading, setWishlistLoading] = useState({});
   const [cartLoading, setCartLoading] = useState({});
-
   const navigate = useNavigate();
   const { user, backendUrl } = useAppContext();
   const { toggleWishlist, getWishlist } = useWishlistService();
   const { addToCart } = useCartServices();
 
-  // Format image URLs
   const formatImageUrl = (imagePath) => {
     if (!imagePath) return "/placeholder.jpg";
     const match = imagePath.match(
@@ -28,55 +26,30 @@ const Wishlist = () => {
     const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
     return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
   };
+   const fetchWishlist = async () => {
+      if (!user) {
+        navigate("/signin");
+        return;
+      }
 
-  // Fetch wishlist
-  const fetchWishlist = async () => {
-    try {
-      setLoading(true);
-      const response = await getWishlist();
-      setWishlistItems(response.data);
-    } catch (error) {
-      console.error("Failed to fetch wishlist", error);
-      toast.error("Failed to load your wishlist");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+      try {
+        setLoading(true);
+        const response = await getWishlist();
+        setWishlistItems(response.data);
+      } catch (error) {
+        console.error("Failed to fetch wishlist", error);
+        toast.error("Failed to load your wishlist");
+      } finally {
+        setLoading(false);
+      }
+    };
   useEffect(() => {
-    if (user) {
-      fetchWishlist();
-    }
-  }, [user]);
+ fetchWishlist();
+  }, []);
 
-  // Toggle wishlist
   const handleWishlistToggle = async (productId, e) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (!user) {
-      toast.custom((t) => (
-        <div
-          className={`${
-            t.visible ? "animate-enter" : "animate-leave"
-          } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 p-4 items-center justify-between gap-3`}
-        >
-          <span className="text-sm font-medium text-gray-900">
-            Please login to add items to your wishlist
-          </span>
-          <button
-            onClick={() => {
-              toast.dismiss(t.id);
-              navigate("/signin");
-            }}
-            className="px-3 py-1 bg-black text-white text-sm rounded hover:bg-blue-700"
-          >
-            Sign In
-          </button>
-        </div>
-      ));
-      return;
-    }
 
     try {
       setWishlistLoading((prev) => ({ ...prev, [productId]: true }));
@@ -95,7 +68,6 @@ const Wishlist = () => {
     }
   };
 
-  // Add to cart handler
   const handleAddToCart = (product, e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -103,37 +75,6 @@ const Wishlist = () => {
     toast("Please select a size on the product page");
   };
 
-  // Not signed in UX
-  if (!user) {
-    return (
-      
-      <div className="p-6 flex flex-col items-center justify-center min-h-screen text-center">
-              <BackBar />
-
-        <h1 className="text-2xl font-bold mb-4">You are not signed in</h1>
-        <p className="text-gray-600 mb-6">
-          To see your wishlist, please sign in first. You can also continue
-          browsing products without signing in.
-        </p>
-        <div className="flex gap-4">
-          <button
-            onClick={() => navigate("/signin")}
-            className="px-4 py-2 bg-black text-white rounded hover:bg-blue-700"
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => navigate("/home")}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-          >
-            Continue Browsing
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Loading skeleton
   if (loading) return <ModelSkeleton />;
 
   return (
@@ -172,6 +113,7 @@ const Wishlist = () => {
                 key={product._id}
                 className="bg-white rounded-lg shadow hover:shadow-lg transition block p-4 relative"
               >
+                {/* Product image with error handling */}
                 <Link to={`/product/${product.slug}`}>
                   <img
                     src={formatImageUrl(productImage)}
@@ -190,7 +132,9 @@ const Wishlist = () => {
                       {product.name}
                     </h2>
                   </Link>
-                  <p className="text-gray-500 text-xs capitalize">{product.gender}</p>
+                  <p className="text-gray-500 text-xs capitalize">
+                    {product.gender}
+                  </p>
                   <div className="flex items-center justify-between mt-2">
                     <div>
                       <p className="text-gray-700 font-medium">
@@ -210,11 +154,12 @@ const Wishlist = () => {
                   </div>
                 </div>
 
+                {/* Add to cart button */}
                 <div className="flex mt-3 justify-between w-full gap-2">
                   <button
                     onClick={(e) => handleAddToCart(product, e)}
                     disabled={isCartLoading}
-                    className="w-full py-2 bg-black text-white text-xs rounded-full flex items-center justify-center gap-1 hover:bg-gray-800 disabled:opacity-50"
+                    className="w-full  py-2 bg-black text-white text-xs rounded-full flex items-center justify-center gap-1 hover:bg-gray-800 disabled:opacity-50"
                   >
                     {isCartLoading ? (
                       "Adding..."
@@ -225,10 +170,10 @@ const Wishlist = () => {
                       </>
                     )}
                   </button>
-
+                  {/* Wishlist button */}
                   <button
                     onClick={(e) => handleWishlistToggle(product._id, e)}
-                    className="p-2 rounded-full shadow bg-white"
+                    className={` p-2 rounded-full shadow bg-white`}
                     aria-label="Remove from wishlist"
                     disabled={isWishlistLoading}
                   >
@@ -267,7 +212,6 @@ const Wishlist = () => {
           })}
         </div>
       )}
-
       <Footer />
     </div>
   );

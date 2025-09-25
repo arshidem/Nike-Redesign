@@ -17,13 +17,10 @@ connectDB();
 // CORS middleware
 const corsOptions = {
   origin: (origin, callback) => {
- const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.FRONTEND_URL_HOST,
-  "https://nike-redesign-six.vercel.app",
-  "https://nike-redesign-six.vercel.app/",
-];
-
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      process.env.FRONTEND_URL_HOST,
+    ];
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
