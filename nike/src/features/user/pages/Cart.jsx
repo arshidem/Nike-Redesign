@@ -127,7 +127,7 @@ const Cart = () => {
 
   if (!cart || cart.items?.length === 0) {
     return (
-      <div className="text-center py-20">
+      <div className="p-6 flex flex-col items-center justify-center min-h-screen text-center">
         <BackBar />
         <h2 className="text-2xl font-bold text-gray-700 mb-4">
           Your Bag is Empty
