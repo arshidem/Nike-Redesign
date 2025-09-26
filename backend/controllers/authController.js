@@ -17,7 +17,7 @@ client.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.B
 const sendOTP = async (email, otp) => {
   try {
     await client.sendTransacEmail({
-      sender: { name: 'Nike Auth', email: process.env.SENDER_EMAIL },
+      sender: { name: 'Nike Redesign', email: process.env.SENDER_EMAIL },
       to: [{ email }],
       subject: 'Your OTP Code',
       htmlContent: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,

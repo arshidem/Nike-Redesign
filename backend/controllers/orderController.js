@@ -755,7 +755,7 @@ const sendOrderConfirmation = async (email, order) => {
     console.log("Sending order confirmation email to:", email);
 
     await client.sendTransacEmail({
-      sender: { name: "Nike Auth", email: process.env.SENDER_EMAIL },
+      sender: { name: "Nike Redesign", email: process.env.SENDER_EMAIL },
       to: [{ email }],
       subject: `Order Confirmation #${order._id}`,
       htmlContent: emailHtml,
