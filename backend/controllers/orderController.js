@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const nodemailer = require("nodemailer");
 const moment = require("moment-timezone");
+const SibApiV3Sdk = require('@sendinblue/client');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -103,7 +104,7 @@ exports.verifyPayment = async (req, res) => {
       razorpay_signature,
       email,
     } = req.body;
-    
+
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -164,8 +165,13 @@ exports.verifyPayment = async (req, res) => {
     const stockUpdates = await Promise.all(
       req.body.items.map(async (item) => {
         try {
-          const product = await Product.findById(item.product).session(session).lean();
-          const variant = product?.variants?.find((v) => v.color === item.color);
+          const product = await Product.findById(item.product)
+            .session(session)
+            .lean();
+
+          const variant = product?.variants?.find(
+            (v) => v.color === item.color
+          );
           const sizeObj = variant?.sizes?.find((s) => s.size === item.size);
 
           if (!variant || !sizeObj || sizeObj.stock < item.quantity) {
@@ -214,67 +220,21 @@ exports.verifyPayment = async (req, res) => {
     }
 
     // 7. Commit transaction
-       // 7. Commit transaction
     await session.commitTransaction();
-console.log(orderData);
+    console.log(orderData);
 
-    // 8. Notify admins about new order
-  // Remove these imports at top of file:
-// const sendPushNotification = require("../utils/push");
-
-// In your verifyPayment function, replace the notification section with:
-
-// 8. Notify admins about new order (foreground only)
-const io = req.app.get("io");
-const { adminSockets } = require("../utils/socketState");
-
-adminSockets.forEach((adminUser, socketId) => {
-  io.to(socketId).emit("new-order", {
-    type: "toast", // Explicitly specify notification type
-    data: {
-      orderId: newOrder[0]._id,
-      user: {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-      },
-      totalPrice,
-      itemCount: req.body.items.length,
-      paidAt: orderData.paidAt,
-      status: orderData.status,
-    }
+    // 8. Send order confirmation email (non-critical)
+try {
+  await sendOrderConfirmation(email, {
+    ...newOrder[0].toObject(),
+    customerName: req.user.name
   });
-});
-
-console.log('✅ Admin notified via toast: New order placed');
-const sendPushNotification = require("../utils/push");
-
-// After new order is created:
-const payload = {
-  title: "🛒 New Order!",
-  body: `From: ${req.user.email} | Total: ₹${totalPrice}`,
-  fullUrl: `${process.env.FRONTEND_URL}/admin`,
-};
-
-await sendPushNotification(adminPushSubscription, payload);
+} catch (emailError) {
+  console.error("Order confirmation email failed:", emailError);
+}
 
 
- 
-    // 9. Send order confirmation email (non-critical operation)
-    try {
-      await sendOrderConfirmation(
-        email,
-        {
-          ...newOrder[0].toObject(),
-          customerName: req.user.name
-        }
-      );
-    } catch (emailError) {
-      console.error("Order confirmation email failed:", emailError);
-      // Not failing the request because email is non-critical
-    }
-
-    // 10. Success response
+    // 9. Success response
     res.status(200).json({
       success: true,
       message: "Order placed successfully",
@@ -284,11 +244,10 @@ await sendPushNotification(adminPushSubscription, payload);
         newStock: u.newStock,
       })),
     });
-
   } catch (error) {
     await session.abortTransaction();
     console.error("Order processing failed:", error);
-    
+
     res.status(500).json({
       success: false,
       message: "Order processing failed",
@@ -305,6 +264,7 @@ await sendPushNotification(adminPushSubscription, payload);
     session.endSession();
   }
 };
+
 // Get user orders
 // Get user orders
 exports.getUserOrders = async (req, res) => {
@@ -747,135 +707,63 @@ exports.getOrderStatusStats = async (req, res) => {
 };
 
 
+const client = new SibApiV3Sdk.TransactionalEmailsApi();
+client.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+
 const sendOrderConfirmation = async (email, order) => {
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      tls: { rejectUnauthorized: false }, // For self-signed certificates
-    });
+    if (!email) {
+      console.error("No recipient email provided!");
+      return;
+    }
 
-    // Format order items
-    const itemsHtml = order.items
-      .map(
-        (item) => `
+    if (!order.items || !Array.isArray(order.items)) {
+      console.error("Order has no items:", order);
+      return;
+    }
+
+    // Format items
+    const itemsHtml = order.items.map((item) => `
       <tr>
-        <td>${item.title} (${item.color}, Size ${item.size})</td>
+        <td>${item.title || item.name} (${item.color || ""}, Size ${item.size || ""})</td>
         <td>${item.quantity}</td>
         <td>₹${item.price}</td>
         <td>₹${item.price * item.quantity}</td>
       </tr>
-    `
-      )
-      .join("");
+    `).join("");
 
-    // Calculate delivery date (5 days from now)
+    // Delivery date
     const deliveryDate = new Date();
     deliveryDate.setDate(deliveryDate.getDate() + 5);
 
-    // Simple but effective HTML email
     const emailHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: Arial, sans-serif; }
-    .order-table { width: 100%; border-collapse: collapse; }
-    .order-table th, .order-table td { padding: 8px; border: 1px solid #ddd; }
-    .order-table th { background-color: #f2f2f2; }
-    .address-box { background: #f9f9f9; padding: 15px; margin: 15px 0; }
-  </style>
-</head>
-<body>
-  <h2>Thank you for your order!</h2>
-  <p>Order #${order._id}</p>
-  
-  <h3>Order Summary</h3>
-  <table class="order-table">
-    <thead>
-      <tr>
-        <th>Item</th>
-        <th>Qty</th>
-        <th>Price</th>
-        <th>Total</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${itemsHtml}
-    </tbody>
-  </table>
-
-  <div style="margin-top: 20px;">
-    <p><strong>Subtotal:</strong> ₹${order.itemsPrice}</p>
-    <p><strong>Shipping:</strong> ₹${order.shippingPrice}</p>
-    <p><strong>Tax:</strong> ₹${order.taxPrice}</p>
-    <p><strong>Total:</strong> ₹${order.totalPrice}</p>
-  </div>
-
-  <div class="address-box">
-    <h3>Shipping Address</h3>
-    <p>${order.shippingAddress.fullName}</p>
-    <p>${order.shippingAddress.street}</p>
-    <p>${order.shippingAddress.city}, ${order.shippingAddress.state} - ${
-      order.shippingAddress.postalCode
-    }</p>
-    <p>${order.shippingAddress.country}</p>
-    <p><strong>Expected Delivery:</strong> ${deliveryDate.toDateString()}</p>
-  </div>
-
-  <p>Payment Method: Razorpay (${order.paymentResult?.id || "N/A"})</p>
-  <p>Need help? Contact <a href="mailto:support@yourstore.com">support@yourstore.com</a></p>
-</body>
-</html>
+      <h2>Thank you for your order, ${order.customerName || "Customer"}!</h2>
+      <p>Order #${order._id}</p>
+      <h3>Order Summary</h3>
+      <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;">
+        <thead>
+          <tr>
+            <th>Item</th><th>Qty</th><th>Price</th><th>Total</th>
+          </tr>
+        </thead>
+        <tbody>${itemsHtml}</tbody>
+      </table>
+      <p><strong>Total:</strong> ₹${order.totalPrice}</p>
+      <p><strong>Expected Delivery:</strong> ${deliveryDate.toDateString()}</p>
     `;
 
-    // Plain text version for email clients that prefer it
-    const textVersion = `
-Thank you for your order (#${order._id})
+    console.log("Sending order confirmation email to:", email);
 
-Order Summary:
-${order.items
-  .map(
-    (item) =>
-      `${item.title} (${item.color}, Size ${item.size}) - ${item.quantity} x ₹${
-        item.price
-      } = ₹${item.price * item.quantity}`
-  )
-  .join("\n")}
-
-Subtotal: ₹${order.itemsPrice}
-Shipping: ₹${order.shippingPrice}
-Tax: ₹${order.taxPrice}
-Total: ₹${order.totalPrice}
-
-Shipping Address:
-${order.shippingAddress.fullName}
-${order.shippingAddress.street}
-${order.shippingAddress.city}, ${order.shippingAddress.state} - ${
-      order.shippingAddress.postalCode
-    }
-${order.shippingAddress.country}
-
-Expected Delivery: ${deliveryDate.toDateString()}
-Payment Method: Razorpay (${order.paymentResult?.id || "N/A"})
-    `;
-
-    await transporter.sendMail({
-      from: `"Fake Store" <${process.env.SENDER_EMAIL}>`,
-      to: email,
+    await client.sendTransacEmail({
+      sender: { name: "Nike Auth", email: process.env.SENDER_EMAIL },
+      to: [{ email }],
       subject: `Order Confirmation #${order._id}`,
-      text: textVersion,
-      html: emailHtml,
+      htmlContent: emailHtml,
     });
 
-    console.log(`Order confirmation sent to ${email}`);
+    console.log(`✅ Order confirmation sent to ${email}`);
   } catch (error) {
-    console.error("Error sending order confirmation:", error);
-    throw error; // Re-throw to handle in calling function
+    console.error("❌ Failed to send order confirmation:", error.response?.body || error.message);
+    throw new Error("Order confirmation email failed");
   }
 };
