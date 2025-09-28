@@ -253,7 +253,7 @@ if (!paymentInit?.success || !order) {
       key: import.meta.env.VITE_RAZORPAY_KEY_ID,
       amount: order.amount,
       currency: order.currency || "INR",
-      name: "Your Store",
+      name: "Nike Redesign",
       description: "Order Payment",
       order_id: order.id,
       handler: async (response) => {
