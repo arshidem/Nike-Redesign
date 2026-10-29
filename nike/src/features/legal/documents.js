@@ -40,7 +40,7 @@ export const privacyPolicy = {
       id: "providers",
       title: "05 / Service providers",
       paragraphs: [
-        "The application uses hosting and database services to run the frontend, backend, and stored records. Its email-code integration uses Brevo, payment integration uses Razorpay, and product media integration uses Cloudinary. Providers receive information needed for the feature in use, such as your email for a verification message or payment details supplied to a payment provider.",
+        "The application uses hosting and database services to run the frontend, backend, and stored records. Its transactional email integration supports SMTP2GO or Resend, depending on the backend configuration. Its payment integration uses Razorpay, and product media integration uses Cloudinary. Providers receive information needed for the feature in use, such as your email for a verification message or payment details supplied to a payment provider.",
         "Payment references and status may be stored with an order. Enter payment credentials only in the payment provider’s checkout. Third-party services apply their own privacy terms, and their processing may take place in other countries.",
       ],
     },
