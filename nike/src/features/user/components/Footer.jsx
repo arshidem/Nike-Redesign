@@ -48,6 +48,7 @@ export default function Footer() {
         <span>NIKE / INDEPENDENT STOREFRONT CONCEPT</span>
         <span>Designed by Triode Studio · India</span>
         <span>Not affiliated with Nike, Inc.</span>
+        <nav className="footer-legal-links" aria-label="Legal"><Link to="/privacy-policy">Privacy Policy</Link><Link to="/terms-of-service">Terms of Service</Link></nav>
       </div>
     </footer>
   );

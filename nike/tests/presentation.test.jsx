@@ -47,6 +47,8 @@ const renderSignIn = async () =>
 test("redesigned sign-in retains email validation without making an invalid API call", async () => {
   await renderSignIn();
   expect(container.querySelector(".auth-frame")).not.toBeNull();
+  expect(container.querySelector('a[href="/privacy-policy"]')).not.toBeNull();
+  expect(container.querySelector('a[href="/terms-of-service"]')).not.toBeNull();
   await click(container.querySelector(".design-sign-in button"));
   expect(toast.error).toHaveBeenCalledWith("Please enter your email.");
   expect(axios.post).not.toHaveBeenCalled();
