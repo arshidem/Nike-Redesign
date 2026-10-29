@@ -360,7 +360,7 @@ if (!paymentInit?.success || !order) {
   return (
     <>
     <BackBar/>
-    <div className="max-w-5xl mx-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
+    <div className="commerce-page checkout-page max-w-5xl mx-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
       
       <div>
         <h2 className="text-xl font-semibold mb-4">Delivery Information</h2>

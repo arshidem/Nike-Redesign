@@ -143,7 +143,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 mt-8">
+    <div className="commerce-page cart-page max-w-6xl mx-auto px-4 py-8 mt-8">
       <Toaster position="top-center" />
       <BackBar />
       <div className="flex flex-col lg:flex-row gap-8 mt-4">

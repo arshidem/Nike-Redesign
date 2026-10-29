@@ -62,12 +62,11 @@ const ProductDetails = () => {
     useCartServices();
 
   const formatImageUrl = (imagePath) => {
-    if (!imagePath || typeof imagePath !== "string") return "/placeholder.jpg";
-    const match = imagePath.match(
-      /uploads[\\/][\w\-.]+\.(jpg|jpeg|avif|png|webp)/i
-    );
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
+    if (!imagePath || typeof imagePath !== 'string') return '/assets/editorial/image-unavailable.svg';
+    if (/^https?:\/\//i.test(imagePath)) return imagePath;
+    const normalized = imagePath.replace(/\\/g, '/');
+    const relative = normalized.includes('uploads/') ? normalized.slice(normalized.indexOf('uploads/')) : normalized.replace(/^\/+/, '');
+    return `${(backendUrl || '').replace(/\/$/, '')}/${relative}`;
   };
   const isInWishlist = wishlistIds.includes(product?._id);
 
@@ -288,10 +287,10 @@ const handleWishlistToggle = async (e) => {
     sizes.find((s) => s.size === selectedSize)?.stock || 0;
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="commerce-page product-detail-page max-w-6xl mx-auto p-6">
       <Toaster position="top-center" />
 
-      <div className="fixed top-0 left-0 w-full z-30 bg-white shadow-md px-4 py-2 flex items-center">
+      <div className="commerce-backbar fixed top-0 left-0 w-full z-30 bg-white px-4 py-2 flex items-center">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-1 px-3 py-2 border border-black rounded hover:bg-gray-100 transition sm:w-auto"
@@ -319,6 +318,7 @@ const handleWishlistToggle = async (e) => {
         <div className="w-full lg:w-1/2 lg:sticky lg:top-24 lg:h-fit self-start">
           <img
             src={selectedImage}
+            alt={product.name}
             className="w-full aspect-square object-cover rounded"
           />
           <div className="flex gap-2 mt-4 overflow-x-auto">

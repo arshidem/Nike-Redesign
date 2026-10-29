@@ -6,7 +6,8 @@
   "scripts": {
     "start": "npm run dev",
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "test:storefront": "jest --config jest.storefront.config.cjs --runInBand"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

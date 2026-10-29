@@ -23,7 +23,7 @@ const CreateProduct = lazy(() => import("./features/admin/pages/CreateProduct"))
 const UpdateProduct = lazy(() => import("./features/admin/pages/UpdateProduct"));
 const AdminProductDetails = lazy(() => import("./features/admin/pages/AdminProductDetailes"));
 const Wishlist = lazy(()=> import("./features/user/pages/Wishlist") )
-import { LogoLoader } from "./features/user/components/LogoLoader";
+
 
 const Loading = () => (
   <div className="flex justify-center items-center h-screen">
@@ -58,7 +58,7 @@ class ErrorBoundary extends React.Component {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<LogoLoader />} />
+      <Route path="/" element={<Home />} />
       <Route path="/home" element={<Home />} />
       <Route path="/model/:modelName" element={<ModelPage />} />
       <Route path="/product/:productSlug" element={<ProductDetails />} />
