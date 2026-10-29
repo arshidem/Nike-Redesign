@@ -135,4 +135,4 @@ ProductSchema.virtual("cartPopularityScore").get(function () {
   );
 });
 
-module.exports = mongoose.model("Product", ProductSchema);
+module.exports = (mongoose.models.Product || mongoose.model("Product", ProductSchema));

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../../lib/navigation";
 
 /** Presentation shell only; each child owns its original form and auth flow. */
 export default function AuthFrame({ children }) {

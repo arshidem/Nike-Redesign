@@ -1,5 +1,6 @@
+import { prepareMediaData } from "../../../utils/uploadMedia";
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../../../lib/navigation";
 import axios from "axios";
 import { useDropzone } from "react-dropzone";
 import { useAppContext } from "../../../context/AppContext";
@@ -392,10 +393,10 @@ const CreateProduct = () => {
       });
 
       // Submit to backend
-      const response = await axios.post(`${backendUrl}/api/products`, formDataToSend, {
+      const response = await axios.post(`${backendUrl}/api/products`, await prepareMediaData(formDataToSend, token, "product"), {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
         },
       });
 

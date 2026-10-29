@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../../../lib/navigation";
 import axios from "axios";
 import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
 import { useAppContext } from "../../../context/AppContext";

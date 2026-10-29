@@ -42,4 +42,4 @@ const PincodeSchema = new mongoose.Schema({
   nearbyPincodes: [String] // For suggesting alternatives
 });
 
-module.exports = mongoose.model('Pincode', PincodeSchema);
+module.exports = (mongoose.models.Pincode || mongoose.model("Pincode", PincodeSchema));

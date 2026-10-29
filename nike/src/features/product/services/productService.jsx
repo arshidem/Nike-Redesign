@@ -1,3 +1,4 @@
+import { prepareMediaData } from "../../../utils/uploadMedia";
 import axios from 'axios';
 import { useAppContext } from '../../../context/AppContext';
 
@@ -80,8 +81,8 @@ const fetchFeaturedProducts = async () => {
   // ➕ Create a new product (admin only)
   const createProduct = async (formData) => {
     try {
-      const response = await axios.post(`${backendUrl}/api/products`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      const response = await axios.post(`${backendUrl}/api/products`, await prepareMediaData(formData, token, "product"), {
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
       return response.data;
@@ -96,10 +97,10 @@ const fetchFeaturedProducts = async () => {
     try {
       const response = await axios.put(
         `${backendUrl}/api/products/${slug}`,
-        formDataToSend,
+        await prepareMediaData(formDataToSend, token, "product"),
         {
           headers: {
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
           withCredentials: true,
@@ -117,7 +118,7 @@ const fetchFeaturedProducts = async () => {
     try {
       const response = await axios.delete(`${backendUrl}/api/products/${id}`, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         withCredentials: true,

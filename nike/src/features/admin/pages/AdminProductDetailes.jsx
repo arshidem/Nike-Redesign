@@ -1,5 +1,6 @@
+import { mediaUrl } from "../../../utils/mediaUrl";
 import React, { useEffect, useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "../../../lib/navigation";
 import { useAppContext } from "../../../context/AppContext";
 import { EditIcon, XIcon } from "../../../shared/ui/Icons";
 import { useProductService } from "../../product/services/productService";
@@ -101,14 +102,7 @@ const AdminProductDetails = () => {
       </div>
     ));
   };
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath) return "/placeholder.jpg";
-    const match = imagePath.match(
-      /uploads[\\/][\w\-.]+\.(jpg|jpeg|avif|png|webp)/i
-    );
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
-  };
+  const formatImageUrl = mediaUrl;
 
   const getMainImage = () => {
     if (product?.featuredImg) return formatImageUrl(product.featuredImg);

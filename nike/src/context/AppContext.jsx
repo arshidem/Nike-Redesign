@@ -9,7 +9,7 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);
   const [authReady, setAuthReady] = useState(false);
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+const backendUrl = '';
   // Derive authentication state
   const isAuthenticated = !!user && !!token;
 

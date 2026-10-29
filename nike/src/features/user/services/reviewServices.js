@@ -1,3 +1,4 @@
+import { prepareMediaData } from "../../../utils/uploadMedia";
 // src/features/product/services/reviewServices.jsx
 import axios from "axios";
 import { useAppContext } from "../../../context/AppContext";
@@ -23,10 +24,10 @@ const addReview = async (productId, reviewData, images = []) => {
     formData.append("images", file);
   });
 
-  const res = await axios.post(API, formData, {
+  const res = await axios.post(API, await prepareMediaData(formData, token, "review"), {
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "multipart/form-data",
+      "Content-Type": "application/json",
     },
   });
 

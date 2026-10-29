@@ -81,4 +81,4 @@ CartSchema.post("findOneAndDelete", async function (doc) {
 CartSchema.index({ status: 1 });
 CartSchema.index({ "items.productId": 1 });
 
-module.exports = mongoose.model("Cart", CartSchema);
+module.exports = (mongoose.models.Cart || mongoose.model("Cart", CartSchema));

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from "../../../lib/navigation";
 import { useUserService } from '../../user/services/userService';
 import { formatDate } from '../../../utils/dateUtils';
 import { BackBar, ConfirmModal } from '../../../shared/ui/Icons';

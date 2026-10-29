@@ -1,5 +1,6 @@
+import { mediaUrl } from "../../../utils/mediaUrl";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../../../lib/navigation";
 import toast, { Toaster } from "react-hot-toast";
 import {
   ArrowIconLeft,
@@ -32,14 +33,7 @@ const Cart = () => {
   const [couponCode, setCouponCode] = useState("");
   const { backendUrl } = useAppContext();
 
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath || typeof imagePath !== "string") return "/placeholder.jpg";
-    const match = imagePath.match(
-      /uploads[\\/][\w\-.]+\.(jpg|jpeg|png|webp|avif)/i
-    );
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return `${backendUrl}/${relativePath}`;
-  };
+  const formatImageUrl = mediaUrl;
 
   useEffect(() => {
     loadCart();

@@ -39,7 +39,7 @@ exports.addReview = async (req, res) => {
     const userId = req.user._id;
 
     // Extract image file paths
-    const imageUrls = req.files?.map((file) => `/uploads/${file.filename}`) || [];
+    const imageUrls = req.files?.map((file) => file.path) || [];
 
     const newReview = await Review.create({
       product,

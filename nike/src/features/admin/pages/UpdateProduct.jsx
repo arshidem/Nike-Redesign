@@ -1,5 +1,6 @@
+import { prepareMediaData } from "../../../utils/uploadMedia";
 import React, { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "../../../lib/navigation";
 import axios from "axios";
 import { useDropzone } from "react-dropzone";
 import { useAppContext } from "../../../context/AppContext";
@@ -523,10 +524,10 @@ const handleSubmit = async (e) => {
     // Send the request
     const response = await axios.put(
       `${backendUrl}/api/products/${slug}`,
-      formDataToSend,
+      await prepareMediaData(formDataToSend, token, "product"),
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
       }

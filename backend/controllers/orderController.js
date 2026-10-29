@@ -6,14 +6,16 @@ const Order = require("../models/Order");
 const User = require("../models/User");
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
-const nodemailer = require("nodemailer");
 const moment = require("moment-timezone");
-const SibApiV3Sdk = require('@sendinblue/client');
+const { sendOrderConfirmation } = require("../services/transactionalEmail");
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+let razorpay;
+function getRazorpay() {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    const error = new Error('Payment service is not configured'); error.status = 503; throw error;
+  }
+  return razorpay || (razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET }));
+}
 
 // Create Razorpay order
 
@@ -42,7 +44,7 @@ exports.createOrder = async (req, res) => {
       payment_capture: 1,
     };
 
-    const razorpayOrder = await razorpay.orders.create(options);
+    const razorpayOrder = await getRazorpay().orders.create(options);
 
     res.status(200).json({
       success: true,
@@ -703,67 +705,5 @@ exports.getOrderStatusStats = async (req, res) => {
     res.json(statusCounts);
   } catch (error) {
     res.status(500).json({ message: "Error getting status stats", error });
-  }
-};
-
-
-const client = new SibApiV3Sdk.TransactionalEmailsApi();
-client.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
-
-const sendOrderConfirmation = async (email, order) => {
-  try {
-    if (!email) {
-      console.error("No recipient email provided!");
-      return;
-    }
-
-    if (!order.items || !Array.isArray(order.items)) {
-      console.error("Order has no items:", order);
-      return;
-    }
-
-    // Format items
-    const itemsHtml = order.items.map((item) => `
-      <tr>
-        <td>${item.title || item.name} (${item.color || ""}, Size ${item.size || ""})</td>
-        <td>${item.quantity}</td>
-        <td>₹${item.price}</td>
-        <td>₹${item.price * item.quantity}</td>
-      </tr>
-    `).join("");
-
-    // Delivery date
-    const deliveryDate = new Date();
-    deliveryDate.setDate(deliveryDate.getDate() + 5);
-
-    const emailHtml = `
-      <h2>Thank you for your order, ${order.customerName || "Customer"}!</h2>
-      <p>Order #${order._id}</p>
-      <h3>Order Summary</h3>
-      <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;">
-        <thead>
-          <tr>
-            <th>Item</th><th>Qty</th><th>Price</th><th>Total</th>
-          </tr>
-        </thead>
-        <tbody>${itemsHtml}</tbody>
-      </table>
-      <p><strong>Total:</strong> ₹${order.totalPrice}</p>
-      <p><strong>Expected Delivery:</strong> ${deliveryDate.toDateString()}</p>
-    `;
-
-    console.log("Sending order confirmation email to:", email);
-
-    await client.sendTransacEmail({
-      sender: { name: "Nike Redesign", email: process.env.SENDER_EMAIL },
-      to: [{ email }],
-      subject: `Order Confirmation #${order._id}`,
-      htmlContent: emailHtml,
-    });
-
-    console.log(`✅ Order confirmation sent to ${email}`);
-  } catch (error) {
-    console.error("❌ Failed to send order confirmation:", error.response?.body || error.message);
-    throw new Error("Order confirmation email failed");
   }
 };

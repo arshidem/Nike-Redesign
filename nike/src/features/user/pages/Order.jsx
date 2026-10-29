@@ -1,5 +1,6 @@
+import { mediaUrl } from "../../../utils/mediaUrl";
 import React, { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link } from "../../../lib/navigation";
 import useOrderServices from "../services/orderServices";
 import { BackBar } from "../../../shared/ui/Icons";
 import toast from "react-hot-toast";
@@ -15,12 +16,7 @@ export default function Order() {
   const [page, setPage] = useState(1);
   const { backendUrl } = useAppContext();
 
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath || typeof imagePath !== "string") return "/placeholder.jpg";
-    const match = imagePath.match(/uploads[\\/][\w\-.]+\.(jpg|jpeg|png|webp|avif)/i);
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return `${backendUrl}/${relativePath}`;
-  };
+  const formatImageUrl = mediaUrl;
 
   const fetchOrders = async () => {
     setLoading(true);

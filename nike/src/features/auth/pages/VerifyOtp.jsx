@@ -3,7 +3,7 @@ import AuthFrame from "../../../shared/ui/AuthFrame";
 
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../../../lib/navigation";
 import { useAppContext } from "../../../context/AppContext.jsx";
 import toast, { Toaster } from "react-hot-toast";
 import { syncGuestCartToServer } from "../../../utils/cartSync.js";

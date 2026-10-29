@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../../../lib/navigation";
 import { XIcon, BackBar } from "../../../shared/ui/Icons";
 import useAddressService from "../services/addressServices";
-import useOrderServices from '/src/features/user/services/orderServices.jsx';
+import useOrderServices from '../services/orderServices.jsx';
 import useCartServices from "../services/cartServices";
 // Remove the curly braces {}import useCartServices from "../services/cartServices";
 import { loadScript } from "../../../utils/loadRazorpayScript";
@@ -250,7 +250,7 @@ if (!paymentInit?.success || !order) {
 
 
     const rzp = new window.Razorpay({
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       amount: order.amount,
       currency: order.currency || "INR",
       name: "Nike Redesign",

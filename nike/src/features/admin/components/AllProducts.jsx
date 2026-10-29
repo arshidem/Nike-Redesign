@@ -1,6 +1,7 @@
+import { mediaUrl } from "../../../utils/mediaUrl";
 import React, { useEffect, useState } from "react";
 import { useProductService } from "../../product/services/productService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../../../lib/navigation";
 import { useAppContext } from "../../../context/AppContext";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -226,14 +227,7 @@ export const AllProducts = () => {
     navigate(`/admin/product/${slug}`, { state: { fromView: "products" } });
   };
 
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath) return "/placeholder.jpg";
-    const match = imagePath.match(
-      /uploads[\\/][\w\-.]+\.(jpg|jpeg|avif|png|webp)/i
-    );
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
-  };
+  const formatImageUrl = mediaUrl;
 
   const getProductImage = (product) => {
     const firstImage = product?.variants?.[0]?.images?.[0];

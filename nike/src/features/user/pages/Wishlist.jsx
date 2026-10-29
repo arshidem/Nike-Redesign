@@ -1,5 +1,6 @@
+import { mediaUrl } from "../../../utils/mediaUrl";
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "../../../lib/navigation";
 import { useAppContext } from "../../../context/AppContext";
 import { useWishlistService } from "../services/wishlistServices";
 import useCartServices from "../services/cartServices";
@@ -20,14 +21,7 @@ const Wishlist = () => {
   const { addToCart } = useCartServices();
 
   // Format image URLs
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath) return "/placeholder.jpg";
-    const match = imagePath.match(
-      /uploads[\\/][\w\-.]+\.(jpg|jpeg|avif|png|webp)/i
-    );
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
-  };
+  const formatImageUrl = mediaUrl;
 
   // Fetch wishlist
   const fetchWishlist = async () => {

@@ -1,6 +1,6 @@
 // hooks/useWishlist.js
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../lib/navigation";
 import { useWishlistService } from "../features/user/services/wishlistServices";
 import { toast } from "react-hot-toast";
 
