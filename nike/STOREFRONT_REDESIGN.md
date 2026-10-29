@@ -1,13 +1,32 @@
-# Storefront redesign
+# Nike application design
 
-The storefront uses a black, warm-white, sage, and lime palette with locally hosted Anton typography, original repository shoe imagery, department cards, a featured product grid, and responsive navigation. Both / and /home open the storefront directly.
+The application uses the homepage's warm-white, black, sage, and lime palette, locally hosted Anton typography, shared content edges, and square panel styling.
 
-Product lists, model collections, product details, bag, and checkout share the visual styles in src/css/storefront.css. Their filtering, variant selection, wishlist, cart, and checkout handlers remain in the existing pages. The admin and authentication interfaces retain their existing layouts.
+## Coverage
 
-Editorial shoe images are copied from the repository's existing backend/uploads assets to public/assets/editorial so the homepage can render without an API request. Featured products, prices, and model collections still use the existing backend. Product cards have explicit loading, empty, and retry states. Editorial category images are illustrations of the collection, not inventory or pricing promises.
+- Homepage, navigation, footer, department cards, featured products, and icon collections.
+- Product lists and model collections, filters, product details, suggestions, reviews, and rating summaries.
+- Bag, wishlist, checkout, orders, order details, profile, account details, and delivery addresses.
+- Sign-in, both OTP screens, and registration completion, using a shared editorial membership shell.
+- Admin dashboard/sidebar, product and user management, order tables, coupons, analytics, reports, product creation and editing, and detail pages.
+- Shared loading skeletons, spinner, empty/error states, search overlay, inputs, buttons, panels, tables, and dialogs.
+
+The logo loader remains disabled. The Reports view remains a presentation-only empty workspace; no reports service was introduced.
+
+## Behavior boundaries
+
+The full application styling pass changes presentation classes, static markup, chart display colors, and stylesheet imports. It does not change existing hooks, handlers, validation, calculations, API requests, database models, workflow conditions, or service code. AuthFrame is a presentation wrapper; each auth screen continues to own its original form logic.
+
+Editorial shoe images are copied from the repository's existing backend/uploads assets to public/assets/editorial. They are collection artwork, not inventory or pricing promises. Product collections and prices still use the existing backend.
 
 ## Validation
 
-From nike/, install the existing dependencies with npm install --legacy-peer-deps. The repository currently ignores package-lock.json. Run npm run build and npm run test:storefront. The interaction tests use mocked API responses and cover mobile navigation, search opening, product links and prices, and featured-collection retry behavior. They do not replace a connected backend test.
+From nike/, install dependencies with npm install --legacy-peer-deps. The existing repository ignores package-lock.json. Run:
 
-Before merging, check the Vercel preview at mobile and desktop widths and exercise filters, product variants, wishlist, bag updates, and checkout with the configured VITE_BACKEND_URL. Backend services and payment credentials were not changed or exercised during this redesign. No live orders or payments were created.
+- npm run build
+- npm run test:storefront
+- node scripts/verify-presentation.cjs ec02e200655c3b45d74fc7902d7d797eedc170b7
+
+The seven DOM interaction tests mock APIs. They cover navigation/search, featured-product links and failure recovery, sign-in validation and the exact OTP request/navigation, and reusable filter selection. The presentation verification compares non-render code and non-style JSX expressions against the first merged redesign, detecting changes to existing behavioral expressions. It excludes the stylesheet entry import and the new AuthFrame presentation file.
+
+Browser visual QA was unavailable in the execution environment. Before merging, review representative customer, membership, and admin screens on the deployment preview at mobile, tablet, and desktop widths. Pay particular attention to long tables, dialogs, OTP fields, account navigation, and chart sizing. Live backend, inventory, authentication delivery, and checkout/payment integration were not exercised. No orders or payments were created.

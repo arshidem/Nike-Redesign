@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 const ErrorState = ({ title, error, icon, action }) => {
   return (
-    <div className="error-state">
+    <div className="design-component design-error-state error-state">
       {icon && <div className="error-state__icon">{icon}</div>}
       <h3 className="error-state__title">{title}</h3>
       {error && (

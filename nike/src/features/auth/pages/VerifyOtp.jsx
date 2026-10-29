@@ -1,3 +1,4 @@
+import AuthFrame from "../../../shared/ui/AuthFrame";
 // src/features/auth/components/VerifyOtp.jsx
 
 import React, { useState, useEffect, useRef } from "react";
@@ -115,10 +116,10 @@ const VerifyOtp = () => {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-50 px-4">
+    <AuthFrame><div className="design-page design-auth design-verify-otp flex items-center justify-center h-screen bg-gray-50 px-4">
       <Toaster />
       <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
-        <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-center">Verify OTP</h2>
+        <h2 data-section="MEMBER ACCESS" className="text-xl sm:text-2xl font-semibold mb-4 text-center">Verify OTP</h2>
         <p className="text-sm text-gray-600 mb-4 text-center">
           OTP sent to <span className="font-medium">{email}</span>
         </p>
@@ -160,7 +161,7 @@ const VerifyOtp = () => {
           {loading ? "Verifying..." : "Verify & Continue"}
         </button>
       </div>
-    </div>
+    </div></AuthFrame>
   );
 };
 

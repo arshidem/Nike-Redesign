@@ -7,6 +7,7 @@ import { AppProvider } from "./context/AppContext";
 import './index.css';
 import './css/home.css';
 import './css/storefront.css';
+import './css/design-system.css';
 
 const queryClient = new QueryClient();
 

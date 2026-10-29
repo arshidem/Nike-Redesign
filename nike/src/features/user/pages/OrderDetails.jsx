@@ -57,16 +57,16 @@ const OrderDetails = () => {
     fetchOrder();
   }, [orderId]);
 
-  if (loading) return <OrderDetailsSkeleton/>;
-  if (!order) return <div className="text-center text-red-500 mt-10">Order not found.</div>;
+  if (loading) return <div className="design-page design-customer design-order-details"><OrderDetailsSkeleton/></div>;
+  if (!order) return <div className="design-page design-customer design-order-details text-center text-red-500 mt-10">Order not found.</div>;
 
   const statusStep = getStatusStep(order.status);
 
   return (
-    <>
+    <div className="design-page design-customer design-order-details"><>
       <BackBar />
       <div className="max-w-4xl mx-auto p-6 mt-8 text-black">
-        <h2 className="text-3xl font-bold mb-6">Order Details</h2>
+        <h2 data-section="YOUR SPACE / ORDERS" className="text-3xl font-bold mb-6">Order Details</h2>
 
         {/* Tracking Bar */}
         {order.status !== "cancelled" ? (
@@ -183,7 +183,7 @@ const OrderDetails = () => {
         </div>
       </div>
       <Footer/>
-    </>
+    </></div>
   );
 };
 

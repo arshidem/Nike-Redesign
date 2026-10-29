@@ -218,7 +218,7 @@ const AdminProductDetails = () => {
             <XIcon className="w-5 h-5 transition-transform duration-200 hover:rotate-90" />
           </button>
 
-          <h2 className="text-lg sm:text-xl font-bold mb-4">
+          <h2 data-section="NIKE / STUDIO CONSOLE" className="text-lg sm:text-xl font-bold mb-4">
             Product Analytics
           </h2>
 
@@ -298,12 +298,12 @@ const AdminProductDetails = () => {
     );
   };
 
-  if (loading) return <AdminProductDetailsSkeleton/>;
-  if (error) return <div className="p-4 text-center">Error: {error}</div>;
-  if (!product) return <div className="p-4 text-center">Product not found</div>;
+  if (loading) return <div className="design-page design-admin design-admin-product-detailes"><AdminProductDetailsSkeleton/></div>;
+  if (error) return <div className="design-page design-admin design-admin-product-detailes p-4 text-center">Error: {error}</div>;
+  if (!product) return <div className="design-page design-admin design-admin-product-detailes p-4 text-center">Product not found</div>;
 
   return (
-    <div>
+    <div className="design-page design-admin design-admin-product-detailes">
       {showAnalytics && (
         <ProductAnalyticsModal
           product={product}
@@ -341,7 +341,7 @@ const AdminProductDetails = () => {
         <div className="bg-white rounded border p-4 mb-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold">{product.name}</h1>
+              <h1 data-section="NIKE / STUDIO CONSOLE" className="text-xl sm:text-2xl font-bold">{product.name}</h1>
               <div className="text-xs sm:text-sm text-gray-600">
                 <span className="block sm:inline-block sm:mr-4">
                   Slug: {product.slug}
@@ -447,7 +447,7 @@ const AdminProductDetails = () => {
               <div className="space-y-6">
                 {/* Basic Info */}
                 <div>
-                  <h2 className="text-lg font-semibold border-b pb-2 mb-3">
+                  <h2 data-section="NIKE / STUDIO CONSOLE" className="text-lg font-semibold border-b pb-2 mb-3">
                     Basic Information
                   </h2>
                   <div className="grid grid-cols-2 gap-4 text-sm">
@@ -511,13 +511,13 @@ const AdminProductDetails = () => {
                 {/* Description */}
                 <div>
                   <div className="mb-6 border-b">
-                    <h2 className="text-lg font-semibold pb-2 ">Description</h2>
+                    <h2 data-section="NIKE / STUDIO CONSOLE" className="text-lg font-semibold pb-2 ">Description</h2>
                     <p className="text-sm whitespace-pre-line">
                       {product.description || "No description available"}
                     </p>
                   </div>
                   <div className="border-b">
-                    <h2 className="text-lg font-semibold pb-2 mb-3">
+                    <h2 data-section="NIKE / STUDIO CONSOLE" className="text-lg font-semibold pb-2 mb-3">
                       Product Details
                     </h2>
                     <pre className="text-sm whitespace-pre-line">
@@ -528,7 +528,7 @@ const AdminProductDetails = () => {
 
                 {/* Flags */}
                 <div>
-                  <h2 className="text-lg font-semibold border-b pb-2 mb-3">
+                  <h2 data-section="NIKE / STUDIO CONSOLE" className="text-lg font-semibold border-b pb-2 mb-3">
                     Flags
                   </h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
@@ -564,7 +564,7 @@ const AdminProductDetails = () => {
 
                 {/* Tags & Badges */}
                 <div>
-                  <h2 className="text-lg font-semibold border-b pb-2 mb-3">
+                  <h2 data-section="NIKE / STUDIO CONSOLE" className="text-lg font-semibold border-b pb-2 mb-3">
                     Tags & Badges
                   </h2>
                   <div className="grid grid-cols-1 gap-4 text-sm">
@@ -584,7 +584,7 @@ const AdminProductDetails = () => {
 
           {activeTab === "variants" && (
             <div className="bg-white rounded border">
-              <h2 className="text-lg font-semibold border-b pb-2 mb-4">
+              <h2 data-section="NIKE / STUDIO CONSOLE" className="text-lg font-semibold border-b pb-2 mb-4">
                 Product Variants
               </h2>
               {product.variants?.length > 0 ? (
@@ -677,7 +677,7 @@ const AdminProductDetails = () => {
 
           {activeTab === "seo" && (
             <div className="bg-white rounded border p-4">
-              <h2 className="text-lg font-semibold border-b pb-2 mb-4">
+              <h2 data-section="NIKE / STUDIO CONSOLE" className="text-lg font-semibold border-b pb-2 mb-4">
                 SEO Information
               </h2>
               <div className="space-y-4">

@@ -88,7 +88,7 @@ const handleMenuItemClick = (id) => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gray-50">
+    <div className="design-page design-admin design-admin-dashboard relative min-h-screen bg-gray-50">
       {/* Mobile Hamburger Button */}
       {isMobile && (
         <button
@@ -125,7 +125,7 @@ const handleMenuItemClick = (id) => {
     {/* Top Section */}
     <div>
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        <h2 className={`flex justify-between gap-5 ${sidebarCollapsed ? 'hidden' : 'block'}`}>
+        <h2 data-section="NIKE / STUDIO CONSOLE" className={`flex justify-between gap-5 ${sidebarCollapsed ? 'hidden' : 'block'}`}>
           <span>{<NikeSwoosh />}</span>
           <span className='text-xl font-bold text-black'>Admin Panel</span>
         </h2>

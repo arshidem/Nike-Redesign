@@ -1,3 +1,4 @@
+import AuthFrame from "../../../shared/ui/AuthFrame";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -78,10 +79,10 @@ const VerifyRegisterOtp = () => {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-50">
+    <AuthFrame><div className="design-page design-auth design-verify-register-otp flex items-center justify-center h-screen bg-gray-50">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-semibold mb-4 text-center">Verify Registration OTP</h2>
+        <h2 data-section="MEMBER ACCESS" className="text-2xl font-semibold mb-4 text-center">Verify Registration OTP</h2>
 
         <p className="text-sm text-gray-600 mb-2">
           OTP sent to <span className="font-medium">{registerData?.email}</span>
@@ -117,7 +118,7 @@ const VerifyRegisterOtp = () => {
           {loading ? "Verifying..." : "Verify & Register"}
         </button>
       </div>
-    </div>
+    </div></AuthFrame>
   );
 };
 

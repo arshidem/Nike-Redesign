@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 const EmptyState = ({ title, description, icon, action }) => {
   return (
-    <div className="empty-state">
+    <div className="design-component design-empty-state empty-state">
       {icon && <div className="empty-state__icon">{icon}</div>}
       <h3 className="empty-state__title">{title}</h3>
       {description && <p className="empty-state__description">{description}</p>}

@@ -432,7 +432,7 @@ const CreateProduct = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="design-page design-admin design-create-product min-h-screen bg-gray-50">
       {/* Back Button Container */}
       <div className="fixed bg-white p-2 w-full shadow flex items-center z-10">
         <button
@@ -470,7 +470,7 @@ const CreateProduct = () => {
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           {/* Basic Information Section */}
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+            <h2 data-section="NIKE / STUDIO CONSOLE" className="text-xl font-semibold mb-4">Basic Information</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Name */}
@@ -650,7 +650,7 @@ const CreateProduct = () => {
 
           {/* Featured Image Section */}
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Featured Image</h2>
+            <h2 data-section="NIKE / STUDIO CONSOLE" className="text-xl font-semibold mb-4">Featured Image</h2>
             <FeaturedImageUploader
               featuredImg={formData.featuredImg}
               onUpload={handleFeaturedImageUpload}
@@ -660,7 +660,7 @@ const CreateProduct = () => {
 
           {/* Variants Section */}
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Product Variants</h2>
+            <h2 data-section="NIKE / STUDIO CONSOLE" className="text-xl font-semibold mb-4">Product Variants</h2>
             
             {formData.variants.map((variant, variantIndex) => (
               <div key={variantIndex} className="mb-8 border-b pb-6 last:border-b-0">
@@ -793,7 +793,7 @@ const CreateProduct = () => {
 
           {/* SEO & Marketing Section */}
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">SEO & Marketing</h2>
+            <h2 data-section="NIKE / STUDIO CONSOLE" className="text-xl font-semibold mb-4">SEO & Marketing</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Meta Title */}

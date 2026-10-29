@@ -77,9 +77,9 @@ export default function Search({ isOpen, onClose }) {
 
 return (
  <div
-  className={`fixed inset-0 bg-black bg-opacity-50 h-[150%] flex items-start justify-center z-50 p-4 
+  className={"design-component design-search " + (`fixed inset-0 bg-black bg-opacity-50 h-[150%] flex items-start justify-center z-50 p-4
     transition-opacity duration-300 
-    ${isExiting ? "search-slide-out" : "search-slide-in"}`}
+    ${isExiting ? "search-slide-out" : "search-slide-in"}`)}
 >
 
 

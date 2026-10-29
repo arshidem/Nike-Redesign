@@ -82,7 +82,7 @@ export const OrderAnalytics = () => {
   }, [statusRange]);
 if (summaryLoading) {
   return (
-    <div className="p-4 space-y-6">
+    <div className="design-component design-order-analytics p-4 space-y-6">
       {/* Summary Title Skeleton */}
       <Skeleton height={32} width={200} />
 
@@ -119,7 +119,7 @@ if (summaryLoading) {
 }
 
   return (
-    <div className="p-4 space-y-6 bg-white text-black">
+    <div className="design-component design-order-analytics p-4 space-y-6 bg-white text-black">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Order Analytics</h2>
       </div>

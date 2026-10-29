@@ -334,17 +334,17 @@ if (!paymentInit?.success || !order) {
 
   if (isLoading) {
     return (
-      <CheckoutSkeleton/>
+      <div className="design-page design-customer design-checkout"><CheckoutSkeleton/></div>
     );
   }
 
   if (cart.items.length === 0) {
     return (
-      <>
+      <div className="design-page design-customer design-checkout"><>
           <BackBar/>
       <div className="max-w-5xl mx-auto p-4 mt-12">
         <div className="text-center py-12">
-          <h2 className="text-xl font-semibold mb-2">Your cart is empty</h2>
+          <h2 data-section="YOUR EVERYDAY / NIKE" className="text-xl font-semibold mb-2">Your cart is empty</h2>
           <button 
             onClick={() => navigate('/products')}
             className="mt-4 bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition"
@@ -353,17 +353,17 @@ if (!paymentInit?.success || !order) {
           </button>
         </div>
       </div>
-      </>
+      </></div>
     );
   }
 
   return (
-    <>
+    <div className="design-page design-customer design-checkout"><>
     <BackBar/>
     <div className="commerce-page checkout-page max-w-5xl mx-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
       
       <div>
-        <h2 className="text-xl font-semibold mb-4">Delivery Information</h2>
+        <h2 data-section="YOUR EVERYDAY / NIKE" className="text-xl font-semibold mb-4">Delivery Information</h2>
         <input
           type="email"
           defaultValue={user?.email || ""}
@@ -567,7 +567,7 @@ if (!paymentInit?.success || !order) {
      
     </div>
      <Footer/>
-    </>
+    </></div>
   );
 };
 
