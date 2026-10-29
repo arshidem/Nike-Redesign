@@ -2,32 +2,12 @@
 
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-// const nodemailer = require("nodemailer");
-const SibApiV3Sdk = require('@sendinblue/client');
+const { sendOTP } = require("../services/transactionalEmail");
 
 // Helpers
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 const generateToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
-
-
-const client = new SibApiV3Sdk.TransactionalEmailsApi();
-client.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
-
-const sendOTP = async (email, otp) => {
-  try {
-    await client.sendTransacEmail({
-      sender: { name: 'Nike Redesign', email: process.env.SENDER_EMAIL },
-      to: [{ email }],
-      subject: 'Your OTP Code',
-      htmlContent: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
-    });
-    console.log(`OTP sent to ${email}`);
-  } catch (error) {
-    console.error('Failed to send OTP:', error);
-    throw new Error('OTP sending failed');
-  }
-};
 
 
 // Request OTP
