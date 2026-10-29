@@ -1,79 +1,54 @@
 import React from "react";
-import { NikeSwoosh } from "../../../shared/ui/Icons"; // Adjust the path if needed
-import Search from "./Search";
-
-const Footer = () => {
+import { Link } from "react-router-dom";
+import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
+const groups = [
+  {
+    title: "Find your next",
+    links: [
+      ["New arrivals", "/new/arrivals?newArrival=true"],
+      ["Best sellers", "/new/best-sellers?bestSellers=true"],
+      ["Men", "/men/shoes?gender=men&category=shoes"],
+      ["Women", "/women/shoes?gender=women&category=shoes"],
+      ["Kids", "/kids/shoes?gender=kids&category=shoes"],
+    ],
+  },
+  {
+    title: "Your space",
+    links: [
+      ["Sign in", "/signin"],
+      ["Your favourites", "/wishlist"],
+      ["Shopping bag", "/bag"],
+      ["Track your orders", "/orders"],
+      ["Account settings", "/account"],
+    ],
+  },
+];
+export default function Footer() {
   return (
-    <footer className="bg-white border-t pt-10 pb-6 text-sm text-gray-700">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        {/* Top Columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          <div>
-            <h4 className="font-semibold mb-3">Resources</h4>
-            <ul className="space-y-2">
-              <li>Find A Store</li>
-              <li>Become A Member</li>
-              <li>Running Shoe Finder</li>
-              <li>Product Advice</li>
-              <li>Send Us Feedback</li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-3">Help</h4>
-            <ul className="space-y-2">
-              <li>Get Help</li>
-              <li>Order Status</li>
-              <li>Delivery</li>
-              <li>Returns</li>
-              <li>Payment Options</li>
-              <li>Contact Us On Nike.com Inquiries</li>
-              <li>Contact Us On All Other Inquiries</li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-3">Company</h4>
-            <ul className="space-y-2">
-              <li>About Nike</li>
-              <li>News</li>
-              <li>Careers</li>
-              <li>Investors</li>
-              <li>Sustainability</li>
-              <li>Impact</li>
-              <li>Report a Concern</li>
-            </ul>
-          </div>
-
-          <div className="flex justify-start lg:justify-end items-start mt-1">
-            <div className="flex items-center gap-1">
-              <span className="text-xl">🌐</span>
-              <span>India</span>
-            </div>
-          </div>
+    <footer className="store-footer">
+      <div className="footer-top">
+        <div className="footer-statement">
+          NEVER
+          <br />
+          DONE.<span>↗</span>
         </div>
-
-        {/* Divider */}
-        <hr className="my-6" />
-
-        {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row justify-between items-center text-xs text-gray-600 gap-4">
-          <div className="flex items-center gap-2">
-            <NikeSwoosh className="w-5 h-5" />
-            <span>© 2025 Nike, Inc. All rights reserved</span>
+        {groups.map((group) => (
+          <div className="footer-links" key={group.title}>
+            <h2>{group.title}</h2>
+            {group.links.map(([label, to]) => (
+              <Link to={to} key={to}>
+                {label}
+                <ArrowUpRightIcon />
+              </Link>
+            ))}
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center md:justify-start">
-            <span>Guides ⌄</span>
-            <span>Terms of Sale</span>
-            <span>Terms of Use</span>
-            <span>Nike Privacy Policy</span>
-            <span>Privacy Settings</span>
-          </div>
-        </div>
+        ))}
       </div>
-      <Search/>
+      <div className="footer-bottom">
+        <span>NIKE / INDEPENDENT STOREFRONT CONCEPT</span>
+        <span>Designed by Triode Studio · India</span>
+        <span>Not affiliated with Nike, Inc.</span>
+      </div>
     </footer>
   );
-};
-
-export default Footer;
+}

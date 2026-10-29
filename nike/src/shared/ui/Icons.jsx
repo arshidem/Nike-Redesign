@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -908,7 +909,7 @@ export const BackBar = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="fixed top-0 left-0 w-full z-30 bg-white shadow-md px-4 py-2 flex items-center">
+    <div className="commerce-backbar fixed top-0 left-0 w-full z-30 bg-white px-4 py-2 flex items-center">
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-1 px-3 py-2 border border-black rounded hover:bg-gray-100 transition sm:w-auto"
@@ -929,6 +930,7 @@ export const BackBar = () => {
         </svg>
         <span className="text-sm font-medium">Back</span>
       </button>
+      <Link to="/home" aria-label="Nike home">NIKE ↗</Link>
     </div>
   );
 };

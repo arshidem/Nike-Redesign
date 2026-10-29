@@ -112,14 +112,11 @@ const queryParams = new URLSearchParams(location.search);
 
   // Format image URL
   const formatImageUrl = (imagePath) => {
-    if (!imagePath) return "/placeholder.jpg";
-    if (imagePath.startsWith("http")) return imagePath;
-    
-    const match = imagePath.match(
-      /uploads[\\/][\w\-.]+\.(jpg|jpeg|avif|png|webp)/i
-    );
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
+    if (!imagePath || typeof imagePath !== 'string') return '/assets/editorial/image-unavailable.svg';
+    if (/^https?:\/\//i.test(imagePath)) return imagePath;
+    const normalized = imagePath.replace(/\\/g, '/');
+    const relative = normalized.includes('uploads/') ? normalized.slice(normalized.indexOf('uploads/')) : normalized.replace(/^\/+/, '');
+    return `${(backendUrl || '').replace(/\/$/, '')}/${relative}`;
   };
 
   useEffect(() => {
@@ -773,7 +770,7 @@ const handleColorChange = (value) => {
   };
 
   return (
-    <div className="p-6 relative">
+    <div className="commerce-page catalog-page p-6 relative">
       <BackBar />
 
       <div className="flex justify-between items-center">
@@ -854,7 +851,7 @@ const handleColorChange = (value) => {
         ) : (
           <>
             <div className="flex flex-col md:flex-row gap-5 mt-1">
-              <div className="w-full grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="catalog-grid w-full grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {products.map((product) => {
                   const rawImage = product?.variants?.[0]?.images?.[0];
                   const image = formatImageUrl(rawImage);
@@ -865,7 +862,7 @@ const handleColorChange = (value) => {
                     <Link
                       to={`/product/${product.slug}`}
                       key={product._id}
-                      className="bg-white rounded-lg shadow hover:shadow-lg transition block p-4 relative"
+                      className="catalog-product-card bg-white rounded-lg shadow hover:shadow-lg transition block p-4 relative"
                     >
                       <button
                         onClick={(e) => handleWishlistToggle(product._id, e)}
