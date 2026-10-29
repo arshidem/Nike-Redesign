@@ -1,8 +1,7 @@
 const Product = require("../models/Product");
-const fs = require("fs");
+const { removeMedia } = require("../services/media");
 const path = require("path");
 const slugify = require("slugify");
-const multer = require("multer");
 const Order = require("../models/Order");
 const Cart = require("../models/Cart");
 const Review = require("../models/Review");
@@ -51,7 +50,7 @@ exports.createProduct = async (req, res) => {
 
     // Helper to get relative path
     const getRelPath = (filePath) =>
-      path.relative(process.cwd(), filePath).replace(/\\/g, "/");
+      /^https:\/\//.test(filePath) ? filePath : path.relative(process.cwd(), filePath).replace(/\\/g, "/");
 
     // --- Handle variant images ---
     const variantImagesMap = {};
@@ -160,7 +159,7 @@ exports.createProduct = async (req, res) => {
         .flat()
         .forEach((file) => {
           if (file.path) {
-            fs.unlink(file.path, () => {});
+            void removeMedia(file.path);
           }
         });
     }
@@ -587,20 +586,20 @@ exports.updateProduct = async (req, res) => {
 
     // Helper to get relative path
     const getRelPath = (filePath) =>
-      path.relative(process.cwd(), filePath).replace(/\\/g, "/");
+      /^https:\/\//.test(filePath) ? filePath : path.relative(process.cwd(), filePath).replace(/\\/g, "/");
 
     // --- Handle featured image ---
     let featuredImg = existingProduct.featuredImg;
     if (req.body.removeFeaturedImg === "true") {
       if (featuredImg) {
         const oldPath = path.join(process.cwd(), featuredImg);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        if (Boolean(oldPath)) void removeMedia(oldPath);
       }
       featuredImg = null;
     } else if (req.files?.featuredImg?.[0]) {
       if (featuredImg) {
         const oldPath = path.join(process.cwd(), featuredImg);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        if (Boolean(oldPath)) void removeMedia(oldPath);
       }
       featuredImg = getRelPath(req.files.featuredImg[0].path);
     }
@@ -679,7 +678,7 @@ exports.updateProduct = async (req, res) => {
     variantsData.forEach((variant) => {
       (variant.imagesToRemove || []).forEach((url) => {
         const filePath = path.join(process.cwd(), url);
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        if (Boolean(filePath)) void removeMedia(filePath);
       });
     });
 
@@ -728,8 +727,8 @@ exports.updateProduct = async (req, res) => {
     if (req.files) {
       const files = Object.values(req.files).flat();
       files.forEach((file) => {
-        if (file.path && fs.existsSync(file.path)) {
-          fs.unlinkSync(file.path);
+        if (file.path && Boolean(file.path)) {
+          void removeMedia(file.path);
         }
       });
     }
@@ -750,13 +749,13 @@ exports.deleteProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    if (product.featuredImg && fs.existsSync(product.featuredImg)) {
-      fs.unlinkSync(product.featuredImg);
+    if (product.featuredImg && Boolean(product.featuredImg)) {
+      void removeMedia(product.featuredImg);
     }
 
     product.variants.forEach((variant) => {
       variant.images.forEach((imgPath) => {
-        if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
+        if (Boolean(imgPath)) void removeMedia(imgPath);
       });
     });
 
@@ -796,8 +795,8 @@ exports.bulkDeleteProducts = async (req, res) => {
     // 2) Safely remove images
     const deleteFile = (path) => {
       try {
-        if (path && fs.existsSync(path)) {
-          fs.unlinkSync(path);
+        if (path && Boolean(path)) {
+          void removeMedia(path);
         }
       } catch (fileErr) {
         console.error(`Failed to delete file ${path}:`, fileErr);

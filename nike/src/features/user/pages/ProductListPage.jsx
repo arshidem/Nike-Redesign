@@ -1,5 +1,6 @@
+import { mediaUrl } from "../../../utils/mediaUrl";
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "../../../lib/navigation";
 import { useProductService } from "../../product/services/productService";
 import { useAppContext } from "../../../context/AppContext";
 import { toast } from "react-hot-toast";
@@ -111,13 +112,7 @@ const queryParams = new URLSearchParams(location.search);
   }, [location.search]);
 
   // Format image URL
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath || typeof imagePath !== 'string') return '/assets/editorial/image-unavailable.svg';
-    if (/^https?:\/\//i.test(imagePath)) return imagePath;
-    const normalized = imagePath.replace(/\\/g, '/');
-    const relative = normalized.includes('uploads/') ? normalized.slice(normalized.indexOf('uploads/')) : normalized.replace(/^\/+/, '');
-    return `${(backendUrl || '').replace(/\/$/, '')}/${relative}`;
-  };
+  const formatImageUrl = mediaUrl;
 
   useEffect(() => {
     const loadProducts = async () => {

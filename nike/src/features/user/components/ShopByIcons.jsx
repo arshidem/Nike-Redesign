@@ -1,6 +1,6 @@
+import { mediaUrl } from "../../../utils/mediaUrl";
 import React, { useEffect, useState, useRef } from "react";
-import { Link } from "react-router-dom";
-import "../../../css/shopByIcons.css";
+import { Link } from "../../../lib/navigation";
 import { ArrowIconLeft, ArrowIconRight } from "../../../shared/ui/Icons";
 import { useProductService } from "../../product/services/productService";
 import { useAppContext } from "../../../context/AppContext";
@@ -13,15 +13,7 @@ const ShopByIcons = () => {
   const { fetchProducts } = useProductService();
   const { backendUrl } = useAppContext();
 
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath) return "/assets/editorial/image-unavailable.svg";
-    if (/^https?:\/\//i.test(imagePath)) return imagePath;
-    const match = imagePath.match(
-      /uploads[\\/][\w\-.]+\.(jpg|jpeg|avif|png|webp)/i,
-    );
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
-  };
+  const formatImageUrl = mediaUrl;
 
   useEffect(() => {
     const loadProducts = async () => {

@@ -9,10 +9,13 @@ const Product = require("../models/Product");
 const moment = require("moment-timezone");
 const { sendOrderConfirmation } = require("../services/transactionalEmail");
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+let razorpay;
+function getRazorpay() {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    const error = new Error('Payment service is not configured'); error.status = 503; throw error;
+  }
+  return razorpay || (razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET }));
+}
 
 // Create Razorpay order
 
@@ -41,7 +44,7 @@ exports.createOrder = async (req, res) => {
       payment_capture: 1,
     };
 
-    const razorpayOrder = await razorpay.orders.create(options);
+    const razorpayOrder = await getRazorpay().orders.create(options);
 
     res.status(200).json({
       success: true,

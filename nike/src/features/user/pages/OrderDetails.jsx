@@ -1,5 +1,6 @@
+import { mediaUrl } from "../../../utils/mediaUrl";
 import React, { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "../../../lib/navigation";
 import useOrderServices from "../services/orderServices";
 import toast from "react-hot-toast";
 import { BackBar } from "../../../shared/ui/Icons";
@@ -34,12 +35,7 @@ const OrderDetails = () => {
   const { getOrderById } = useOrderServices();
   const { backendUrl } = useContext(AppContext);
 
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath || typeof imagePath !== "string") return "/placeholder.jpg";
-    const match = imagePath.match(/uploads[\\/][\w\-.]+\.(jpg|jpeg|png|webp|avif)/i);
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return `${backendUrl}/${relativePath}`;
-  };
+  const formatImageUrl = mediaUrl;
 
   const formatDate = (dateStr) =>
     dateStr ? new Date(dateStr).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "--";

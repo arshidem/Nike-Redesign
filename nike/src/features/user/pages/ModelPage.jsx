@@ -1,5 +1,6 @@
+import { mediaUrl } from "../../../utils/mediaUrl";
 import React, { useCallback, useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate } from "../../../lib/navigation";
 import { useAppContext } from "../../../context/AppContext";
 import { useProductService } from "../../product/services/productService";
 import { useWishlistService } from "../services/wishlistServices";
@@ -75,13 +76,7 @@ const ModelPage = () => {
     setFilters(mobileFilters);
     setShowFilters(false);
   };
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath || typeof imagePath !== 'string') return '/assets/editorial/image-unavailable.svg';
-    if (/^https?:\/\//i.test(imagePath)) return imagePath;
-    const normalized = imagePath.replace(/\\/g, '/');
-    const relative = normalized.includes('uploads/') ? normalized.slice(normalized.indexOf('uploads/')) : normalized.replace(/^\/+/, '');
-    return `${(backendUrl || '').replace(/\/$/, '')}/${relative}`;
-  };
+  const formatImageUrl = mediaUrl;
 
   const toggleFilters = () => {
     setShowFilters(!showFilters);

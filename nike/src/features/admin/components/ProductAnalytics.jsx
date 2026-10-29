@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import PropTypes from "prop-types";
 import { useProductService } from "../../product/services/productService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../../../lib/navigation";
 import { useAppContext } from "../../../context/AppContext";
 import {
   PieChart,

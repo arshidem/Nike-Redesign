@@ -1,5 +1,6 @@
+import { mediaUrl } from "../../../utils/mediaUrl";
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../../../lib/navigation";
 import { useProductService } from "../../product/services/productService";
 import { useAppContext } from "../../../context/AppContext";
 import Skeleton from "react-loading-skeleton";
@@ -11,14 +12,7 @@ const ProductSuggestions = ({ productSlug }) => {
   const { token,backendUrl } = useAppContext();
 const {getProductSuggestions}=useProductService()
 
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath || typeof imagePath !== "string") return "/placeholder.jpg";
-    const match = imagePath.match(
-      /uploads[\\/][\w\-.]+\.(jpg|jpeg|avif|png|webp)/i
-    );
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
-  };
+  const formatImageUrl = mediaUrl;
   useEffect(() => {
     if (!productSlug) return;
 

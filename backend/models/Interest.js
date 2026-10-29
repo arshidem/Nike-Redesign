@@ -12,4 +12,4 @@ const InterestSchema = new mongoose.Schema({
   image: { type: String }, // URL or filename
 }, { timestamps: true });
 
-module.exports = mongoose.model("Interest", InterestSchema);
+module.exports = (mongoose.models.Interest || mongoose.model("Interest", InterestSchema));

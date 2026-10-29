@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "../../../lib/navigation";
 import {
   MagnifyingGlassIcon,
   HeartIcon,
@@ -11,8 +11,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { useAppContext } from "../../../context/AppContext";
 import Search from "./Search";
-import "../../../css/navbar.css";
-
 const menus = [
   {
     label: "New & Featured",

@@ -19,7 +19,7 @@ A free `*.vercel.app` address is hosting, not a domain whose DNS you control. Re
 2. Open **Sending → Verified Senders → Single sender emails**. Add an address you control and click the verification link sent to that mailbox.
 3. If verification is rejected because the address's domain restricts third-party sending, use an eligible sender or obtain and verify your own domain. Do not try to verify `gmail.com` or `vercel.app` as your own domain.
 4. Open **Sending → API Keys** and create a key permitted to use `/email/send`. Use an API key, not an SMTP password.
-5. In **Render → backend Web Service → Environment**, configure:
+5. In **Vercel → project → Settings → Environment Variables**, configure:
 
 ```text
 EMAIL_PROVIDER=smtp2go
@@ -30,7 +30,7 @@ EMAIL_REPLY_TO=<optional address for replies>
 
 Keep these values on the backend; do not prefix keys with `VITE_` or commit them. `SENDER_EMAIL` is supported as a sender-address fallback when `EMAIL_FROM` is unset. Remove blank optional values rather than entering the example text literally.
 
-6. Use a supported Node runtime: Node 22.8+ or Node 24. Set Render's Node version if an older version is pinned, then save and redeploy.
+6. Use a supported Node runtime: Node 22.8+ or Node 24. Set Vercel's Node version to a supported release, then save and redeploy.
 7. Make one controlled OTP request and confirm receipt. Inspect SMTP2GO Activity for its accepted/delivered/bounced state. Confirm a receipt using a payment test transaction before accepting real orders. No live emails, payment transactions, or provider-account changes were made during development.
 
 SMTP2GO's free plan currently has 1,000 emails/month, 200/day, and a 25/hour cap without a verified sender domain. The free plan has no time limit, but account review, sender rules, quotas, and provider policies still apply. Throttled messages can be queued, which matters for five-minute OTP expiry. For production traffic, use a verified domain and a plan sized for your login/order volume. No provider can promise that an account will never be restricted.
@@ -66,7 +66,7 @@ These predate the provider migration and were not changed:
 
 ## Tests
 
-From `backend/`, run `npm ci --legacy-peer-deps` and `npm test` on the supported Node runtime. Twelve tests use mocked provider/database/payment boundaries; they do not send real email or create real orders. They cover both transport payloads, provider response failures, configuration errors, retry boundaries, log redaction, templates, OTP endpoint behavior, and preserving a paid order when receipt sending fails.
+From the repository root, run `npm ci` and `npm run test:backend` on the supported Node runtime. The backend tests use mocked provider/database/payment boundaries; they do not send real email or create real orders. They cover both transport payloads, provider response failures, configuration errors, retry boundaries, log redaction, templates, OTP endpoint behavior, and preserving a paid order when receipt sending fails.
 
 ## Official references
 

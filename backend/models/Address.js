@@ -57,4 +57,4 @@ const AddressSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Address", AddressSchema);
+module.exports = (mongoose.models.Address || mongoose.model("Address", AddressSchema));

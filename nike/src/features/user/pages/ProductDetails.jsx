@@ -1,5 +1,6 @@
+import { mediaUrl } from "../../../utils/mediaUrl";
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "../../../lib/navigation";
 import toast, { Toaster } from "react-hot-toast";
 import { useProductService } from "../../product/services/productService";
 import { useAppContext } from "../../../context/AppContext";
@@ -61,13 +62,7 @@ const ProductDetails = () => {
   const { addToCart, updateItemQuantity, removeItemFromCart, getCart } =
     useCartServices();
 
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath || typeof imagePath !== 'string') return '/assets/editorial/image-unavailable.svg';
-    if (/^https?:\/\//i.test(imagePath)) return imagePath;
-    const normalized = imagePath.replace(/\\/g, '/');
-    const relative = normalized.includes('uploads/') ? normalized.slice(normalized.indexOf('uploads/')) : normalized.replace(/^\/+/, '');
-    return `${(backendUrl || '').replace(/\/$/, '')}/${relative}`;
-  };
+  const formatImageUrl = mediaUrl;
   const isInWishlist = wishlistIds.includes(product?._id);
 
   // Fetch wishlist on component mount

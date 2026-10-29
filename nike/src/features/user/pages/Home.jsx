@@ -1,10 +1,8 @@
 import React, { lazy, Suspense } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../../../lib/navigation";
 import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
 import { Navbar } from "../components/Navbar";
 import Footer from "../components/Footer";
-import "../../../css/home.css";
-
 const Featured = lazy(() => import("../components/Featured"));
 const ShopByIcons = lazy(() => import("../components/ShopByIcons"));
 const departments = [

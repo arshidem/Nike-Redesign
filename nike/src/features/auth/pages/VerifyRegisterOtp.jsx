@@ -1,6 +1,6 @@
 import AuthFrame from "../../../shared/ui/AuthFrame";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../../../lib/navigation";
 import axios from "axios";
 import { useAppContext } from "../../../context/AppContext.jsx";
 import { toast, ToastContainer } from "react-toastify";

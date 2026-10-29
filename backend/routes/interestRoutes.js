@@ -1,7 +1,7 @@
 // routes/interestRoutes.js
 const express = require("express");
 const router = express.Router();
-const auth = require("../middleware/auth");
+const { protect: auth } = require("../middleware/authMiddleware");
 const ctrl = require("../controllers/interestController");
 
 router.post("/", auth, ctrl.addInterest);

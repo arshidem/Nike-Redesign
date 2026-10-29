@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../../lib/navigation";
 import { Navbar } from "../user/components/Navbar";
 import Footer from "../user/components/Footer";
 import {
@@ -8,8 +8,6 @@ import {
   privacyPolicy,
   termsOfService,
 } from "./documents";
-import "../../css/legal.css";
-
 export default function LegalPage({ documentType }) {
   const privacy = documentType === "privacy";
   const document = privacy ? privacyPolicy : termsOfService;

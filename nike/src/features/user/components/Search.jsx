@@ -1,12 +1,11 @@
+import { mediaUrl } from "../../../utils/mediaUrl";
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../../../lib/navigation";
 import axios from "axios";
 import { SearchIcon, XIcon, NikeSwoosh } from "../../../shared/ui/Icons";
 import { useAppContext } from "../../../context/AppContext";
 import { toast } from "react-hot-toast";
 import { debounce } from "lodash";
-import "../../../css/navbar.css";
-
 export default function Search({ isOpen, onClose }) {
   const { backendUrl } = useAppContext();
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,12 +67,7 @@ export default function Search({ isOpen, onClose }) {
 
   if (!isOpen && !isExiting) return null;
 
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath) return "/placeholder.jpg";
-    const match = imagePath.match(/uploads[\\/][\w\-.]+\.(jpg|jpeg|avif|png|webp)/i);
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
-  };
+  const formatImageUrl = mediaUrl;
 
 return (
  <div

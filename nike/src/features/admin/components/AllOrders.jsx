@@ -1,3 +1,4 @@
+import { mediaUrl } from "../../../utils/mediaUrl";
 import React, {
   useEffect,
   useState,
@@ -6,8 +7,7 @@ import React, {
   useContext,
   useRef,
 } from "react";
-import { io } from "socket.io-client";
-import { Link } from "react-router-dom";
+import { Link } from "../../../lib/navigation";
 import useOrderServices from "../../user/services/orderServices";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -77,14 +77,7 @@ export const AllOrders = () => {
     cancelled: "bg-gray-200 text-gray-600",
   };
 
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath || typeof imagePath !== "string") return "/placeholder.jpg";
-    const match = imagePath.match(
-      /uploads[\\/][\w\-.]+\.(jpg|jpeg|png|webp|avif)/i
-    );
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return `${backendUrl}/${relativePath}`;
-  };
+  const formatImageUrl = mediaUrl;
   const handleStatusUpdate = async (newStatus) => {
     if (!selectedOrder?._id) return;
 

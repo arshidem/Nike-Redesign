@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../../../lib/navigation";
 import { useUserService } from "../../user/services/userService";
 import { useAppContext } from "../../../context/AppContext";
 import { formatDate } from "../../../utils/dateUtils";

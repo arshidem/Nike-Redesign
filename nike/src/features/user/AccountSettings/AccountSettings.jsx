@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "../../../lib/navigation";
 import { ArrowIconRight, ArrowIconLeft } from "../../../shared/ui/Icons";
 
 import AccountDetails from "./AccountDetails";

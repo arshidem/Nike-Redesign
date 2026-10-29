@@ -1,7 +1,7 @@
 import AuthFrame from "../../../shared/ui/AuthFrame";
 import React, { useState } from "react";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "../../../lib/navigation";
 import { useAppContext } from "../../../context/AppContext.jsx";
 import toast, { Toaster } from "react-hot-toast";
 import { NikeSwoosh } from "../../../shared/ui/Icons.jsx";

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "../../../lib/navigation";
 import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
 const groups = [
   {
