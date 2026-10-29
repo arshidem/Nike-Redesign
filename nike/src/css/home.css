@@ -1,3 +1,12 @@
+/* Shared content edges keep navigation, hero copy, and section grids aligned. */
+:root {
+  --store-content-width: 1440px;
+  --store-gutter: clamp(20px, 4vw, 64px);
+  --store-page-inset: max(
+    var(--store-gutter),
+    calc((100vw - var(--store-content-width)) / 2)
+  );
+}
 .storefront {
   background: #f8f8f3;
   color: #171813;
@@ -22,23 +31,28 @@
 }
 .campaign-hero {
   display: grid;
-  grid-template-columns: 44% 56%;
+  grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
   min-height: 640px;
 }
 .campaign-copy {
-  padding: 56px 9% 28px;
+  min-width: 0;
+  padding: 56px var(--store-gutter) 28px var(--store-page-inset);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
 .campaign-copy h1 {
   font-family: "Anton", Impact, sans-serif;
-  font-size: clamp(76px, 8.1vw, 132px);
+  font-size: clamp(64px, 7.5vw, 128px);
+  max-width: 100%;
   line-height: 0.94;
   letter-spacing: -0.04em;
   margin: 28px 0 22px;
 }
 .campaign-copy h1 > span {
+  display: block;
+}
+.campaign-copy h1 > .campaign-accent {
   color: #5a6d3d;
 }
 .campaign-description {
@@ -71,6 +85,7 @@
 .store-button svg {
   width: 19px;
   height: 19px;
+  flex-shrink: 0;
 }
 .campaign-footnote {
   width: 100%;
@@ -91,6 +106,8 @@
   justify-content: center;
   isolation: isolate;
   min-width: 0;
+  overflow: hidden;
+  padding: 64px 32px 120px;
 }
 .campaign-outline {
   position: absolute;
@@ -115,13 +132,14 @@
   z-index: -1;
 }
 .hero-shoe {
-  width: 96%;
+  width: min(100%, 660px);
+  max-height: 330px;
   height: auto;
   object-fit: contain;
   mix-blend-mode: multiply;
-  transform: rotate(-22deg);
+  transform: rotate(-16deg);
   filter: drop-shadow(10px 30px 16px #4d583733);
-  margin-bottom: 10px;
+  margin: 0;
 }
 .art-index {
   position: absolute;
@@ -177,11 +195,12 @@
   letter-spacing: 0.035em;
 }
 .store-section {
-  padding: 76px 4%;
+  padding: 76px var(--store-page-inset);
 }
 .store-section-heading {
   display: flex;
   align-items: flex-end;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 20px;
   margin-bottom: 30px;
@@ -198,6 +217,7 @@
   align-items: center;
   gap: 18px;
   font-size: 12px;
+  flex-shrink: 0;
   border-bottom: 1px solid #aaa;
   padding-bottom: 7px;
 }
@@ -297,7 +317,7 @@
   z-index: -1;
 }
 .sport-story-copy {
-  padding: 56px 4%;
+  padding: 56px var(--store-page-inset);
   width: 100%;
 }
 .sport-story h2 {
@@ -317,9 +337,9 @@
 }
 .membership-panel {
   background: #d9ff43;
-  padding: 64px 6%;
+  padding: 64px var(--store-page-inset);
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   gap: 30px;
   align-items: center;
 }
@@ -342,12 +362,12 @@
 .store-footer {
   background: #151611;
   color: #fff;
-  padding: 66px 4% 24px;
+  padding: 66px var(--store-page-inset) 24px;
 }
 .footer-top {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
-  gap: 50px;
+  gap: clamp(24px, 4vw, 50px);
   padding-bottom: 60px;
 }
 .footer-statement {
@@ -403,20 +423,19 @@
     padding-top: 70px;
   }
   .store-section {
-    padding-left: max(4%, calc((100vw - 1500px) / 2));
-    padding-right: max(4%, calc((100vw - 1500px) / 2));
+    padding-inline: var(--store-page-inset);
   }
 }
 @media (max-width: 900px) {
   .campaign-hero {
     min-height: 540px;
-    grid-template-columns: 46% 54%;
+    grid-template-columns: minmax(0, 46fr) minmax(0, 54fr);
   }
   .campaign-copy {
     padding-top: 40px;
   }
   .campaign-copy h1 {
-    font-size: 86px;
+    font-size: clamp(64px, 8vw, 86px);
   }
   .campaign-description {
     font-size: 12px;
@@ -440,18 +459,12 @@
     grid-template-columns: 1fr;
   }
   .campaign-copy {
-    padding: 32px 6% 26px;
+    padding: 32px var(--store-page-inset) 26px;
   }
   .campaign-copy h1 {
-    font-size: 86px;
+    font-size: clamp(64px, 19vw, 96px);
     margin: 20px 0;
     line-height: 0.96;
-  }
-  .campaign-copy h1 br:nth-of-type(2) {
-    display: none;
-  }
-  .campaign-copy h1 span {
-    margin-left: 12px;
   }
   .campaign-description {
     font-size: 13px;
@@ -463,14 +476,15 @@
   }
   .campaign-art {
     min-height: 370px;
+    padding: 48px 24px 110px;
   }
   .campaign-outline {
     font-size: 125px;
     top: 15%;
   }
   .hero-shoe {
-    width: 88%;
-    max-height: 300px;
+    width: min(100%, 420px);
+    max-height: 220px;
   }
   .hero-product {
     left: 24px;
@@ -485,10 +499,11 @@
     right: 24px;
   }
   .store-section {
-    padding: 48px 6%;
+    padding: 48px var(--store-page-inset);
   }
   .store-section-heading {
-    gap: 16px;
+    gap: 18px;
+    flex-direction: column;
     align-items: flex-start;
   }
   .store-section-heading h2 {
@@ -498,7 +513,7 @@
     font-size: 10px;
     gap: 8px;
     flex-shrink: 0;
-    margin-top: 26px;
+    margin-top: 0;
   }
   .department-grid {
     grid-template-columns: 1fr;
@@ -511,14 +526,14 @@
   .department-card > img {
     height: 170px;
     width: 75%;
-    align-self: flex-end;
-    margin-top: -30px;
+    align-self: center;
+    margin-top: 0;
     transform: rotate(-12deg);
   }
   .department-bottom {
     padding: 20px;
     position: relative;
-    margin-top: -10px;
+    margin-top: 0;
   }
   .department-bottom h3 {
     font-size: 30px;
@@ -536,14 +551,14 @@
     min-height: 500px;
   }
   .sport-story-copy {
-    padding: 36px 6%;
+    padding: 36px var(--store-page-inset);
   }
   .sport-story:after {
     background: linear-gradient(0deg, #000c, #0001);
   }
   .membership-panel {
     grid-template-columns: 1fr;
-    padding: 44px 6%;
+    padding: 44px var(--store-page-inset);
     gap: 24px;
   }
   .membership-panel > div:last-child {
@@ -563,7 +578,7 @@
     font-size: 70px;
   }
   .store-footer {
-    padding: 42px 6% 24px;
+    padding: 42px var(--store-page-inset) 24px;
   }
   .footer-bottom {
     flex-direction: column;
@@ -580,5 +595,86 @@
   }
   .store-button:hover {
     transform: none;
+  }
+}
+
+/* Match the icon rail to the featured product row. */
+.store-icons-section {
+  min-width: 0;
+}
+.store-icons-controls {
+  display: flex;
+  gap: 12px;
+}
+.store-icons-controls button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #c9ccbe;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.store-icons-controls svg {
+  width: 20px;
+  height: 20px;
+}
+.store-icon-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 60px) / 4);
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+.store-icon-card {
+  display: block;
+  min-width: 0;
+  text-align: center;
+  scroll-snap-align: start;
+}
+.store-icon-rail .store-icon-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  margin-bottom: 16px;
+}
+.store-icon-card h3 {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 900px) {
+  .store-icon-rail {
+    grid-auto-columns: calc((100% - 40px) / 3);
+  }
+}
+@media (max-width: 600px) {
+  .store-icon-rail {
+    grid-auto-columns: calc((100% - 12px) / 2);
+    gap: 12px;
+  }
+  .store-icons-controls {
+    gap: 8px;
+  }
+  .store-icons-controls button {
+    width: 40px;
+    height: 40px;
+  }
+  .store-icons-section .store-section-heading {
+    flex-direction: row;
+    align-items: center;
+  }
+  .store-icons-heading {
+    font-size: clamp(22px, 6vw, 30px) !important;
+  }
+  .campaign-footnote {
+    flex-wrap: wrap;
+  }
+  .store-button {
+    max-width: 100%;
+    gap: 16px;
   }
 }

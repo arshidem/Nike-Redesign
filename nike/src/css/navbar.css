@@ -5,15 +5,17 @@
   color: #111;
 }
 .store-utility {
-  height: 34px;
+  min-height: 34px;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: #111;
   color: #fff;
-  padding: 0 4%;
+  padding: 8px var(--store-page-inset);
   font-size: 10px;
   letter-spacing: 0.12em;
+  gap: 16px;
 }
 .store-utility > div {
   display: flex;
@@ -31,14 +33,16 @@
 }
 .store-nav {
   height: 88px;
-  padding: 0 4%;
-  display: flex;
+  padding: 0 var(--store-page-inset);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   border-bottom: 1px solid #e7e7e2;
-  gap: 24px;
+  gap: clamp(16px, 2vw, 32px);
 }
 .store-wordmark {
+  justify-self: start;
+  white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -61,6 +65,8 @@
   margin-left: 2px;
 }
 .store-nav-links {
+  justify-self: center;
+  white-space: nowrap;
   display: flex;
   gap: 28px;
   align-items: center;
@@ -73,7 +79,9 @@
   font-weight: 650;
   cursor: pointer;
   list-style: none;
-  padding: 32px 0;
+  height: 88px;
+  display: flex;
+  align-items: center;
 }
 .store-dropdown summary::-webkit-details-marker {
   display: none;
@@ -84,7 +92,7 @@
 .store-dropdown-panel {
   position: absolute;
   left: -24px;
-  top: 80px;
+  top: 100%;
   width: 225px;
   background: #fff;
   padding: 14px;
@@ -104,12 +112,14 @@
   width: 15px;
 }
 .store-nav-actions {
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 .store-icon-button {
   position: relative;
+  flex-shrink: 0;
   min-width: 42px;
   height: 44px;
   display: flex;
@@ -185,7 +195,7 @@
 }
 @media (max-width: 1050px) {
   .store-nav-links {
-    gap: 18px;
+    gap: 16px;
   }
   .store-search-button span {
     display: none;
@@ -198,15 +208,18 @@
     display: none;
   }
 }
-@media (max-width: 767px) {
+@media (max-width: 900px) {
   .store-utility {
     font-size: 8px;
     height: 30px;
+    min-height: 30px;
+    padding-block: 0;
     letter-spacing: 0.06em;
   }
   .store-nav {
     height: 70px;
-    padding: 0 5%;
+    padding: 0 var(--store-page-inset);
+    grid-template-columns: minmax(0, 1fr) auto;
   }
   .store-nav-links {
     display: none;
@@ -231,7 +244,7 @@
     right: 0;
     overflow: auto;
     background: #fff;
-    padding: 22px 6% 44px;
+    padding: 22px var(--store-page-inset) 44px;
     z-index: 40;
   }
   .store-mobile-nav details {
@@ -265,4 +278,9 @@
   .search-slide-in {
     animation: none;
   }
+}
+
+@media (max-width: 480px) {
+  .store-utility { justify-content: flex-end; }
+  .store-utility > span { display: none; }
 }

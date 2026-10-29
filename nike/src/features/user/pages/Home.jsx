@@ -42,11 +42,9 @@ export default function Home() {
               <span className="status-dot" /> EVERYDAY ICONS / VOL. 01
             </p>
             <h1 id="campaign-title">
-              MAKE
-              <br />
-              YOUR
-              <br />
-              <span>MOVE.</span>
+              <span>MAKE</span>
+              <span>YOUR</span>
+              <span className="campaign-accent">MOVE.</span>
             </h1>
             <p className="campaign-description">
               Court roots. Street attitude. Find the pair that takes you from
