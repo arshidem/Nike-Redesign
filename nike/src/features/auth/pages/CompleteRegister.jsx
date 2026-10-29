@@ -1,3 +1,4 @@
+import AuthFrame from "../../../shared/ui/AuthFrame";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -70,14 +71,14 @@ const handleCompleteRegister = async () => {
 
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-white">
+    <AuthFrame><div className="design-page design-auth design-complete-register flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-white">
       <Toaster />
       <div className="w-full max-w-md px-6 py-8 bg-white/30 backdrop-blur-md shadow-xl rounded-xl">
         <div className="flex justify-center mb-8">
           <NikeSwoosh />
         </div>
 
-        <h2 className="text-2xl font-semibold mb-6 text-center">
+        <h2 data-section="MEMBER ACCESS" className="text-2xl font-semibold mb-6 text-center">
           Complete your profile
         </h2>
 
@@ -109,7 +110,7 @@ const handleCompleteRegister = async () => {
           {loading ? "Saving..." : "Save & Continue"}
         </button>
       </div>
-    </div>
+    </div></AuthFrame>
   );
 };
 

@@ -110,7 +110,7 @@ const ProductReviewSection = ({ productId }) => {
     .slice(0, 2);
 
   return (
-    <div className="mt-10 border-t pt-6">
+    <div className="design-component design-product-review-section mt-10 border-t pt-6">
 
       <RatingSummary reviews={reviews} />
 

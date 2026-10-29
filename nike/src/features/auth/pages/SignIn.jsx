@@ -1,3 +1,4 @@
+import AuthFrame from "../../../shared/ui/AuthFrame";
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -49,7 +50,7 @@ const SignIn = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-white">
+    <AuthFrame><div className="design-page design-auth design-sign-in flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-white">
       <Toaster />
       <div className="w-full max-w-md px-6 py-8 bg-white/30 backdrop-blur-md shadow-xl rounded-xl">
         {/* Logo */}
@@ -58,7 +59,7 @@ const SignIn = () => {
         </div>
 
         {/* Title */}
-        <h1 className="text-center text-2xl font-semibold mb-6">
+        <h1 data-section="MEMBER ACCESS" className="text-center text-2xl font-semibold mb-6">
           Enter your Email to Continue
         </h1>
 
@@ -90,7 +91,7 @@ const SignIn = () => {
 
       
       </div>
-    </div>
+    </div></AuthFrame>
   );
 };
 

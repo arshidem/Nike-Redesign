@@ -5,7 +5,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 
 // 👉 Product Details Page Skeleton
 export const ProductDetailsSkeleton = () => (
-  <div className="max-w-6xl mx-auto p-6">
+  <div className="design-component design-skeleton max-w-6xl mx-auto p-6">
     <div className="flex flex-col lg:flex-row gap-8 mt-10">
       <div className="w-full lg:w-1/2 space-y-4">
         <Skeleton height={450} className="rounded" />
@@ -35,7 +35,7 @@ export const ProductDetailsSkeleton = () => (
 // 👉 Cart Page Skeleton
 export const CartSkeleton = () => {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 mt-8">
+    <div className="design-component design-skeleton max-w-6xl mx-auto px-4 py-8 mt-8">
       <div className="flex flex-col lg:flex-row gap-8 mt-4">
         {/* Bag Section */}
         <div className="flex-1">
@@ -78,7 +78,7 @@ export const CartSkeleton = () => {
 // 👉 Checkout Skeleton
 export const CheckoutSkeleton = () => {
   return (
-    <div className="max-w-5xl mx-auto p-4 mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="design-component design-skeleton max-w-5xl mx-auto p-4 mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* LEFT: Address Form Skeleton */}
       <div>
         <Skeleton height={24} width={180} className="mb-4" />
@@ -125,7 +125,7 @@ export const CheckoutSkeleton = () => {
 
 export const OrderSkeleton = () => {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 mt-8">
+    <div className="design-component design-skeleton max-w-4xl mx-auto px-4 py-8 mt-8">
       <Skeleton height={32} width={200} className="mb-6" />
 
       <div className="space-y-4">
@@ -149,7 +149,7 @@ export const OrderSkeleton = () => {
 };
 export const ModelSkeleton = () => {
   return (
-    <div className="mt-4 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+    <div className="design-component design-skeleton mt-4 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2">
       {[...Array(6)].map((_, i) => (
         <div key={i} className="p-4 bg-white rounded-lg shadow">
           <Skeleton height={160} className="mb-4" />
@@ -163,7 +163,7 @@ export const ModelSkeleton = () => {
   );
 };
 export const OrderDetailsSkeleton = () => (
-  <div className="max-w-4xl mx-auto p-6 mt-8 text-black">
+  <div className="design-component design-skeleton max-w-4xl mx-auto p-6 mt-8 text-black">
     {/* Heading */}
     <Skeleton height={32} width={180} className="mb-6" />
 
@@ -223,7 +223,7 @@ export const OrderDetailsSkeleton = () => (
   </div>
 );
 export const ProfileSkeleton = () => (
-  <div className="p-6 max-w-4xl mx-auto">
+  <div className="design-component design-skeleton p-6 max-w-4xl mx-auto">
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 mt-10">
       <Skeleton circle width={80} height={80} />
       <div>
@@ -254,7 +254,7 @@ export const ProfileSkeleton = () => (
 );
 
 export const AdminProductDetailsSkeleton = () => (
-  <div className="max-w-7xl mx-auto sm:pt-14 pt-12 px-4">
+  <div className="design-component design-skeleton max-w-7xl mx-auto sm:pt-14 pt-12 px-4">
     <Skeleton height={32} width={240} className="mb-4" />
 
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -325,7 +325,7 @@ export const AdminProductDetailsSkeleton = () => (
 );
 export const AdminUserDetailsSkeleton = () => {
   return (
-    <div className="min-h-screen bg-gray-50 p-4 animate-pulse">
+    <div className="design-component design-skeleton min-h-screen bg-gray-50 p-4 animate-pulse">
       <div className="fixed bg-white p-2 w-full shadow z-10 flex items-center">
         <div className="h-8 w-8 bg-gray-200 rounded" />
       </div>
@@ -363,7 +363,7 @@ export const AdminUserDetailsSkeleton = () => {
 
 export const UpdateProductSkeleton = () => {
   return (
-    <div>
+    <div className="design-component design-skeleton">
       <div className="fixed bg-white p-2 w-full shadow flex items-center z-10">
         <Skeleton className="w-8 h-8 rounded" />
       </div>
@@ -467,7 +467,7 @@ export const UpdateProductSkeleton = () => {
 
 export const AccountDetailsSkeleton = () => {
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="design-component design-skeleton max-w-2xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-10 w-10 rounded-full" />
@@ -545,7 +545,7 @@ export const AccountDetailsSkeleton = () => {
 
 export const DeliveryAddressesSkeleton = () => {
   return (
-    <div className="p-6">
+    <div className="design-component design-skeleton p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <Skeleton className="h-8 w-48" />
@@ -578,7 +578,7 @@ export const DeliveryAddressesSkeleton = () => {
 
 export const FeaturedSkeleton = () => {
   return (
-    <div className="featured-skeleton">
+    <div className="design-component design-skeleton featured-skeleton">
       {/* Title */}
       <Skeleton className="h-8 w-40 mx-auto mb-8" />
 

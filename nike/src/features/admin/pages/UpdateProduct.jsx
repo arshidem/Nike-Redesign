@@ -570,13 +570,13 @@ const handleSubmit = async (e) => {
 
   if (fetching) {
     return (
-     <UpdateProductSkeleton/>
+     <div className="design-page design-admin design-update-product"><UpdateProductSkeleton/></div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="design-page design-admin design-update-product p-6">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
@@ -589,7 +589,7 @@ const handleSubmit = async (e) => {
   }
 
   return (
-    <div>
+    <div className="design-page design-admin design-update-product">
       <div className="fixed bg-white p-2 w-full shadow  items-center z-10">
         <button
           onClick={() => navigate(`/admin/product/${slug}`)}
@@ -616,7 +616,7 @@ const handleSubmit = async (e) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information Section */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+            <h2 data-section="NIKE / STUDIO CONSOLE" className="text-xl font-semibold mb-4">Basic Information</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Name */}
@@ -814,13 +814,13 @@ const handleSubmit = async (e) => {
 
           {/* Featured Image Section */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h2 className="text-lg font-semibold mb-4">Featured Image</h2>
+            <h2 data-section="NIKE / STUDIO CONSOLE" className="text-lg font-semibold mb-4">Featured Image</h2>
             <FeaturedImageUploader />
           </div>
 
           {/* Variants Section */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h2 className="text-lg font-semibold mb-4">Product Variants</h2>
+            <h2 data-section="NIKE / STUDIO CONSOLE" className="text-lg font-semibold mb-4">Product Variants</h2>
 
             {formData.variants.map((variant, variantIndex) => (
               <div
@@ -993,7 +993,7 @@ const handleSubmit = async (e) => {
 
           {/* SEO & Marketing Section */}
           <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <h2 className="text-xl font-semibold mb-4">SEO & Marketing</h2>
+            <h2 data-section="NIKE / STUDIO CONSOLE" className="text-xl font-semibold mb-4">SEO & Marketing</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Meta Title */}

@@ -255,7 +255,7 @@ export const AllProducts = () => {
 
   if (loading) {
     return (
-      <div className="p-4 space-y-6">
+      <div className="design-component design-all-products p-4 space-y-6">
         <Skeleton height={32} width={200} />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(6)].map((_, i) => (
@@ -272,7 +272,7 @@ export const AllProducts = () => {
   }
 
   return (
-    <>
+    <div className="design-component design-all-products"><>
       <div className="p-4">
               <h1 className="text-2xl font-bold mb-4">Product Management</h1>
 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 w-full">
@@ -812,6 +812,6 @@ export const AllProducts = () => {
 </div>
 
       </div>
-    </>
+    </></div>
   );
 };

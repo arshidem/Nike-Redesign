@@ -119,7 +119,7 @@ const handleDelete = (id) => {
   );
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="design-component design-coupon p-6 max-w-5xl mx-auto">
         <Toaster/>
       <h2 className="text-2xl font-bold mb-4">Coupons</h2>
 

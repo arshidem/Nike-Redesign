@@ -41,7 +41,7 @@ const {getProductSuggestions}=useProductService()
   if (!loading && suggestions.length === 0) return null;
 
   return (
-    <div className="mt-10">
+    <div className="design-component design-product-suggestions mt-10">
       <h2 className="text-lg font-semibold mb-4">You might also like</h2>
 
       <div className="flex gap-4 overflow-x-auto no-scrollbar">

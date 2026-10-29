@@ -45,13 +45,13 @@ export default function Order() {
     cancelled: "bg-gray-200 text-gray-600",
   };
 
-  if (loading) return <OrderSkeleton/>;
+  if (loading) return <div className="design-page design-customer design-order"><OrderSkeleton/></div>;
 
   return (
-    <>
+    <div className="design-page design-customer design-order"><>
       <BackBar />
       <div className="max-w-4xl mx-auto px-4 py-8 mt-8">
-        <h1 className="sm:text-xl font-bold mb-6">Your Orders</h1>
+        <h1 data-section="YOUR SPACE / ORDERS" className="sm:text-xl font-bold mb-6">Your Orders</h1>
 
         {orders.length === 0 ? (
           <p className="text-center text-gray-500">No orders found.</p>
@@ -127,6 +127,6 @@ export default function Order() {
         )}
       </div>
       <Footer/>
-    </>
+    </></div>
   );
 }

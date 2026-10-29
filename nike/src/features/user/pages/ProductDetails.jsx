@@ -278,7 +278,7 @@ const handleWishlistToggle = async (e) => {
     }
   };
 
-  if (!product) return <ProductDetailsSkeleton />;
+  if (!product) return <div className="design-page design-customer design-product-details"><ProductDetailsSkeleton /></div>;
 
   const variant = product.variants[selectedVariantIndex];
   const thumbnails = variant.images?.map(formatImageUrl) || [];
@@ -287,7 +287,7 @@ const handleWishlistToggle = async (e) => {
     sizes.find((s) => s.size === selectedSize)?.stock || 0;
 
   return (
-    <div className="commerce-page product-detail-page max-w-6xl mx-auto p-6">
+    <div className="design-page design-customer design-product-details commerce-page product-detail-page max-w-6xl mx-auto p-6">
       <Toaster position="top-center" />
 
       <div className="commerce-backbar fixed top-0 left-0 w-full z-30 bg-white px-4 py-2 flex items-center">
@@ -359,7 +359,7 @@ const handleWishlistToggle = async (e) => {
 
         {/* Info Section */}
         <div className="lg:w-1/2 space-y-4">
-          <h1 className="text-3xl font-bold">{product.name}</h1>
+          <h1 data-section="FIND YOUR NEXT / NIKE" className="text-3xl font-bold">{product.name}</h1>
           <div className="text-xl font-semibold">₹{product.finalPrice}</div>
           {product.discountPercentage > 0 && (
             <div className="text-sm text-red-500">
@@ -529,7 +529,7 @@ const handleWishlistToggle = async (e) => {
             </AccordionItem>
             {product.videoUrl && (
               <div className="aspect-w-16 aspect-h-9 mt-4">
-                <h1 className="text-xl font-semibold mb-4 text-gray-800 tracking-tight">
+                <h1 data-section="FIND YOUR NEXT / NIKE" className="text-xl font-semibold mb-4 text-gray-800 tracking-tight">
                   Visual Preview
                 </h1>
                 <iframe

@@ -176,7 +176,7 @@ const ProductAnalytics = () => {
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 rounded-lg">
+      <div className="design-component design-product-analytics p-4 bg-red-50 rounded-lg">
         <h2 className="text-xl font-semibold text-red-600">
           Error Loading Analytics
         </h2>
@@ -193,7 +193,7 @@ const ProductAnalytics = () => {
 
   if (!processedData) {
     return (
-      <div className="p-4 bg-yellow-50 rounded-lg">
+      <div className="design-component design-product-analytics p-4 bg-yellow-50 rounded-lg">
         <h2 className="text-xl font-semibold text-yellow-600">
           No Data Available
         </h2>
@@ -205,7 +205,7 @@ const ProductAnalytics = () => {
   }
 
   return (
-    <div className="p-4 space-y-6 bg-white text-black">
+    <div className="design-component design-product-analytics p-4 space-y-6 bg-white text-black">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Product Analytics</h2>
         <button
@@ -235,7 +235,7 @@ const ProductAnalytics = () => {
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
-                  fill="#8884d8"
+                  fill="#596d3e"
                   dataKey="value"
                   nameKey="name"
                   labelLine={false}
@@ -278,7 +278,7 @@ const ProductAnalytics = () => {
                 <Tooltip
                   formatter={(value) => [`${value} products`, "Count"]}
                 />
-                <Bar dataKey="count" fill="#82ca9d" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="#b5cc80" radius={[4, 4, 0, 0]} />
                 <Legend />
               </BarChart>
             </ResponsiveContainer>

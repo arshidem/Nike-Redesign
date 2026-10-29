@@ -68,13 +68,13 @@ const Profile = () => {
   );
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="design-page design-customer design-profile p-6 max-w-4xl mx-auto">
       <BackBar/>
       <Toaster />
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 mt-10">
         <div className="w-20 h-20 rounded-full bg-gray-300" />
         <div>
-          <h1 className="text-2xl font-semibold">{user?.name}</h1>
+          <h1 data-section="YOUR SPACE / MEMBERSHIP" className="text-2xl font-semibold">{user?.name}</h1>
           <p className="text-sm text-gray-600">Nike Member Since {new Date(user?.createdAt).toLocaleString("default", { month: "long", year: "numeric" })}</p>
         </div>
       </div>

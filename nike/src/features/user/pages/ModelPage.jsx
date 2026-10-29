@@ -548,11 +548,11 @@ const handleWishlistToggle = async (productId, e) => {
   };
 
   return (
-    <div className="commerce-page catalog-page p-6 relative">
+    <div className="design-page design-customer design-model-page commerce-page catalog-page p-6 relative">
       <BackBar />
 
       <div className="flex justify-between items-center">
-        <h1 className="text-xl font-bold mb-2 mt-10">
+        <h1 data-section="FIND YOUR NEXT / NIKE" className="text-xl font-bold mb-2 mt-10">
           {decodeURIComponent(modelName)} ({products.length})
         </h1>
         <button
@@ -579,7 +579,7 @@ const handleWishlistToggle = async (productId, e) => {
         } transition-transform duration-300 ease-in-out bg-white p-6 overflow-y-auto md:hidden`}
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">Filters</h2>
+          <h2 data-section="FIND YOUR NEXT / NIKE" className="text-xl font-bold">Filters</h2>
           <button onClick={toggleFilters}>
             <XIcon className="w-6 h-6" />
           </button>
@@ -611,7 +611,7 @@ const handleWishlistToggle = async (productId, e) => {
     `}
         >
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl mt-14 font-bold">Filters</h2>
+            <h2 data-section="FIND YOUR NEXT / NIKE" className="text-xl mt-14 font-bold">Filters</h2>
           </div>
 
           <FilterSection />
@@ -716,7 +716,7 @@ const handleWishlistToggle = async (productId, e) => {
                       <span className="text-red-600 font-semibold text-sm">
                         {product.tag}
                       </span>
-                      <h2 className="text-sm font-semibold">{product.name}</h2>
+                      <h2 data-section="FIND YOUR NEXT / NIKE" className="text-sm font-semibold">{product.name}</h2>
                       <p className="text-gray-500 text-sm">
                         {product.gender.charAt(0).toUpperCase() +
                           product.gender.slice(1)}

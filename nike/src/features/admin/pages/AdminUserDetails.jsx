@@ -62,11 +62,11 @@ if (userData?.data) {
     }
   };
 
-  if (loading) return <AdminUserDetailsSkeleton />;
+  if (loading) return <div className="design-page design-admin design-admin-user-details"><AdminUserDetailsSkeleton /></div>;
 
   if (error || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
+      <div className="design-page design-admin design-admin-user-details min-h-screen flex items-center justify-center p-6 bg-gray-50">
         <div className="bg-white p-6 rounded-lg shadow max-w-md text-center">
           <p className="text-gray-700">{error || 'User not found'}</p>
           <button
@@ -81,7 +81,7 @@ if (userData?.data) {
   }
 
   return (
-    <>
+    <div className="design-page design-admin design-admin-user-details"><>
       {/* Top Fixed Back Bar */}
       <BackBar />
 
@@ -94,14 +94,14 @@ if (userData?.data) {
 {typeof user.name === 'string' ? user.name.charAt(0).toUpperCase() : 'U'}
             </div>
             <div>
-              <h1 className="text-xl font-bold text-black">{user.name}</h1>
+              <h1 data-section="NIKE / STUDIO CONSOLE" className="text-xl font-bold text-black">{user.name}</h1>
               <p className="text-gray-600">{user.email}</p>
             </div>
           </div>
 
           {/* Basic Info */}
           <div className="border-t pt-4 mb-4">
-            <h2 className="font-semibold text-lg text-black mb-3">Basic Information</h2>
+            <h2 data-section="NIKE / STUDIO CONSOLE" className="font-semibold text-lg text-black mb-3">Basic Information</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-gray-500">Full Name</p>
@@ -124,7 +124,7 @@ if (userData?.data) {
 
           {/* Account Info */}
           <div className="border-t pt-4 mb-4">
-            <h2 className="font-semibold text-lg text-black mb-3">Account Information</h2>
+            <h2 data-section="NIKE / STUDIO CONSOLE" className="font-semibold text-lg text-black mb-3">Account Information</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-gray-500">User ID</p>
@@ -151,7 +151,7 @@ if (userData?.data) {
 
           {/* Admin Actions */}
           <div className="border-t pt-4">
-            <h2 className="font-semibold text-lg text-black mb-3">Admin Actions</h2>
+            <h2 data-section="NIKE / STUDIO CONSOLE" className="font-semibold text-lg text-black mb-3">Admin Actions</h2>
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <select
                 className="border border-gray-300 px-4 py-2 rounded-md w-full sm:w-auto"
@@ -186,6 +186,6 @@ if (userData?.data) {
           />
         )}
       </div>
-    </>
+    </></div>
   );
 };

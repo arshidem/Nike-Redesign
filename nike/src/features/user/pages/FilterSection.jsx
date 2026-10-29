@@ -34,7 +34,7 @@ const FilterSection = ({
   };
 
   return (
-    <div className="border-b border-gray-200 py-4">
+    <div className="design-component design-filter-section border-b border-gray-200 py-4">
       {isCollapsible ? (
         <button
           onClick={toggleSection}

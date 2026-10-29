@@ -10,7 +10,7 @@ const ErrorMessage = ({
   if (!message) return null;
 
   return (
-    <div className={`flex items-center gap-2 p-2 text-red-600 ${className}`}>
+    <div className={"design-component design-error-message " + (`flex items-center gap-2 p-2 text-red-600 ${className}`)}>
       <ExclamationCircleIcon className="h-5 w-5 flex-shrink-0" />
       <span className="text-sm">{message}</span>
       {onRetry && (

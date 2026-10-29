@@ -107,10 +107,10 @@ const Wishlist = () => {
   if (!user) {
     return (
       
-      <div className="p-6 flex flex-col items-center justify-center min-h-screen text-center">
+      <div className="design-page design-customer design-wishlist p-6 flex flex-col items-center justify-center min-h-screen text-center">
               <BackBar />
 
-        <h1 className="text-2xl font-bold mb-4">You are not signed in</h1>
+        <h1 data-section="YOUR EVERYDAY / NIKE" className="text-2xl font-bold mb-4">You are not signed in</h1>
         <p className="text-gray-600 mb-6">
           To see your wishlist, please sign in first. You can also continue
           browsing products without signing in.
@@ -134,13 +134,13 @@ const Wishlist = () => {
   }
 
   // Loading skeleton
-  if (loading) return <ModelSkeleton />;
+  if (loading) return <div className="design-page design-customer design-wishlist"><ModelSkeleton /></div>;
 
   return (
-    <div className="p-6">
+    <div className="design-page design-customer design-wishlist p-6">
       <BackBar />
 
-      <h1 className="text-xl font-bold mb-2 mt-10">
+      <h1 data-section="YOUR EVERYDAY / NIKE" className="text-xl font-bold mb-2 mt-10">
         Your Wishlist ({wishlistItems.length})
       </h1>
 
@@ -186,7 +186,7 @@ const Wishlist = () => {
 
                 <div className="space-y-1">
                   <Link to={`/product/${product.slug}`}>
-                    <h2 className="text-sm font-semibold line-clamp-1 hover:underline">
+                    <h2 data-section="YOUR EVERYDAY / NIKE" className="text-sm font-semibold line-clamp-1 hover:underline">
                       {product.name}
                     </h2>
                   </Link>

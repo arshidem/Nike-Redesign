@@ -20,7 +20,7 @@ const RatingSummary = ({ reviews }) => {
   const maxCount = Math.max(...ratingCounts);
 
   return (
-    <div className="mb-6">
+    <div className="design-component design-rating-summary mb-6">
       <h3 className="text-lg font-semibold mb-2">Rating & Reviews</h3>
       <div className="flex items-center space-x-4 mb-2">
         <div className="text-4xl font-bold">{average}</div>

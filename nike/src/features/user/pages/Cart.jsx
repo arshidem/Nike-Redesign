@@ -120,16 +120,16 @@ const Cart = () => {
 
   if (loading)
     return (
-      <div>
+      <div className="design-page design-customer design-cart">
         <CartSkeleton />
       </div>
     );
 
   if (!cart || cart.items?.length === 0) {
     return (
-      <div className="p-6 flex flex-col items-center justify-center min-h-screen text-center">
+      <div className="design-page design-customer design-cart p-6 flex flex-col items-center justify-center min-h-screen text-center">
         <BackBar />
-        <h2 className="text-2xl font-bold text-gray-700 mb-4">
+        <h2 data-section="YOUR EVERYDAY / NIKE" className="text-2xl font-bold text-gray-700 mb-4">
           Your Bag is Empty
         </h2>
         <button
@@ -143,7 +143,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="commerce-page cart-page max-w-6xl mx-auto px-4 py-8 mt-8">
+    <div className="design-page design-customer design-cart commerce-page cart-page max-w-6xl mx-auto px-4 py-8 mt-8">
       <Toaster position="top-center" />
       <BackBar />
       <div className="flex flex-col lg:flex-row gap-8 mt-4">
@@ -151,7 +151,7 @@ const Cart = () => {
         <div className="flex-1">
           {/* Cart Header Summary */}
           <div className="text-center mb-8">
-            <h1 className="sm:text-xl font-bold">Bag</h1>
+            <h1 data-section="YOUR EVERYDAY / NIKE" className="sm:text-xl font-bold">Bag</h1>
             <p className="text-sm text-gray-600 mt-1">
               {cart.items?.length} item{cart.items.length > 1 ? "s" : ""} | ₹
               {(cart.finalTotal ?? cart.total ?? 0).toLocaleString()}
@@ -248,7 +248,7 @@ const Cart = () => {
         {/* Summary Section */}
         <div className="lg:w-1/3">
           <div className="bg-gray-50 p-6 rounded-lg sticky top-4">
-            <h2 className="text-xl font-bold mb-4">Summary</h2>
+            <h2 data-section="YOUR EVERYDAY / NIKE" className="text-xl font-bold mb-4">Summary</h2>
 
             {/* Prices */}
             <div className="space-y-2 text-sm text-gray-600 mb-4">

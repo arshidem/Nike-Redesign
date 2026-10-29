@@ -236,14 +236,14 @@ export const AllUsers = () => {
   // Loading and error states
   if (loading && page === 1)
     return (
-      <div className="p-4">
+      <div className="design-component design-all-users p-4">
         <Loader />
       </div>
     );
-  if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
+  if (error) return <div className="design-component design-all-users p-4 text-red-500">Error: {error}</div>;
 
   return (
-    <div className="p-4">
+    <div className="design-component design-all-users p-4">
 <div className="flex items-center justify-between gap-1 flex-nowrap sm:flex-wrap w-full overflow-x-auto">
   {/* Search input with button */}
   <div className="relative flex-grow min-w-[120px] max-w-[200px]">

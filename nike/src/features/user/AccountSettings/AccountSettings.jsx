@@ -35,7 +35,7 @@ const AccountSettings = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="design-page design-customer design-account-settings p-4">
       {/* Top back button for all screens */}
       <div className="flex items-center mb-6">
         <button
@@ -50,7 +50,7 @@ const AccountSettings = () => {
       {/* Desktop View */}
       <div className="hidden md:flex gap-8">
         <aside className="w-1/4 border-r pr-4">
-          <h2 className="text-xl font-semibold mb-4">Settings</h2>
+          <h2 data-section="YOUR SPACE / MEMBERSHIP" className="text-xl font-semibold mb-4">Settings</h2>
           <ul className="space-y-4">
             {sections.map((section) => (
               <li
@@ -77,7 +77,7 @@ const AccountSettings = () => {
           <div>{renderContent()}</div>
         ) : (
           <>
-            <h2 className="text-xl font-semibold mb-4">Settings</h2>
+            <h2 data-section="YOUR SPACE / MEMBERSHIP" className="text-xl font-semibold mb-4">Settings</h2>
             <ul className="space-y-4">
               {sections.map((section) => (
                 <li

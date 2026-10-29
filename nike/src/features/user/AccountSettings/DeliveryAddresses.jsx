@@ -188,13 +188,13 @@ const DeliveryAddresses = () => {
     autoFill();
   }, [formData.postalCode]);
 
-  if (loading) return <DeliveryAddressesSkeleton/>;
+  if (loading) return <div className="design-page design-customer design-delivery-addresses"><DeliveryAddressesSkeleton/></div>;
 
   return (
-    <div className="p-6">
+    <div className="design-page design-customer design-delivery-addresses p-6">
       <Toaster position="top-center" />
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold mb-4">Delivery Addresses</h2>
+        <h2 data-section="YOUR SPACE / MEMBERSHIP" className="text-2xl font-semibold mb-4">Delivery Addresses</h2>
         <button
           onClick={() => {
             resetForm();

@@ -171,13 +171,13 @@ if (data && data._id) {
     </div>
   );
 
-  if (loading) return <AccountDetailsSkeleton/>;
+  if (loading) return <div className="design-page design-customer design-account-details"><AccountDetailsSkeleton/></div>;
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="design-page design-customer design-account-details max-w-2xl mx-auto p-6">
       <Toaster position="top-center" />
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Account Details</h1>
+        <h1 data-section="YOUR SPACE / MEMBERSHIP" className="text-2xl font-semibold">Account Details</h1>
         <button
           onClick={toggleEditing}
           className="p-2 rounded-full hover:bg-gray-100"
