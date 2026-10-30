@@ -2,32 +2,34 @@
 
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const SibApiV3Sdk = require("@sendinblue/client");
+const Mailjet = require("node-mailjet");
 
 // Helpers
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 const generateToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-// Brevo REST API — HTTP-based, no SMTP ports needed, works on Render
-// Disable IP whitelist at: app.brevo.com/security/authorised_ips
-const client = new SibApiV3Sdk.TransactionalEmailsApi();
-client.setApiKey(
-  SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
-  process.env.BREVO_API_KEY
+// Mailjet — HTTP API, no SMTP, no IP restrictions, works on Render
+const mailjet = Mailjet.apiConnect(
+  process.env.MAILJET_API_KEY,
+  process.env.MAILJET_SECRET_KEY
 );
 
 const sendOTP = async (email, otp) => {
   try {
-    await client.sendTransacEmail({
-      sender: { name: "Nike Redesign", email: process.env.SENDER_EMAIL },
-      to: [{ email }],
-      subject: "Your OTP Code",
-      htmlContent: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
+    await mailjet.post("send", { version: "v3.1" }).request({
+      Messages: [
+        {
+          From: { Email: process.env.SENDER_EMAIL, Name: "Nike Redesign" },
+          To: [{ Email: email }],
+          Subject: "Your OTP Code",
+          HTMLPart: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
+        },
+      ],
     });
     console.log(`OTP sent to ${email}`);
   } catch (error) {
-    console.error("Failed to send OTP:", error?.response?.body || error);
+    console.error("Failed to send OTP:", error?.statusCode, error?.ErrorMessage || error);
     throw new Error("OTP sending failed");
   }
 };
