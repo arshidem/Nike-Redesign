@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { protect } = require("../middleware/authMiddleware");
+const { otpRateLimiter, emailOtpRateLimiter } = require("../middleware/rateLimit");
 
 const {
   requestOTP,
@@ -9,15 +10,15 @@ const {
   logout,
   getMe,
   updateUserData,
-  deleteUser
+  deleteUser,
 } = require("../controllers/authController");
 
-router.post("/request-otp", requestOTP);
+router.post("/request-otp", otpRateLimiter, emailOtpRateLimiter, requestOTP);
 router.post("/verify-otp", verifyOTP);
 router.post("/complete-registration", completeRegistration);
 router.post("/logout", protect, logout);
 router.get("/me", protect, getMe);
-router.put("/me", protect,updateUserData);
-router.delete("/me", protect,deleteUser);
+router.put("/me", protect, updateUserData);
+router.delete("/me", protect, deleteUser);
 
 module.exports = router;

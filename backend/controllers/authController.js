@@ -9,19 +9,24 @@ const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 const generateToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-
 // Nodemailer transporter using Brevo SMTP (no IP restriction)
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: Number(process.env.SMTP_PORT) === 465,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+// createTransport is called lazily per send — handles Render sleep/wake reconnects
+const createTransporter = () =>
+  nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: Number(process.env.SMTP_PORT) === 465, // true=SSL(465), false=STARTTLS(587)
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    connectionTimeout: 10000, // 10s — prevents hanging on stale connections
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+  });
 
 const sendOTP = async (email, otp) => {
+  const transporter = createTransporter();
   try {
     await transporter.sendMail({
       from: `Nike Redesign <${process.env.SENDER_EMAIL}>`,
@@ -33,26 +38,33 @@ const sendOTP = async (email, otp) => {
   } catch (error) {
     console.error("Failed to send OTP:", error);
     throw new Error("OTP sending failed");
+  } finally {
+    transporter.close(); // always release the connection
   }
 };
 
+// In-memory store for new user OTPs (not yet in DB)
+// { email -> { otp, expiresAt } }
+const pendingOtps = new Map();
 
 // Request OTP
-// src/controllers/authController.js
-
 exports.requestOTP = async (req, res) => {
   const { email } = req.body;
   const otp = generateOTP();
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min
 
-  // Only update OTP for existing users
   const user = await User.findOne({ email });
+
   if (user) {
+    // Existing user — save OTP to DB
     user.otp = otp;
-    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+    user.otpExpires = expiresAt;
     await user.save();
+  } else {
+    // New user — store OTP in memory until they complete registration
+    pendingOtps.set(email, { otp, expiresAt });
   }
 
-  // Send OTP regardless
   await sendOTP(email, otp);
   return res
     .status(200)
@@ -61,8 +73,6 @@ exports.requestOTP = async (req, res) => {
 
 
 // Verify OTP
-// src/controllers/authController.js
-
 exports.verifyOTP = async (req, res) => {
   const { email, otp } = req.body;
   if (!email || !otp)
@@ -70,40 +80,51 @@ exports.verifyOTP = async (req, res) => {
 
   const user = await User.findOne({ email }).select("+otp +otpExpires");
 
-  // CASE A: No user in DB Ã¢â€ â€™ new user flow
+  // CASE A: No user in DB → check pending (new user) OTP
   if (!user) {
+    const pending = pendingOtps.get(email);
+    if (!pending) {
+      return res.status(400).json({ message: "OTP not found. Please request a new one." });
+    }
+    const isExpired = pending.expiresAt < new Date();
+    const isMismatch = pending.otp !== otp;
+    if (isExpired || isMismatch) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+    // Valid OTP for new user — clear it and proceed to registration
+    pendingOtps.delete(email);
     return res.status(200).json({ newUser: true, email });
   }
 
-  // CASE B: Existing user, validate OTP
+  // CASE B: Existing user — validate OTP from DB
   const isExpired = !user.otpExpires || user.otpExpires < new Date();
   const isMismatch = user.otp !== otp;
   if (isExpired || isMismatch) {
     return res.status(400).json({ message: "Invalid or expired OTP" });
   }
 
-  // Ã¢Å“â€¦ OTP valid Ã¢â‚¬â€ clear it
+  // ✅ OTP valid — clear it
   user.otp = null;
   user.otpExpires = null;
   await user.save();
 
-  // CASE C: User exists but missing profile Ã¢â€ â€™ treat as newUser
+  // CASE C: User exists but missing profile → treat as newUser
   if (!user.name || !user.gender) {
     return res.status(200).json({ newUser: true, email });
   }
 
-  // CASE D: Fully registered user Ã¢â€ â€™ login
+  // CASE D: Fully registered user → login
   const activeUser = await User.handleLogin(user._id);
   const token = generateToken(user._id);
   return res.status(200).json({
     token,
-    user: { 
+    user: {
       _id: activeUser._id,
       name: activeUser.name,
       email: activeUser.email,
       gender: activeUser.gender,
       isActive: activeUser.isActive,
-      lastLogin: activeUser.lastLogin
+      lastLogin: activeUser.lastLogin,
     },
   });
 };
@@ -136,8 +157,8 @@ exports.completeRegistration = async (req, res) => {
       email: activeUser.email,
       gender: activeUser.gender,
       isActive: activeUser.isActive,
-      lastLogin: activeUser.lastLogin
-    }
+      lastLogin: activeUser.lastLogin,
+    },
   });
 };
 
@@ -207,7 +228,7 @@ console.log(req.body);
         ...(state !== undefined && { state }),
         ...(city !== undefined && { city }),
         ...(postalCode !== undefined && { postalCode }),
-        // Ã¢ÂÅ’ Do NOT include `email` in updates
+        // ❌ Do NOT include `email` in updates
       },
       {
         new: true,
@@ -252,7 +273,7 @@ exports.deleteUser = async (req, res) => {
 
     res.status(200).json({
       message: "Account deleted successfully",
-      userId: deletedUser._id
+      userId: deletedUser._id,
     });
   } catch (error) {
     console.error("Error deleting user:", error);
