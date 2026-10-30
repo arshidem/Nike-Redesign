@@ -2,8 +2,7 @@
 
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-// const nodemailer = require("nodemailer");
-const SibApiV3Sdk = require('@sendinblue/client');
+const nodemailer = require("nodemailer");
 
 // Helpers
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -11,21 +10,29 @@ const generateToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
 
-const client = new SibApiV3Sdk.TransactionalEmailsApi();
-client.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+// Nodemailer transporter using Brevo SMTP (no IP restriction)
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT),
+  secure: Number(process.env.SMTP_PORT) === 465,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
 const sendOTP = async (email, otp) => {
   try {
-    await client.sendTransacEmail({
-      sender: { name: 'Nike Redesign', email: process.env.SENDER_EMAIL },
-      to: [{ email }],
-      subject: 'Your OTP Code',
-      htmlContent: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
+    await transporter.sendMail({
+      from: `Nike Redesign <${process.env.SENDER_EMAIL}>`,
+      to: email,
+      subject: "Your OTP Code",
+      html: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
     });
     console.log(`OTP sent to ${email}`);
   } catch (error) {
-    console.error('Failed to send OTP:', error);
-    throw new Error('OTP sending failed');
+    console.error("Failed to send OTP:", error);
+    throw new Error("OTP sending failed");
   }
 };
 
@@ -63,7 +70,7 @@ exports.verifyOTP = async (req, res) => {
 
   const user = await User.findOne({ email }).select("+otp +otpExpires");
 
-  // CASE A: No user in DB → new user flow
+  // CASE A: No user in DB Ã¢â€ â€™ new user flow
   if (!user) {
     return res.status(200).json({ newUser: true, email });
   }
@@ -75,17 +82,17 @@ exports.verifyOTP = async (req, res) => {
     return res.status(400).json({ message: "Invalid or expired OTP" });
   }
 
-  // ✅ OTP valid — clear it
+  // Ã¢Å“â€¦ OTP valid Ã¢â‚¬â€ clear it
   user.otp = null;
   user.otpExpires = null;
   await user.save();
 
-  // CASE C: User exists but missing profile → treat as newUser
+  // CASE C: User exists but missing profile Ã¢â€ â€™ treat as newUser
   if (!user.name || !user.gender) {
     return res.status(200).json({ newUser: true, email });
   }
 
-  // CASE D: Fully registered user → login
+  // CASE D: Fully registered user Ã¢â€ â€™ login
   const activeUser = await User.handleLogin(user._id);
   const token = generateToken(user._id);
   return res.status(200).json({
@@ -200,7 +207,7 @@ console.log(req.body);
         ...(state !== undefined && { state }),
         ...(city !== undefined && { city }),
         ...(postalCode !== undefined && { postalCode }),
-        // ❌ Do NOT include `email` in updates
+        // Ã¢ÂÅ’ Do NOT include `email` in updates
       },
       {
         new: true,
