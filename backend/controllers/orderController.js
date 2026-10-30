@@ -6,9 +6,8 @@ const Order = require("../models/Order");
 const User = require("../models/User");
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
-const nodemailer = require("nodemailer");
 const moment = require("moment-timezone");
-const SibApiV3Sdk = require('@sendinblue/client');
+const { sendEmail } = require("../utils/email");
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -707,8 +706,6 @@ exports.getOrderStatusStats = async (req, res) => {
 };
 
 
-const client = new SibApiV3Sdk.TransactionalEmailsApi();
-client.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
 
 const sendOrderConfirmation = async (email, order) => {
   try {
@@ -754,11 +751,10 @@ const sendOrderConfirmation = async (email, order) => {
 
     console.log("Sending order confirmation email to:", email);
 
-    await client.sendTransacEmail({
-      sender: { name: "Nike Redesign", email: process.env.SENDER_EMAIL },
-      to: [{ email }],
+    await sendEmail({
+      to: email,
       subject: `Order Confirmation #${order._id}`,
-      htmlContent: emailHtml,
+      html: emailHtml,
     });
 
     console.log(`✅ Order confirmation sent to ${email}`);
