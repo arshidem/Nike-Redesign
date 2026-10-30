@@ -2,45 +2,28 @@
 
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
 // Helpers
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 const generateToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-// Nodemailer transporter using Brevo SMTP (no IP restriction)
-// createTransport is called lazily per send — handles Render sleep/wake reconnects
-const createTransporter = () =>
-  nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: Number(process.env.SMTP_PORT) === 465, // true=SSL(465), false=STARTTLS(587)
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    connectionTimeout: 10000, // 10s — prevents hanging on stale connections
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-  });
+// Resend client — HTTP API, no SMTP, no IP restrictions, works on Render
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendOTP = async (email, otp) => {
-  const transporter = createTransporter();
-  try {
-    await transporter.sendMail({
-      from: `Nike Redesign <${process.env.SENDER_EMAIL}>`,
-      to: email,
-      subject: "Your OTP Code",
-      html: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
-    });
-    console.log(`OTP sent to ${email}`);
-  } catch (error) {
+  const { error } = await resend.emails.send({
+    from: "Nike Redesign <onboarding@resend.dev>",
+    to: email,
+    subject: "Your OTP Code",
+    html: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
+  });
+  if (error) {
     console.error("Failed to send OTP:", error);
     throw new Error("OTP sending failed");
-  } finally {
-    transporter.close(); // always release the connection
   }
+  console.log(`OTP sent to ${email}`);
 };
 
 // In-memory store for new user OTPs (not yet in DB)
