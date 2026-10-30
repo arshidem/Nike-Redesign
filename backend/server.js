@@ -52,6 +52,26 @@ app.get("/", (req, res) => {
   });
 });
 
+// SMTP diagnostic route — remove after debugging
+app.get("/api/test-smtp", async (req, res) => {
+  const nodemailer = require("nodemailer");
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: Number(process.env.SMTP_PORT) === 465,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    connectionTimeout: 10000,
+  });
+  try {
+    await transporter.verify();
+    res.json({ ok: true, host: process.env.SMTP_HOST, port: process.env.SMTP_PORT });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message, code: err.code });
+  } finally {
+    transporter.close();
+  }
+});
+
 // Import route files
 const productRouter = require("./routes/productRoutes");
 const authRoutes = require("./routes/authRoutes");
