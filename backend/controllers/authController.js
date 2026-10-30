@@ -2,34 +2,22 @@
 
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const Mailjet = require("node-mailjet");
+const { sendEmail } = require("../utils/email");
 
 // Helpers
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 const generateToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-// Mailjet — HTTP API, no SMTP, no IP restrictions, works on Render
-const mailjet = Mailjet.apiConnect(
-  process.env.MAILJET_API_KEY,
-  process.env.MAILJET_SECRET_KEY
-);
-
 const sendOTP = async (email, otp) => {
   try {
-    await mailjet.post("send", { version: "v3.1" }).request({
-      Messages: [
-        {
-          From: { Email: process.env.SENDER_EMAIL, Name: "Nike Redesign" },
-          To: [{ Email: email }],
-          Subject: "Your OTP Code",
-          HTMLPart: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
-        },
-      ],
+    await sendEmail({
+      to: email,
+      subject: "Your OTP Code",
+      html: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
     });
-    console.log(`OTP sent to ${email}`);
   } catch (error) {
-    console.error("Failed to send OTP:", error?.statusCode, error?.ErrorMessage || error);
+    console.error("Failed to send OTP:", error.message);
     throw new Error("OTP sending failed");
   }
 };
