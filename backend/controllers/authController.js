@@ -2,28 +2,34 @@
 
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const { Resend } = require("resend");
+const SibApiV3Sdk = require("@sendinblue/client");
 
 // Helpers
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 const generateToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-// Resend client — HTTP API, no SMTP, no IP restrictions, works on Render
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Brevo REST API — HTTP-based, no SMTP ports needed, works on Render
+// Disable IP whitelist at: app.brevo.com/security/authorised_ips
+const client = new SibApiV3Sdk.TransactionalEmailsApi();
+client.setApiKey(
+  SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY
+);
 
 const sendOTP = async (email, otp) => {
-  const { error } = await resend.emails.send({
-    from: "Nike Redesign <onboarding@resend.dev>",
-    to: email,
-    subject: "Your OTP Code",
-    html: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
-  });
-  if (error) {
-    console.error("Failed to send OTP:", error);
+  try {
+    await client.sendTransacEmail({
+      sender: { name: "Nike Redesign", email: process.env.SENDER_EMAIL },
+      to: [{ email }],
+      subject: "Your OTP Code",
+      htmlContent: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
+    });
+    console.log(`OTP sent to ${email}`);
+  } catch (error) {
+    console.error("Failed to send OTP:", error?.response?.body || error);
     throw new Error("OTP sending failed");
   }
-  console.log(`OTP sent to ${email}`);
 };
 
 // In-memory store for new user OTPs (not yet in DB)
