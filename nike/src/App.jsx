@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import MiniCart from "./features/user/components/MiniCart";
 import Search from "./features/user/components/Search";
@@ -56,6 +56,11 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+function SearchPage() {
+  const navigate = useNavigate();
+  return <Search isOpen onClose={() => window.history.state?.idx > 0 ? navigate(-1) : navigate("/products")} />;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -76,7 +81,7 @@ function AppRoutes() {
       <Route path="/complete-register" element={<CompleteRegister />} />
       <Route path="/verify-register-otp" element={<VerifyRegisterOtp />} />
 
-        <Route path="/search" element={<Search isOpen={true} onClose={() => { window.history.back(); }} />} />
+        <Route path="/search" element={<SearchPage />} />
 
       <Route path="/new/arrivals" element={<ProductListPage title="New Arrivals" />} />
       <Route path="/new/best-sellers" element={<ProductListPage title="Best Sellers" />} />
