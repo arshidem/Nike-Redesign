@@ -1,3 +1,4 @@
+import AppBar from "../../../shared/ui/AppBar";
 import WishlistSpinner from "../../../shared/ui/WishlistSpinner";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -168,20 +169,7 @@ export default function Cart() {
   return (
     <div className="bag-page">
       <Toaster position="top-center" />
-      <header className="bag-header">
-        <button
-          className="bag-back"
-          onClick={() =>
-            window.history.state?.idx > 0 ? navigate(-1) : navigate("/products")
-          }
-        >
-          <ArrowLeftIcon />
-          <span>Back</span>
-        </button>
-        <Link to="/home" className="bag-logo" aria-label="Nike home">
-          <img src="/assets/logo/nikeLogo.png" alt="Nike" />
-        </Link>
-      </header>
+      <AppBar className="bag-header" fallback="/products" hideBag hideSearch />
       <main className="bag-main" id="main-content">
         <div className="bag-heading">
           <h1>
