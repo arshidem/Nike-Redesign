@@ -60,6 +60,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/home" element={<Home />} />
+      <Route path="/products" element={<ProductListPage />} />
       <Route path="/model/:modelName" element={<ModelPage />} />
       <Route path="/product/:productSlug" element={<ProductDetails />} />
       <Route path="/bag" element={<Cart />} />
