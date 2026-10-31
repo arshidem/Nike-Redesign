@@ -1,3 +1,4 @@
+import AppBar from "../../../shared/ui/AppBar";
 import WishlistSpinner from "../../../shared/ui/WishlistSpinner";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
@@ -339,31 +340,7 @@ const ProductDetails = () => {
   };
 
   const header = (
-    <header className="pdp-header">
-      <button
-        className="pdp-back"
-        onClick={() =>
-          window.history.state?.idx > 0 ? navigate(-1) : navigate("/products")
-        }
-      >
-        <ArrowLeftIcon />
-        <span>Back</span>
-      </button>
-      <Link to="/home" aria-label="Nike home" className="pdp-logo">
-        <img src="/assets/logo/nikeLogo.png" alt="Nike" />
-      </Link>
-      <div>
-        <button
-          aria-label="Search products"
-          onClick={() => setSearchOpen(true)}
-        >
-          <MagnifyingGlassIcon />
-        </button>
-        <Link to="/bag" aria-label="Shopping bag">
-          <ShoppingBagIcon />
-        </Link>
-      </div>
-    </header>
+    <AppBar className="pdp-header" fallback="/products" onSearch={() => setSearchOpen(true)} />
   );
   if (!product)
     return (
