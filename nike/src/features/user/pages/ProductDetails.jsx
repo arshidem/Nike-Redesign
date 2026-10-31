@@ -1,19 +1,29 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { useProductService } from "../../product/services/productService";
 import { useAppContext } from "../../../context/AppContext";
 import {
-  ArrowIconLeft,
-  ArrowIconRight,
-  XIcon,
-  BagIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+  XMarkIcon,
+  HeartIcon,
   MinusIcon,
   PlusIcon,
-  HeartIcon,
-  Spinner,
-} from "../../../shared/ui/Icons";
-import Loader from "../../../shared/ui/Loader";
+  MagnifyingGlassIcon,
+  ShoppingBagIcon,
+  TruckIcon,
+  ArchiveBoxIcon,
+  ShieldCheckIcon,
+  DocumentTextIcon,
+  ChatBubbleLeftRightIcon,
+} from "@heroicons/react/24/outline";
+import Search from "../components/Search";
+import SizeGuide from "../components/SizeGuide";
+import "../../../css/product-details.css";
 import useCartServices from "../services/cartServices";
 import ProductReviewSection from "../components/ProductReviewSection";
 import Footer from "../components/Footer";
@@ -21,28 +31,39 @@ import { ProductDetailsSkeleton } from "../../../shared/ui/Skeleton";
 import ProductSuggestions from "../components/ProductSuggestions";
 import { useWishlistService } from "../services/wishlistServices";
 
-const AccordionItem = ({ title, children, isOpen, onClick }) => (
-  <div className="border-t">
-    <button
-      onClick={onClick}
-      className="w-full flex justify-between items-center py-4 font-semibold text-left"
-      aria-expanded={isOpen}
-    >
-      {title}
-      <ArrowIconRight
-        className={`w-5 h-5 transition-transform duration-200 ${
-          isOpen ? "rotate-90" : ""
-        }`}
-      />
+const AccordionItem = ({
+  title,
+  icon: Icon,
+  children,
+  isOpen,
+  onClick,
+  id,
+}) => (
+  <section className="pdp-accordion">
+    <button onClick={onClick} aria-expanded={isOpen} aria-controls={id}>
+      <Icon />
+      <span>{title}</span>
+      <ChevronRightIcon className={isOpen ? "is-open" : ""} />
     </button>
-    {isOpen && <div className="pb-4 text-sm text-gray-700">{children}</div>}
-  </div>
+    {isOpen && (
+      <div id={id} className="pdp-accordion-content">
+        {children}
+      </div>
+    )}
+  </section>
 );
 
 const ProductDetails = () => {
   const { productSlug } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const sizeGuideButton = useRef(null);
+  const touchStart = useRef(null);
+  const closeSizeGuide = useCallback(() => setSizeGuideOpen(false), []);
   const [selectedImage, setSelectedImage] = useState("");
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
@@ -62,11 +83,14 @@ const ProductDetails = () => {
     useCartServices();
 
   const formatImageUrl = (imagePath) => {
-    if (!imagePath || typeof imagePath !== 'string') return '/assets/editorial/image-unavailable.svg';
+    if (!imagePath || typeof imagePath !== "string")
+      return "/assets/editorial/image-unavailable.svg";
     if (/^https?:\/\//i.test(imagePath)) return imagePath;
-    const normalized = imagePath.replace(/\\/g, '/');
-    const relative = normalized.includes('uploads/') ? normalized.slice(normalized.indexOf('uploads/')) : normalized.replace(/^\/+/, '');
-    return `${(backendUrl || '').replace(/\/$/, '')}/${relative}`;
+    const normalized = imagePath.replace(/\\/g, "/");
+    const relative = normalized.includes("uploads/")
+      ? normalized.slice(normalized.indexOf("uploads/"))
+      : normalized.replace(/^\/+/, "");
+    return `${(backendUrl || "").replace(/\/$/, "")}/${relative}`;
   };
   const isInWishlist = wishlistIds.includes(product?._id);
 
@@ -86,84 +110,112 @@ const ProductDetails = () => {
   }, [token]);
 
   // Handle wishlist toggle
-const handleWishlistToggle = async (e) => {
-  e.preventDefault();
-  e.stopPropagation();
+  const handleWishlistToggle = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-  if (!token) {
-    // Custom toast for not logged in users
-    toast.custom(
-      (t) => (
-        <div
-          className={`${
-            t.visible ? "animate-enter" : "animate-leave"
-          } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
-        >
-          <div className="p-4 flex items-center justify-between w-full">
-            <span className="text-sm font-medium text-gray-900">
-              Please login to add items to your wishlist
-            </span>
-            <button
-              onClick={() => {
-                toast.dismiss(t.id); // close toast manually
-                navigate("/signin"); // redirect
-              }}
-              className="px-3 py-1 bg-black text-white text-sm rounded hover:bg-gray-800"
-            >
-              Sign In
-            </button>
+    if (!token) {
+      // Custom toast for not logged in users
+      toast.custom(
+        (t) => (
+          <div
+            className={`${
+              t.visible ? "animate-enter" : "animate-leave"
+            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+          >
+            <div className="p-4 flex items-center justify-between w-full">
+              <span className="text-sm font-medium text-gray-900">
+                Please login to add items to your wishlist
+              </span>
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id); // close toast manually
+                  navigate("/signin"); // redirect
+                }}
+                className="px-3 py-1 bg-black text-white text-sm rounded hover:bg-gray-800"
+              >
+                Sign In
+              </button>
+            </div>
           </div>
-        </div>
-      ),
-      {
-        duration: 3000, // 3 seconds
-      }
-    );
-    return; // Stop execution if user not logged in
-  }
+        ),
+        {
+          duration: 3000, // 3 seconds
+        },
+      );
+      return; // Stop execution if user not logged in
+    }
 
-  try {
-    setIsWishlistLoading(true);
-    const response = await toggleWishlist(product._id);
-    setWishlistIds(response.wishlist.map((item) => item._id));
+    try {
+      setIsWishlistLoading(true);
+      const response = await toggleWishlist(product._id);
+      setWishlistIds(response.wishlist.map((item) => item._id));
 
-    toast.success(
-      response.action === "added"
-        ? "Added to wishlist!"
-        : "Removed from wishlist!"
-    );
-  } catch (err) {
-    toast.error(err.message || "Failed to update wishlist");
-  } finally {
-    setIsWishlistLoading(false);
-  }
-};
+      toast.success(
+        response.action === "added"
+          ? "Added to wishlist!"
+          : "Removed from wishlist!",
+      );
+    } catch (err) {
+      toast.error(err.message || "Failed to update wishlist");
+    } finally {
+      setIsWishlistLoading(false);
+    }
+  };
 
   useEffect(() => {
+    let active = true;
+    setProduct(null);
+    setLoadError(false);
+    setSelectedVariantIndex(0);
+    setSelectedSize(null);
+    setCartItem(null);
+    setShowFullDesc(false);
+    setOpenAccordion(null);
+    setSizeGuideOpen(false);
     const loadProduct = async () => {
       try {
         const data = await fetchProductBySlug(productSlug);
-        if (!data) return navigate("/not-found", { replace: true });
+        if (!active) return;
+        if (!data || !data.variants?.length) {
+          setLoadError(true);
+          return;
+        }
         setProduct(data);
         setSelectedImage(formatImageUrl(data.variants?.[0]?.images?.[0]));
       } catch {
-        toast.error("Failed to load product");
-        navigate("/products", { replace: true });
+        if (active) setLoadError(true);
       }
     };
 
     const loadCart = async () => {
-      const cart = await getCart();
-      const map = {};
-      cart.items.forEach((item) => {
-        map[`${item.productId}-${item.variantId}-${item.size}`] = item;
-      });
-      setCartMap(map);
+      try {
+        const cart = await getCart();
+        if (!active) return;
+        const map = {};
+        (cart.items || []).forEach((item) => {
+          map[`${item.productId}-${item.variantId}-${item.size}`] = item;
+        });
+        setCartMap(map);
+      } catch {
+        if (active) setCartMap({});
+      }
     };
 
     loadProduct();
     loadCart();
-  }, [productSlug]);
+    return () => {
+      active = false;
+    };
+  }, [productSlug, retry]);
+
+  useEffect(() => {
+    const close = (event) => {
+      if (event.key === "Escape") setSearchOpen(false);
+    };
+    document.addEventListener("keydown", close);
+    return () => document.removeEventListener("keydown", close);
+  }, []);
 
   useEffect(() => {
     if (!product || !selectedSize) return;
@@ -188,6 +240,10 @@ const handleWishlistToggle = async (e) => {
   const handleAddToBag = async () => {
     const variant = product.variants[selectedVariantIndex];
     const selectedSizeObj = variant.sizes.find((s) => s.size === selectedSize);
+    if (!selectedSizeObj || selectedSizeObj.stock <= 0) {
+      toast.error("Please select an available size");
+      return;
+    }
     const imageUrl = formatImageUrl(variant.images?.[0]);
 
     try {
@@ -199,7 +255,7 @@ const handleWishlistToggle = async (e) => {
         image: imageUrl,
         color: variant.color,
         size: selectedSize,
-        price: product.finalPrice,
+        price: product.finalPrice ?? product.price,
         quantity: 1,
         stock: selectedSizeObj.stock,
         gender: product.gender,
@@ -209,7 +265,7 @@ const handleWishlistToggle = async (e) => {
         (i) =>
           i.productId === product._id &&
           i.variantId === variant._id &&
-          i.size === selectedSize
+          i.size === selectedSize,
       );
 
       if (item) {
@@ -224,7 +280,7 @@ const handleWishlistToggle = async (e) => {
               <p className="font-medium">{product.name}</p>
               <p className="text-sm">Size: {selectedSize}</p>
             </div>
-          </div>
+          </div>,
         );
       }
     } catch (err) {
@@ -278,275 +334,404 @@ const handleWishlistToggle = async (e) => {
     }
   };
 
-  if (!product) return <div className="design-page design-customer design-product-details"><ProductDetailsSkeleton /></div>;
+  const header = (
+    <header className="pdp-header">
+      <button
+        className="pdp-back"
+        onClick={() =>
+          window.history.state?.idx > 0 ? navigate(-1) : navigate("/products")
+        }
+      >
+        <ArrowLeftIcon />
+        <span>Back</span>
+      </button>
+      <Link to="/home" aria-label="Nike home" className="pdp-logo">
+        <img src="/assets/logo/nikeLogo.png" alt="Nike" />
+      </Link>
+      <div>
+        <button
+          aria-label="Search products"
+          onClick={() => setSearchOpen(true)}
+        >
+          <MagnifyingGlassIcon />
+        </button>
+        <Link to="/bag" aria-label="Shopping bag">
+          <ShoppingBagIcon />
+        </Link>
+      </div>
+    </header>
+  );
+  if (!product)
+    return (
+      <div className="pdp-page">
+        {header}
+        {searchOpen && <Search isOpen onClose={() => setSearchOpen(false)} />}
+        {loadError ? (
+          <main className="pdp-unavailable">
+            <p className="store-eyebrow">LET’S FIND YOUR NEXT</p>
+            <h1>This product is unavailable.</h1>
+            <p>Try again, or explore the rest of the collection.</p>
+            <button
+              className="store-button"
+              onClick={() => setRetry((value) => value + 1)}
+            >
+              Try again <ArrowRightIcon />
+            </button>
+            <Link to="/products">Browse all products</Link>
+          </main>
+        ) : (
+          <div className="pdp-loading">
+            <ProductDetailsSkeleton />
+          </div>
+        )}
+      </div>
+    );
 
-  const variant = product.variants[selectedVariantIndex];
+  const variant = product.variants[selectedVariantIndex] || product.variants[0];
   const thumbnails = variant.images?.map(formatImageUrl) || [];
+  const currentImageIndex = Math.max(0, thumbnails.indexOf(selectedImage));
   const sizes = variant.sizes || [];
   const selectedSizeStock =
     sizes.find((s) => s.size === selectedSize)?.stock || 0;
+  const changeImage = (direction) => {
+    if (thumbnails.length)
+      setSelectedImage(
+        thumbnails[
+          (currentImageIndex + direction + thumbnails.length) %
+            thumbnails.length
+        ],
+      );
+  };
+  const rating = Math.min(5, Math.max(0, Number(product.rating?.average) || 0));
+  const reviewCount = product.rating?.total || 0;
+  const footwear = product.category === "shoes";
+  const genderLabel =
+    { men: "Men’s", women: "Women’s", kids: "Kids’", unisex: "Unisex" }[
+      product.gender
+    ] || "Everyday";
+  const price = product.finalPrice ?? product.price;
 
   return (
-    <div className="design-page design-customer design-product-details commerce-page product-detail-page max-w-6xl mx-auto p-6">
+    <div className="pdp-page">
       <Toaster position="top-center" />
-
-      <div className="commerce-backbar fixed top-0 left-0 w-full z-30 bg-white px-4 py-2 flex items-center">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1 px-3 py-2 border border-black rounded hover:bg-gray-100 transition sm:w-auto"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="2"
-            stroke="currentColor"
-            className="w-4 h-4  rotate-180"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8.25 4.5L15.75 12 8.25 19.5"
-            />
-          </svg>
-          <span className="text-sm font-medium">Back</span>
-        </button>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-8 mt-10">
-        {/* Image Section */}
-        <div className="w-full lg:w-1/2 lg:sticky lg:top-24 lg:h-fit self-start">
-          <img
-            src={selectedImage}
-            alt={product.name}
-            className="w-full aspect-square object-cover rounded"
-          />
-          <div className="flex gap-2 mt-4 overflow-x-auto">
-            {thumbnails.map((thumb, idx) => (
-              <img
-                key={idx}
-                src={thumb}
-                className={`w-20 h-20 border rounded object-cover cursor-pointer ${
-                  selectedImage === thumb ? "border-black" : "border-gray-200"
-                }`}
-                onClick={() => setSelectedImage(thumb)}
-              />
-            ))}
-          </div>
-
-          <div className="mt-6">
-            <h4 className="font-semibold mb-2">Available Colors</h4>
-            <div className="flex gap-2">
-              {product.variants.map((v, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleVariantChange(index)}
-                  className={`w-12 h-12 border-2 rounded ${
-                    selectedVariantIndex === index
-                      ? "border-black"
-                      : "border-gray-200"
-                  }`}
-                >
-                  <img
-                    src={formatImageUrl(v.images?.[0])}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Info Section */}
-        <div className="lg:w-1/2 space-y-4">
-          <h1 data-section="FIND YOUR NEXT / NIKE" className="text-3xl font-bold">{product.name}</h1>
-          <div className="text-xl font-semibold">₹{product.finalPrice}</div>
-          {product.discountPercentage > 0 && (
-            <div className="text-sm text-red-500">
-              <span className="line-through text-gray-400">
-                ₹{product.price}
-              </span>{" "}
-              ({product.discountPercentage}% OFF)
-            </div>
-          )}
-
-          {/* Sizes */}
-          <div>
-            <h4 className="font-semibold">Select Size</h4>
-            <div className="grid grid-cols-4 gap-2 mt-2">
-              {sizes.map(({ size, stock }, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleSizeSelect(size)}
-                  disabled={stock === 0}
-                  className={`p-2 border rounded ${
-                    selectedSize === size
-                      ? "bg-black text-white"
-                      : "hover:border-black"
-                  } ${
-                    stock === 0
-                      ? "text-gray-400 line-through cursor-not-allowed"
-                      : ""
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Cart Buttons */}
-          {/* Cart Buttons */}
-          <div className="mt-6 flex gap-3">
-           
-
-            {/* Add to Cart Button */}
-            {!cartItem ? (
-              <button
-                onClick={handleAddToBag}
-                disabled={
-                  !selectedSize || isProcessing || selectedSizeStock === 0
+      {header}
+      {searchOpen && <Search isOpen onClose={() => setSearchOpen(false)} />}
+      <main className="pdp-main">
+        <div className="pdp-layout">
+          <section className="pdp-gallery" aria-label="Product images">
+            <div
+              className="pdp-gallery-stage"
+              tabIndex={0}
+              aria-label={`Product image ${currentImageIndex + 1} of ${thumbnails.length || 1}`}
+              onKeyDown={(event) => {
+                if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+                  event.preventDefault();
+                  changeImage(event.key === "ArrowLeft" ? -1 : 1);
                 }
-                className="flex-1 py-3 bg-black text-white rounded-full hover:bg-gray-800 disabled:opacity-50"
-              >
-                {isProcessing ? "Adding..." : "Add to Bag"}
-              </button>
-            ) : (
-              <div className="flex-1 flex items-center justify-between border border-black px-4 py-2 rounded-full">
+              }}
+              onTouchStart={(event) => {
+                touchStart.current = event.changedTouches[0].clientX;
+              }}
+              onTouchEnd={(event) => {
+                if (touchStart.current == null) return;
+                const distance =
+                  event.changedTouches[0].clientX - touchStart.current;
+                if (Math.abs(distance) > 50) changeImage(distance > 0 ? -1 : 1);
+                touchStart.current = null;
+              }}
+            >
+              <img
+                className="pdp-main-image"
+                src={selectedImage || "/assets/editorial/image-unavailable.svg"}
+                alt={`${product.name}, ${variant.color}, view ${currentImageIndex + 1}`}
+                fetchPriority="high"
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src =
+                    "/assets/editorial/image-unavailable.svg";
+                }}
+              />
+              {thumbnails.length > 1 && (
+                <>
+                  <button
+                    className="pdp-gallery-prev"
+                    aria-label="Previous product image"
+                    onClick={() => changeImage(-1)}
+                  >
+                    <ChevronLeftIcon />
+                  </button>
+                  <button
+                    className="pdp-gallery-next"
+                    aria-label="Next product image"
+                    onClick={() => changeImage(1)}
+                  >
+                    <ChevronRightIcon />
+                  </button>
+                </>
+              )}
+              <span className="pdp-image-count" aria-live="polite">
+                {currentImageIndex + 1} / {thumbnails.length || 1}
+              </span>
+            </div>
+            <div className="pdp-thumbnails">
+              {thumbnails.map((image, index) => (
                 <button
-                  onClick={() => handleQuantityChange(-1)}
-                  disabled={isProcessing}
+                  key={`${image}:${index}`}
+                  aria-label={`View product image ${index + 1}`}
+                  aria-pressed={selectedImage === image}
+                  onClick={() => setSelectedImage(image)}
                 >
-                  {cartItem.quantity === 1 ? <XIcon /> : <MinusIcon />}
+                  <img src={image} alt="" loading="lazy" />
                 </button>
-                <span>{cartItem.quantity}</span>
+              ))}
+            </div>
+          </section>
+          <section className="pdp-info" aria-labelledby="product-title">
+            <p className="pdp-eyebrow">
+              {genderLabel}{" "}
+              {footwear
+                ? "Shoes"
+                : typeof product.category === "string"
+                  ? product.category
+                  : "Collection"}
+            </p>
+            <h1 id="product-title">{product.name}</h1>
+            <div className="pdp-price">
+              <strong>₹ {Number(price).toLocaleString("en-IN")}</strong>
+              <span>(incl. of taxes)</span>
+              {product.discountPercentage > 0 && (
+                <small>
+                  <del>₹{Number(product.price).toLocaleString("en-IN")}</del>{" "}
+                  {product.discountPercentage}% off
+                </small>
+              )}
+            </div>
+            {reviewCount > 0 && (
+              <button
+                className="pdp-rating"
+                onClick={() => setOpenAccordion(3)}
+                aria-label={`Read ${reviewCount} reviews, rated ${rating} out of 5`}
+              >
+                <span
+                  style={{ "--rating": `${rating * 20}%` }}
+                  aria-hidden="true"
+                >
+                  ★★★★★
+                </span>
+                <small>({reviewCount})</small>
+              </button>
+            )}
+            {product.description && (
+              <div className="pdp-description">
+                <p className={showFullDesc ? "" : "pdp-description-clamped"}>
+                  {product.description}
+                </p>
                 <button
-                  onClick={() => handleQuantityChange(1)}
+                  onClick={() => setShowFullDesc((value) => !value)}
+                  aria-expanded={showFullDesc}
+                >
+                  {showFullDesc ? "Less" : "More"}
+                  <ChevronDownIcon className={showFullDesc ? "is-open" : ""} />
+                </button>
+              </div>
+            )}
+            <div className="pdp-color-section">
+              <div className="pdp-section-label">
+                <h2>Available Colors</h2>
+                <span>
+                  {product.variants.length}{" "}
+                  {product.variants.length === 1 ? "color" : "colors"}
+                </span>
+              </div>
+              <div className="pdp-colors">
+                {product.variants.map((color, index) => (
+                  <button
+                    key={color._id || index}
+                    aria-label={`Select ${color.color} color`}
+                    aria-pressed={selectedVariantIndex === index}
+                    onClick={() => handleVariantChange(index)}
+                  >
+                    <img
+                      src={formatImageUrl(color.images?.[0])}
+                      alt=""
+                      loading="lazy"
+                    />
+                  </button>
+                ))}
+              </div>
+              <p className="pdp-color-name">{variant.color}</p>
+            </div>
+            <div className="pdp-size-section">
+              <div className="pdp-section-label">
+                <h2>Select Size{footwear ? " (UK)" : ""}</h2>
+                <button
+                  ref={sizeGuideButton}
+                  onClick={() => setSizeGuideOpen(true)}
+                  aria-haspopup="dialog"
+                  aria-expanded={sizeGuideOpen}
+                >
+                  Size Guide <ChevronRightIcon />
+                </button>
+              </div>
+              <div className="pdp-sizes">
+                {sizes.map(({ size, stock }) => (
+                  <button
+                    key={size}
+                    disabled={stock <= 0}
+                    aria-pressed={selectedSize === size}
+                    onClick={() => handleSizeSelect(size)}
+                  >
+                    {footwear && /^UK\s*/i.test(size) ? (
+                      <>
+                        <span>UK</span>
+                        <span>{size.replace(/^UK\s*/i, "")}</span>
+                      </>
+                    ) : (
+                      size
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="pdp-purchase-actions">
+              {!cartItem ? (
+                <button
+                  className="pdp-add-to-bag"
+                  onClick={handleAddToBag}
                   disabled={
-                    isProcessing || cartItem.quantity >= selectedSizeStock
+                    !selectedSize || isProcessing || selectedSizeStock === 0
                   }
                 >
-                  <PlusIcon />
+                  {isProcessing ? "Adding…" : "Add to Bag"}
+                  <ArrowRightIcon />
                 </button>
-              </div>
-            )}
-             {/* Wishlist Button */}
-            <button
-              onClick={handleWishlistToggle}
-              disabled={wishlistLoading}
-              className={`flex items-center justify-center p-3 rounded-full border ${
-                isInWishlist
-                  ? "border hover:bg-gray-200"
-                  : " border hover:bg-gray-200"
-              }`}
-              aria-label={
-                isInWishlist ? "Remove from wishlist" : "Add to wishlist"
-              }
-            >
-              {wishlistLoading ? (
-                <svg
-                  className="animate-spin h-5 w-5 text-gray-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
               ) : (
-                <HeartIcon
-                  className={`h-6 w-6 ${
-                    isInWishlist
-                      ? "fill-red-600 stroke-none" // Fixed typo: strock-none → stroke-none
-                      : "fill-none stroke-black"
-                  }`}
-                  color={isInWishlist ? "red" : "none"} // Optional: can remove if using className
-                  stroke={isInWishlist ? "none" : "black"} // Optional: can remove if using className
-                />
+                <div className="pdp-quantity">
+                  <button
+                    aria-label={
+                      cartItem.quantity === 1
+                        ? "Remove from bag"
+                        : "Decrease quantity"
+                    }
+                    onClick={() => handleQuantityChange(-1)}
+                    disabled={isProcessing}
+                  >
+                    {cartItem.quantity === 1 ? <XMarkIcon /> : <MinusIcon />}
+                  </button>
+                  <span aria-live="polite">{cartItem.quantity} in bag</span>
+                  <button
+                    aria-label="Increase quantity"
+                    onClick={() => handleQuantityChange(1)}
+                    disabled={
+                      isProcessing || cartItem.quantity >= selectedSizeStock
+                    }
+                  >
+                    <PlusIcon />
+                  </button>
+                </div>
               )}
-            </button>
-          </div>
-
-          {/* Accordion Section */}
-          <div className="pt-4 border-t">
-            {/* Product Description outside Accordion */}
-            {product.description && (
-              <div className="mb-4 text-sm text-gray-700 whitespace-pre-wrap">
-                {showFullDesc ? (
-                  <>
-                    <p>{product.description}</p>
-                    <button
-                      onClick={() => setShowFullDesc(false)}
-                      className="text-blue-500 text-xs mt-1"
-                    >
-                      Show less
-                    </button>
-                  </>
+              <button
+                className={`pdp-favorite ${isInWishlist ? "is-saved" : ""}`}
+                aria-label={
+                  isInWishlist ? "Remove from wishlist" : "Add to wishlist"
+                }
+                aria-pressed={isInWishlist}
+                disabled={wishlistLoading}
+                onClick={handleWishlistToggle}
+              >
+                {wishlistLoading ? (
+                  <span className="pdp-spinner" />
                 ) : (
-                  <>
-                    <p className="line-clamp-2">{product.description}</p>
-                    <button
-                      onClick={() => setShowFullDesc(true)}
-                      className="text-blue-500 text-xs mt-1"
-                    >
-                      More...
-                    </button>
-                  </>
+                  <HeartIcon />
                 )}
-              </div>
+              </button>
+            </div>
+            {!selectedSize && (
+              <p className="pdp-size-hint">Choose your size to add to bag.</p>
             )}
-
-            {/* Accordion Section */}
-            <AccordionItem
-              title="Product Details"
-              isOpen={openAccordion === 0}
-              onClick={() => setOpenAccordion(openAccordion === 0 ? null : 0)}
-            >
-              {product.productDetails && (
-                <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-                  {product.productDetails}
-                </pre>
-              )}
-            </AccordionItem>
-
-            <AccordionItem
-              title="Delivery & Returns"
-              isOpen={openAccordion === 2}
-              onClick={() => setOpenAccordion(openAccordion === 2 ? null : 2)}
-            >
-              <p>Free delivery on orders above ₹1000. Easy 30-day returns.</p>
-            </AccordionItem>
+            <div className="pdp-service-strip">
+              <div>
+                <TruckIcon />
+                <p>
+                  <strong>Free Delivery</strong>
+                  <small>On orders above ₹1,000</small>
+                </p>
+              </div>
+              <div>
+                <ArchiveBoxIcon />
+                <p>
+                  <strong>Easy Returns</strong>
+                  <small>30-day returns</small>
+                </p>
+              </div>
+              <div>
+                <ShieldCheckIcon />
+                <p>
+                  <strong>Secure Checkout</strong>
+                  <small>Shop with confidence</small>
+                </p>
+              </div>
+            </div>
+            <div className="pdp-details-rows">
+              <AccordionItem
+                id="pdp-product-details"
+                title="Product Details"
+                icon={DocumentTextIcon}
+                isOpen={openAccordion === 0}
+                onClick={() => setOpenAccordion(openAccordion === 0 ? null : 0)}
+              >
+                <p className="pdp-preformatted">
+                  {product.productDetails ||
+                    product.description ||
+                    "Explore the product images, available colors and sizes above."}
+                </p>
+              </AccordionItem>
+              <AccordionItem
+                id="pdp-delivery"
+                title="Delivery & Returns"
+                icon={TruckIcon}
+                isOpen={openAccordion === 2}
+                onClick={() => setOpenAccordion(openAccordion === 2 ? null : 2)}
+              >
+                <p>
+                  Free delivery on orders above ₹1,000. Easy 30-day returns.
+                </p>
+              </AccordionItem>
+              <AccordionItem
+                id="pdp-reviews"
+                title={`Reviews (${reviewCount})`}
+                icon={ChatBubbleLeftRightIcon}
+                isOpen={openAccordion === 3}
+                onClick={() => setOpenAccordion(openAccordion === 3 ? null : 3)}
+              >
+                <ProductReviewSection productId={product._id} />
+              </AccordionItem>
+            </div>
             {product.videoUrl && (
-              <div className="aspect-w-16 aspect-h-9 mt-4">
-                <h1 data-section="FIND YOUR NEXT / NIKE" className="text-xl font-semibold mb-4 text-gray-800 tracking-tight">
-                  Visual Preview
-                </h1>
+              <section className="pdp-video">
+                <h2>Visual Preview</h2>
                 <iframe
                   src={product.videoUrl}
-                  className="w-full h-64"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   title={`${product.name} video`}
                 />
-              </div>
+              </section>
             )}
-            <ProductReviewSection productId={product._id} />
-          </div>
+          </section>
         </div>
-      </div>
-      <ProductSuggestions productSlug={product.slug} />
+        <ProductSuggestions productSlug={product.slug} />
+      </main>
       <Footer />
+      <SizeGuide
+        open={sizeGuideOpen}
+        product={product}
+        sizes={sizes}
+        selectedSize={selectedSize}
+        onSelect={handleSizeSelect}
+        onClose={closeSizeGuide}
+        returnFocusRef={sizeGuideButton}
+      />
     </div>
   );
 };
