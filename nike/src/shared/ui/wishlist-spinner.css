@@ -1,0 +1,18 @@
+.wishlist-spinner {
+  display: block;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  fill: none !important;
+  animation: wishlist-ring-spin 0.7s linear infinite;
+}
+@keyframes wishlist-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wishlist-spinner {
+    animation: none;
+  }
+}

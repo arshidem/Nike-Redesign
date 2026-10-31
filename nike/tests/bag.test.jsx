@@ -5,10 +5,11 @@ import Cart from "../src/features/user/pages/Cart";
 
 const mockGet = jest.fn(), mockUpdate = jest.fn(), mockRemove = jest.fn(), mockToggle = jest.fn();
 let mockToken = null;
+let mockWishlistLoading = {};
 jest.mock("../src/features/user/services/cartServices", () => ({ __esModule: true, default: () => ({ getCart: mockGet, updateItemQuantity: mockUpdate, removeItemFromCart: mockRemove }) }));
 jest.mock("../src/features/product/services/productService", () => ({ useProductService: () => ({ fetchProducts: async () => ({ products: [{ _id: "p1", slug: "dunk", name: "Nike Dunk", gender: "men", finalPrice: 4148, variants: [{ images: ["https://images.test/dunk.avif"] }] }] }) }) }));
 jest.mock("../src/context/AppContext", () => ({ useAppContext: () => ({ backendUrl: "https://store.test", token: mockToken, user: null }) }));
-jest.mock("../src/hooks/useWishlist", () => ({ useWishlist: () => ({ wishlistLoading: {}, isInWishlist: () => false, handleWishlistToggle: mockToggle }) }));
+jest.mock("../src/hooks/useWishlist", () => ({ useWishlist: () => ({ wishlistLoading: mockWishlistLoading, isInWishlist: () => false, handleWishlistToggle: mockToggle }) }));
 jest.mock("react-hot-toast", () => ({ __esModule: true, default: { error: jest.fn() }, Toaster: () => null }));
 const item = { _id: "server-line", productId: "p1", variantId: "v1", name: "Nike Dunk", gender: "men", color: "black", size: "UK 5.5", price: 4148, quantity: 1, total: 4148, stock: 2, image: "https://images.test/dunk.avif" };
 let root, container;
@@ -16,6 +17,7 @@ beforeEach(() => {
   global.IS_REACT_ACT_ENVIRONMENT = true;
   container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
   mockToken = null;
+  mockWishlistLoading = {};
   mockGet.mockReset().mockResolvedValue({ items: [item], total: 4148 });
   mockUpdate.mockReset().mockResolvedValue({ items: [{ ...item, quantity: 2, total: 8296 }], total: 8296 });
   mockRemove.mockReset().mockResolvedValue({ items: [], total: 0 });
@@ -80,4 +82,13 @@ test("load failures offer retry and favorites use the product ID without removin
   await click(container.querySelector(".bag-favorite"));
   expect(mockToggle).toHaveBeenCalledWith("p1", expect.anything());
   expect(mockRemove).not.toHaveBeenCalled();
+});
+
+test("bag and recommendation hearts show the shared loading ring while their product is pending", async () => {
+  mockWishlistLoading = { p1: true };
+  await render();
+  expect(container.querySelectorAll(".wishlist-spinner")).toHaveLength(2);
+  expect(container.querySelector(".bag-favorite").disabled).toBe(true);
+  expect(container.querySelector(".bag-favorite").getAttribute("aria-busy")).toBe("true");
+  expect(container.querySelector(".bag-recommendation-favorite").disabled).toBe(true);
 });

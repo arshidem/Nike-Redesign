@@ -1,3 +1,4 @@
+import WishlistSpinner from "../../../shared/ui/WishlistSpinner";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
@@ -325,11 +326,12 @@ export default function Cart() {
                         aria-label={`${saved ? "Remove from" : "Add to"} wishlist: ${item.name}`}
                         aria-pressed={saved}
                         disabled={wishlistLoading[productId(item)]}
+                        aria-busy={Boolean(wishlistLoading[productId(item)])}
                         onClick={(event) =>
                           handleWishlistToggle(productId(item), event)
                         }
                       >
-                        <HeartIcon />
+                        {wishlistLoading[productId(item)] ? <WishlistSpinner /> : <HeartIcon />}
                       </button>
                     </li>
                   );
@@ -475,11 +477,12 @@ export default function Cart() {
                         aria-label={`${isInWishlist(product._id) ? "Remove from" : "Add to"} wishlist: ${product.name}`}
                         aria-pressed={isInWishlist(product._id)}
                         disabled={wishlistLoading[product._id]}
+                        aria-busy={Boolean(wishlistLoading[product._id])}
                         onClick={(event) =>
                           handleWishlistToggle(product._id, event)
                         }
                       >
-                        <HeartIcon />
+                        {wishlistLoading[product._id] ? <WishlistSpinner /> : <HeartIcon />}
                       </button>
                     </article>
                   ))}

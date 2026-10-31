@@ -1,3 +1,4 @@
+import WishlistSpinner from "../../../shared/ui/WishlistSpinner";
 import React, { useEffect, useMemo, useRef, useState, useId } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -859,11 +860,12 @@ export default function ProductListPage() {
                       aria-label={`${isInWishlist(product._id) ? "Remove from" : "Add to"} wishlist: ${product.name}`}
                       aria-pressed={isInWishlist(product._id)}
                       disabled={wishlistLoading[product._id]}
+                      aria-busy={Boolean(wishlistLoading[product._id])}
                       onClick={(event) =>
                         handleWishlistToggle(product._id, event)
                       }
                     >
-                      <HeartIcon />
+                      {wishlistLoading[product._id] ? <WishlistSpinner /> : <HeartIcon />}
                     </button>
                   </article>
                 );
