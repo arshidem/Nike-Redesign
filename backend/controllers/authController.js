@@ -17,7 +17,16 @@ const sendOTP = async (email, otp) => {
       html: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
     });
   } catch (error) {
-    console.error("Failed to send OTP:", error.message);
+    let details = error?.response?.body ?? error?.body;
+    if (typeof details === "string") {
+      try { details = JSON.parse(details); } catch { details = undefined; }
+    }
+    // Log only provider diagnostics, never the request headers, API key or OTP.
+    console.error("Failed to send OTP:", {
+      status: error?.response?.statusCode ?? error?.response?.status ?? error?.statusCode,
+      code: details?.code ?? error?.code,
+      message: details?.message ?? error?.message ?? "Unknown email provider error",
+    });
     throw new Error("OTP sending failed");
   }
 };
