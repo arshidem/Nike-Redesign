@@ -9,6 +9,9 @@ import {
   XMarkIcon,
   ArrowUpRightIcon,
   UserIcon,
+  ChevronRightIcon,
+  CubeIcon,
+  ComputerDesktopIcon,
 } from "@heroicons/react/24/outline";
 import { useAppContext } from "../../../context/AppContext";
 import Search from "./Search";
@@ -28,14 +31,8 @@ const menus = [
     label,
     to: `/products?gender=${label.toLowerCase()}&category=shoes`,
     items: [
-      [
-        "Shoes",
-        `/products?gender=${label.toLowerCase()}&category=shoes`,
-      ],
-      [
-        "Clothing",
-        `/products?gender=${label.toLowerCase()}&category=clothing`,
-      ],
+      ["Shoes", `/products?gender=${label.toLowerCase()}&category=shoes`],
+      ["Clothing", `/products?gender=${label.toLowerCase()}&category=clothing`],
       [
         "New arrivals",
         `/products?gender=${label.toLowerCase()}&newArrival=true`,
@@ -70,8 +67,14 @@ export function Navbar() {
   useEffect(() => {
     const update = (event) => {
       try {
-        const items = event?.detail?.items ?? JSON.parse(localStorage.getItem("guest_cart") || "[]");
-        setBagItemCount(Array.isArray(items) ? items.reduce((sum, item) => sum + Number(item.quantity || 0), 0) : 0);
+        const items =
+          event?.detail?.items ??
+          JSON.parse(localStorage.getItem("guest_cart") || "[]");
+        setBagItemCount(
+          Array.isArray(items)
+            ? items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
+            : 0,
+        );
       } catch {
         setBagItemCount(0);
       }
@@ -86,10 +89,15 @@ export function Navbar() {
   }, []);
   useEffect(() => {
     if (!menuOpen) return;
+    const resize = () => {
+      if (window.innerWidth > 900) setMenuOpen(false);
+    };
+    window.addEventListener("resize", resize);
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previous;
+      window.removeEventListener("resize", resize);
     };
   }, [menuOpen]);
   useEffect(() => {
@@ -119,7 +127,10 @@ export function Navbar() {
     }
   };
   return (
-    <header className="store-header" ref={header}>
+    <header
+      className={`store-header${menuOpen ? " store-menu-open" : ""}`}
+      ref={header}
+    >
       <a className="store-skip" href="#main-content">
         Skip to content
       </a>
@@ -131,7 +142,8 @@ export function Navbar() {
               <Link to="/account">
                 Hi, {user.name?.split(" ")[0] || "there"}
               </Link>
-              {user.role === "admin" && <Link to="/admin">Dashboard</Link>}<button onClick={signOut}>Sign out</button>
+              {user.role === "admin" && <Link to="/admin">Dashboard</Link>}
+              <button onClick={signOut}>Sign out</button>
             </>
           ) : (
             <Link to="/signin">
@@ -201,28 +213,93 @@ export function Navbar() {
           id="store-mobile-nav"
           aria-label="Mobile navigation"
         >
-          {menus.map((menu) => (
-            <details key={menu.label}>
-              <summary>{menu.label}</summary>
-              {menu.items.map(([label, to]) => (
-                <Link key={to} to={to}>
-                  {label}
-                  <ArrowUpRightIcon />
-                </Link>
-              ))}
-            </details>
-          ))}
-          <Link to="/wishlist">
-            <HeartIcon /> Your favourites
-          </Link>
-          <Link to={user ? "/account" : "/signin"}>
-            <UserIcon />
-            {user ? "Your account" : "Join us / Sign in"}
-          </Link>
-          <Link to="/orders">
-            Your orders <ArrowUpRightIcon />
-          </Link>
-          {user?.role === "admin" && <Link to="/admin">Admin dashboard</Link>}
+          <div className="store-menu-categories">
+            {menus.map((menu, index) => (
+              <details
+                key={menu.label}
+                className={`store-menu-category store-menu-category-${index}`}
+              >
+                <summary>
+                  <span className="store-menu-card-copy">
+                    <strong>{menu.label}</strong>
+                    <span>
+                      {index === 0 ? (
+                        "Latest drops, stories and more"
+                      ) : index === 4 ? (
+                        <mark>Up to 70% off</mark>
+                      ) : index === 3 ? (
+                        "Shoes, apparel and more"
+                      ) : (
+                        "Shoes, apparel and accessories"
+                      )}
+                    </span>
+                  </span>
+                  {index === 0 ? (
+                    <img
+                      className="store-menu-shoe"
+                      src="/assets/editorial/dunk.png"
+                      alt=""
+                    />
+                  ) : index === 4 ? (
+                    <span className="store-menu-sale-art" aria-hidden="true">
+                      <span />
+                      <img src="/assets/logo/nikeLogo.png" alt="" />
+                    </span>
+                  ) : (
+                    <span
+                      className={`store-menu-person store-menu-person-${index}`}
+                      aria-hidden="true"
+                    />
+                  )}
+                  <ChevronRightIcon className="store-menu-chevron" />
+                </summary>
+                <div className="store-menu-subcategories">
+                  <Link
+                    to={
+                      index === 0
+                        ? "/products"
+                        : index > 0 && index < 4
+                          ? `/products?gender=${menu.label.toLowerCase()}`
+                          : menu.to
+                    }
+                  >
+                    Shop all {menu.label.toLowerCase()}
+                    <ArrowUpRightIcon />
+                  </Link>
+                  {menu.items.map(([label, to]) => (
+                    <Link key={to} to={to}>
+                      {label}
+                      <ArrowUpRightIcon />
+                    </Link>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+          <div className="store-menu-account-links">
+            <Link to="/wishlist">
+              <HeartIcon />
+              <span>Your favourites</span>
+              <ChevronRightIcon />
+            </Link>
+            <Link to={user ? "/account" : "/signin"}>
+              <UserIcon />
+              <span>{user ? "Your account" : "Join us / Sign in"}</span>
+              <ChevronRightIcon />
+            </Link>
+            <Link to="/orders">
+              <CubeIcon />
+              <span>Your orders</span>
+              <ArrowUpRightIcon />
+            </Link>
+            {user?.role === "admin" && (
+              <Link to="/admin">
+                <ComputerDesktopIcon />
+                <span>Admin dashboard</span>
+                <ChevronRightIcon />
+              </Link>
+            )}
+          </div>
         </nav>
       )}
       {searchOpen && <Search isOpen onClose={() => setSearchOpen(false)} />}
