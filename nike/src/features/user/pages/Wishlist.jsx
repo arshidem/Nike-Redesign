@@ -135,7 +135,7 @@ const Wishlist = () => {
   }
 
   // Loading skeleton
-  if (loading) return <div className="design-page design-customer design-wishlist"><ModelSkeleton /></div>;
+  if (loading) return <div className="design-page design-customer design-wishlist"><BackBar /><ModelSkeleton /></div>;
 
   return (
     <div className="design-page design-customer design-wishlist p-6">
