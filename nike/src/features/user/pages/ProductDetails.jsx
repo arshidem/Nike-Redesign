@@ -226,6 +226,17 @@ const ProductDetails = () => {
     setCartItem(cartMap[key] || null);
   }, [selectedSize, selectedVariantIndex, product, cartMap]);
 
+  useEffect(() => {
+    const sync = (event) => {
+      if (!event.detail?.items) return;
+      const map = {};
+      event.detail.items.forEach(item => { map[`${item.productId}-${item.variantId}-${item.size}`] = item; });
+      setCartMap(map);
+    };
+    window.addEventListener("cartUpdated", sync);
+    return () => window.removeEventListener("cartUpdated", sync);
+  }, []);
+
   const handleSizeSelect = (size) => {
     setSelectedSize(size);
   };
@@ -274,15 +285,7 @@ const ProductDetails = () => {
         setCartMap((prev) => ({ ...prev, [key]: item }));
         setCartItem(item);
 
-        toast.success(
-          <div className="flex items-center gap-2">
-            <img src={imageUrl} className="w-10 h-10 object-cover rounded" />
-            <div>
-              <p className="font-medium">{product.name}</p>
-              <p className="text-sm">Size: {selectedSize}</p>
-            </div>
-          </div>,
-        );
+
       }
     } catch (err) {
       toast.error("Failed to add to cart");

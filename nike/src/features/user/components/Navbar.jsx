@@ -67,10 +67,10 @@ export function Navbar() {
     });
   }, [location.pathname, location.search]);
   useEffect(() => {
-    const update = () => {
+    const update = (event) => {
       try {
-        const items = JSON.parse(localStorage.getItem("bagItems") || "[]");
-        setBagItemCount(Array.isArray(items) ? items.length : 0);
+        const items = event?.detail?.items ?? JSON.parse(localStorage.getItem("guest_cart") || "[]");
+        setBagItemCount(Array.isArray(items) ? items.reduce((sum, item) => sum + Number(item.quantity || 0), 0) : 0);
       } catch {
         setBagItemCount(0);
       }
