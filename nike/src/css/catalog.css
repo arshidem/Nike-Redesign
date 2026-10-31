@@ -4,7 +4,7 @@
   color: #151711;
 }
 .catalog-header {
-  height: 86px;
+  height: var(--store-appbar-height, 56px);
   padding: 0 var(--store-page-inset);
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -586,7 +586,7 @@
 }
 @media (max-width: 900px) {
   .catalog-header {
-    height: 76px;
+    height: var(--store-appbar-height, 56px);
   }
   .catalog-hero {
     min-height: 280px;
@@ -609,7 +609,7 @@
 }
 @media (max-width: 600px) {
   .catalog-header {
-    height: 76px;
+    height: var(--store-appbar-height, 56px);
     padding-inline: 5%;
   }
   .catalog-back {
