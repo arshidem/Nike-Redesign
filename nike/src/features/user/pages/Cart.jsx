@@ -153,7 +153,7 @@ export default function Cart() {
         : subtotal + tax - discount),
   );
   const hasUnavailable = items.some(
-    (item) => item.stockAvailable === false || item.stock === 0,
+    (item) => item.stockAvailable === false || item.stock === 0 || (item.stock != null && item.quantity > item.stock),
   );
   const productRoute = (item) => {
     const match = recommendations.products.find(
@@ -260,6 +260,7 @@ export default function Cart() {
                               Number(item.price || 0) * item.quantity,
                           )}
                         </p>
+                        {stockKnown && item.quantity > item.stock && item.stock > 0 && <p className="bag-stock-warning">Only {item.stock} available. Reduce quantity to continue.</p>}
                         {unavailable && (
                           <p className="bag-stock-warning">
                             Currently unavailable. Please remove this item.
@@ -290,8 +291,7 @@ export default function Cart() {
                               aria-label={`Decrease quantity of ${item.name}`}
                               disabled={
                                 busyId !== null ||
-                                item.quantity <= 1 ||
-                                unavailable
+                                item.quantity <= 1
                               }
                               onClick={() =>
                                 mutate(id, () =>
@@ -420,7 +420,7 @@ export default function Cart() {
               )}
               {hasUnavailable && (
                 <p className="bag-stock-warning">
-                  Remove unavailable items to continue.
+                  Reduce quantities or remove unavailable items to continue.
                 </p>
               )}
               <button

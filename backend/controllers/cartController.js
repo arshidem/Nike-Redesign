@@ -1,3 +1,4 @@
+const { refreshCartStock } = require("../utils/cartStock");
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const Coupon = require("../models/Coupon"); // import your Coupon model
@@ -26,6 +27,12 @@ const cart = await Cart.findOne({ userId }).lean();
       return res.status(200).json({ items: [], total: 0, shippingFee: 0 });
     }
 
+    cart.items = await refreshCartStock(cart.items);
+    // Persist only stock fields, so a concurrent quantity change is not overwritten.
+    if (cart.items.length) await Cart.bulkWrite(cart.items.map(item => ({ updateOne: {
+      filter: { _id: cart._id, userId, "items._id": item._id },
+      update: { $set: { "items.$.stock": item.stock, "items.$.stockAvailable": item.stockAvailable } }
+    } })));
     res.status(200).json(cart);
   } catch (err) {
     console.error("Get cart error:", err);
@@ -79,6 +86,8 @@ exports.addToCart = async (req, res) => {
       if (newQty > stock) {
         return res.status(400).json({ error: `Only ${stock} available` });
       }
+      existingItem.stock = stock;
+      existingItem.stockAvailable = stock > 0;
       existingItem.quantity = newQty;
       existingItem.total = newQty * price;
     } else {
@@ -120,22 +129,13 @@ exports.updateItemQuantity = async (req, res) => {
     const item = cart.items.id(itemId);
     if (!item) return res.status(404).json({ error: "Item not found" });
 
-    const product = await Product.findById(item.productId);
-    if (!product) return res.status(404).json({ error: "Product not found" });
-
-    const variant = product.variants.id(item.variantId);
-    if (!variant) return res.status(404).json({ error: "Variant not found" });
-
-    const sizeObj = variant.sizes.find(s => s.size === item.size);
-    if (!sizeObj) return res.status(404).json({ error: "Size not found" });
-
-    const realStock = sizeObj.stock;
-
-    if (quantity > realStock) {
-      return res.status(400).json({
-        error: `Only ${realStock} item${realStock > 1 ? "s" : ""} left in stock`,
-        available: realStock
-      });
+    if (!Number.isSafeInteger(quantity) || quantity < 1) {
+      return res.status(400).json({ error: "Quantity must be a positive whole number" });
+    }
+    // Use the saved inventory snapshot. Decreases remain possible after stock falls.
+    const realStock = Number(item.stock || 0);
+    if (quantity > item.quantity && quantity > realStock) {
+      return res.status(400).json({ error: `Only ${realStock} available`, available: realStock });
     }
 
     item.quantity = quantity;
@@ -288,5 +288,19 @@ exports.syncCart = async (req, res) => {
   } catch (error) {
     console.error("Guest bag sync failed:", error.message);
     return res.status(500).json({ error: "Cart sync failed" });
+  }
+};
+
+// Guest inventory refresh uses the same batch lookup without trusting guest stock values.
+exports.getGuestStock = async (req, res) => {
+  const items = req.body.items;
+  if (!Array.isArray(items) || items.length > 100 || items.some(item =>
+    !item || !/^[a-f0-9]{24}$/i.test(item.productId) || !/^[a-f0-9]{24}$/i.test(item.variantId) || typeof item.size !== "string" || item.size.length > 80
+  )) return res.status(400).json({ error: "Invalid bag items" });
+  try {
+    const stock = await refreshCartStock(items.map(({ productId, variantId, size }) => ({ productId, variantId, size })));
+    return res.json({ items: stock });
+  } catch (error) {
+    return res.status(500).json({ error: "Could not check bag availability" });
   }
 };

@@ -490,3 +490,12 @@ test("guest sync rejects unavailable stock without saving an invalid cart", asyn
   assert.equal((await app.sync()).status, 400);
   assert.equal(app.saved, undefined);
 });
+
+test("payment initiation checks current stock before creating any gateway order", async () => {
+  const app = adapter();
+  app.products[0].variants[1].sizes[0].stock = 0;
+  const result = await app.initiate();
+  assert.equal(result.status, 409);
+  assert.equal(app.stats.created, 0);
+  assert.equal(app.checkouts.length, 0);
+});

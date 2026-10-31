@@ -39,7 +39,15 @@ const useCartServices = () => {
       return res.data;
     } else {
       const items = getLocalCart();
-      return { items, total: calculateTotal(items) };
+      if (!items.length) return { items, total: 0 };
+      const response = await api.post("/stock", { items: items.map(({ productId, variantId, size }) => ({ productId, variantId, size })) });
+      const refreshed = items.map(item => {
+        const snapshot = response.data.items.find(entry => entry.productId === item.productId && entry.variantId === item.variantId && entry.size === item.size);
+        if (!snapshot) throw new Error("Could not check bag availability");
+        return { ...item, stock: snapshot.stock, stockAvailable: snapshot.stockAvailable };
+      });
+      setLocalCart(refreshed);
+      return { items: refreshed, total: calculateTotal(refreshed) };
     }
   };
 
@@ -77,6 +85,7 @@ const useCartServices = () => {
   };
 
   const updateItemQuantity = async (itemId, quantity) => {
+    if (!Number.isSafeInteger(quantity) || quantity < 1) throw new Error("Quantity must be a positive whole number");
     if (isAuthenticated) {
          try {
       const res = await api.put(`/update/${itemId}`, { quantity });
@@ -91,6 +100,7 @@ const useCartServices = () => {
         const matchKey =
           item.productId + item.variantId + item.size;
         const isMatch = matchKey === itemId;
+        if (isMatch && quantity > item.quantity && quantity > Number(item.stock || 0)) throw new Error(`Only ${item.stock || 0} available`);
         return isMatch
           ? { ...item, quantity, total: item.price * quantity }
           : item;

@@ -174,7 +174,7 @@ export default function Checkout() {
     countries.find((country) => country.name === form.country)?.isoCode || "IN";
   const states = State.getStatesOfCountry(countryCode);
   const unavailable = items.some(
-    (item) => item.stockAvailable === false || item.stock === 0,
+    (item) => item.stockAvailable === false || item.stock === 0 || (item.stock != null && item.quantity > item.stock),
   );
 
   const change = (event) => {
@@ -298,6 +298,11 @@ export default function Checkout() {
     receivedPayment.current = false;
     const address = addressPayload(form);
     try {
+      const refreshed = await getCart();
+      setCart(refreshed);
+      if (!refreshed.items?.length || refreshed.items.some(item => item.stockAvailable === false || item.stock === 0 || (item.stock != null && item.quantity > item.stock))) {
+        throw new Error("Stock changed. Reduce quantities or remove unavailable items before paying.");
+      }
       if (!(await loadScript("https://checkout.razorpay.com/v1/checkout.js")))
         throw new Error(
           "The payment window couldn’t load. Check your connection and try again.",
@@ -676,6 +681,7 @@ export default function Checkout() {
                       {item.color ? ` | ${item.color}` : ""}
                     </p>
                     <p>Size: {item.size}</p>
+                    {item.stock != null && item.quantity > item.stock && <p role="status">Only {item.stock} available. Reduce quantity or remove this item.</p>}
                   </div>
                   <div className="checkout-item-actions">
                     <div className="checkout-quantity">
@@ -805,6 +811,7 @@ export default function Checkout() {
               {paymentError}
             </p>
           )}
+          {unavailable && !pendingPayment && <p role="status">Reduce quantities or remove unavailable items to continue.</p>}
           <button
             className="checkout-pay"
             aria-label={
