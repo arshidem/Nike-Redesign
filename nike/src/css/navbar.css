@@ -5,14 +5,14 @@
   color: #111;
 }
 .store-utility {
-  min-height: 34px;
-  height: auto;
+  min-height: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: #111;
   color: #fff;
-  padding: 8px var(--store-page-inset);
+  padding: 4px var(--store-page-inset);
   font-size: 10px;
   letter-spacing: 0.12em;
   gap: 16px;
@@ -32,7 +32,7 @@
   height: 12px;
 }
 .store-nav {
-  height: 88px;
+  height: var(--store-appbar-height, 56px);
   padding: 0 var(--store-page-inset);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -79,7 +79,7 @@
   font-weight: 650;
   cursor: pointer;
   list-style: none;
-  height: 88px;
+  height: var(--store-appbar-height, 56px);
   display: flex;
   align-items: center;
 }
@@ -211,13 +211,13 @@
 @media (max-width: 900px) {
   .store-utility {
     font-size: 10px;
-    height: 30px;
-    min-height: 30px;
+    height: 24px;
+    min-height: 24px;
     padding-block: 0;
     letter-spacing: 0.06em;
   }
   .store-nav {
-    height: 70px;
+    height: var(--store-appbar-height, 56px);
     padding: 0 var(--store-page-inset);
     grid-template-columns: minmax(0, 1fr) auto;
   }
@@ -238,7 +238,7 @@
     flex-direction: column;
     gap: 8px;
     position: fixed;
-    top: 100px;
+    top: calc(var(--store-appbar-height, 56px) + 24px);
     bottom: 0;
     left: 0;
     right: 0;
