@@ -1,3 +1,4 @@
+import WishlistSpinner from "../../../shared/ui/WishlistSpinner";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
@@ -637,10 +638,11 @@ const ProductDetails = () => {
                 }
                 aria-pressed={isInWishlist}
                 disabled={wishlistLoading}
+                aria-busy={Boolean(wishlistLoading)}
                 onClick={handleWishlistToggle}
               >
                 {wishlistLoading ? (
-                  <span className="pdp-spinner" />
+                  <WishlistSpinner />
                 ) : (
                   <HeartIcon />
                 )}
