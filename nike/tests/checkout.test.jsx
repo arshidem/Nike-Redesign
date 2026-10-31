@@ -285,3 +285,14 @@ test("address-save toggle and quantity edits retain the entered delivery details
   expect(mockUpdateAddress).not.toHaveBeenCalled();
   expect(mockAdd).not.toHaveBeenCalled();
 });
+
+test("pay refreshes live stock and blocks the gateway when inventory fell since entry", async () => {
+  await render();
+  mockGetCart.mockResolvedValue({items:[{...item,stock:0,stockAvailable:false}],shippingFee:150});
+  await click(container.querySelector('.checkout-pay'));
+  expect(mockGetCart).toHaveBeenCalledTimes(2);
+  expect(container.querySelector('.checkout-payment-error').textContent).toContain('Stock changed');
+  expect(mockInit).not.toHaveBeenCalled();
+  expect(loadScript).not.toHaveBeenCalled();
+  expect(container.querySelector('.checkout-pay').disabled).toBe(true);
+});
