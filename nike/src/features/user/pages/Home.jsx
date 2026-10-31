@@ -7,10 +7,10 @@ import "../../../css/home.css";
 
 const ShopByIcons = lazy(() => import("../components/ShopByIcons"));
 const categories = [
-  { title: "New Arrivals", to: "/new/arrivals?newArrival=true", image: "/assets/editorial/dunk.png" },
-  { title: "Best Sellers", to: "/new/best-sellers?bestSellers=true", image: "/assets/editorial/blazer-low.svg" },
-  { title: "Men", to: "/men/shoes?gender=men&category=shoes", image: "/assets/editorial/air.png" },
-  { title: "Women", to: "/women/shoes?gender=women&category=shoes", image: "/assets/editorial/blazer-mid.svg" },
+  { title: "New Arrivals", to: "/products?newArrival=true", image: "/assets/editorial/dunk.png" },
+  { title: "Best Sellers", to: "/products?bestSellers=true", image: "/assets/editorial/blazer-low.svg" },
+  { title: "Men", to: "/products?gender=men&category=shoes", image: "/assets/editorial/air.png" },
+  { title: "Women", to: "/products?gender=women&category=shoes", image: "/assets/editorial/blazer-mid.svg" },
 ];
 
 // These campaign picks link to existing products in the store catalog.
@@ -39,7 +39,7 @@ export default function Home() {
               Court roots. Street attitude. Find the pair that takes you from
               your first step to your next big thing.
             </p>
-            <Link className="store-button" to="/new/arrivals?newArrival=true">
+            <Link className="store-button" to="/products?newArrival=true">
               Explore new arrivals <ArrowUpRightIcon />
             </Link>
             <div className="campaign-footnote">
@@ -116,7 +116,7 @@ export default function Home() {
             </h2>
             <Link
               className="store-button store-button-light"
-              to="/new/trending?isTrending=true"
+              to="/products?isTrending=true"
             >
               Find your inspiration <ArrowUpRightIcon />
             </Link>
@@ -129,7 +129,7 @@ export default function Home() {
               <p className="store-eyebrow">IN THE ROTATION</p>
               <h2 id="home-edit-title">Your next obsession.</h2>
             </div>
-            <Link className="store-text-link" to="/new/best-sellers?bestSellers=true">
+            <Link className="store-text-link" to="/products?bestSellers=true">
               Explore the edit <ArrowUpRightIcon />
             </Link>
           </div>
