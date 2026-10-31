@@ -11,6 +11,10 @@ dotenv.config();
 // Initialize express app
 const app = express();
 
+// Render terminates requests at its reverse proxy. Trust the nearest hop
+// so rate limiting uses the forwarded client IP instead of the proxy IP.
+app.set("trust proxy", 1);
+
 // Connect to MongoDB
 connectDB();
 
