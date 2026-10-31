@@ -39,7 +39,7 @@ export const useWishlist = (user) => {
     }
 
     if (!user) {
-      navigate("/login");
+      navigate("/signin");
       return;
     }
 
