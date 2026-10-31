@@ -1,574 +1,842 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { XIcon, BackBar } from "../../../shared/ui/Icons";
-import useAddressService from "../services/addressServices";
-import useOrderServices from '/src/features/user/services/orderServices.jsx';
-import useCartServices from "../services/cartServices";
-// Remove the curly braces {}import useCartServices from "../services/cartServices";
-import { loadScript } from "../../../utils/loadRazorpayScript";
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Country, State } from "country-state-city";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  ShoppingBagIcon,
+  EnvelopeIcon,
+  UserIcon,
+  PhoneIcon,
+  MapPinIcon,
+  BuildingOfficeIcon,
+  TagIcon,
+  TrashIcon,
+  MinusIcon,
+  PlusIcon,
+  ChevronRightIcon,
+  CheckIcon,
+} from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
+import useAddressService from "../services/addressServices";
+import useOrderServices from "../services/orderServices";
+import useCartServices from "../services/cartServices";
+import { loadScript } from "../../../utils/loadRazorpayScript";
 import { useAppContext } from "../../../context/AppContext";
-import Footer from "../components/Footer";
 import { CheckoutSkeleton } from "../../../shared/ui/Skeleton";
+import "../../../css/checkout.css";
 
-const Checkout = () => {
+const blankAddress = {
+  fullName: "",
+  phone: "",
+  street: "",
+  street2: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  country: "India",
+};
+const currency = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
+const countries = Country.getAllCountries();
+const pendingKey = (id) => `nike_pending_payment_${id}`;
+const addressPayload = (form) => ({
+  fullName: form.fullName.trim(),
+  phone: form.phone.trim(),
+  street: [form.street.trim(), form.street2.trim()].filter(Boolean).join(", "),
+  city: form.city.trim(),
+  state: form.state.trim(),
+  postalCode: form.postalCode.trim(),
+  country: form.country,
+});
+
+function Field({ label, icon: Icon, error, className = "", children }) {
+  return (
+    <div className={`checkout-field-wrap ${className}`}>
+      <label className={`checkout-field ${error ? "has-error" : ""}`}>
+        {Icon && <Icon />}
+        <span>
+          <span className="checkout-field-label">{label}</span>
+          {children}
+        </span>
+      </label>
+      {error && (
+        <p className="checkout-field-error" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export default function Checkout() {
   const navigate = useNavigate();
-  const { user, backendUrl } = useAppContext();
-  const { getAddresses } = useAddressService();
+  const { user, token, backendUrl } = useAppContext();
+  const { getAddresses, addAddress, updateAddress } = useAddressService();
   const { initiatePayment, verifyPayment } = useOrderServices();
-  const { getCart, applyCoupon, removeCoupon, clearCart } = useCartServices();
-
+  const {
+    getCart,
+    applyCoupon,
+    removeCoupon,
+    updateItemQuantity,
+    removeItemFromCart,
+  } = useCartServices();
+  const [cart, setCart] = useState({ items: [] });
   const [addresses, setAddresses] = useState([]);
-  const [selectedAddress, setSelectedAddress] = useState(null);
-  const [addressErrors, setAddressErrors] = useState({});
-  const [addressForm, setAddressForm] = useState({
-    fullName: "",
-    phone: "",
-    street: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    country: "",
-  });
-  const [cart, setCart] = useState({ 
-    items: [], 
-    total: 0, 
-    subtotal: 0, 
-    shipping: 0, 
-    coupon: null 
-  });
+  const [selectedAddress, setSelectedAddress] = useState("");
+  const [form, setForm] = useState(blankAddress);
+  const [saveAddress, setSaveAddress] = useState(true);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [addressWarning, setAddressWarning] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [couponCode, setCouponCode] = useState("");
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [imageLoadingStates, setImageLoadingStates] = useState({});
-
-  // Format currency consistently
-  const formatCurrency = useCallback((amount) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0
-    }).format(amount);
-  }, []);
-
-  // Memoized cart calculations
-  const cartCalculations = useMemo(() => {
-    const subtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const shipping = cart.shippingFee || 1250;
-    const discount = cart.coupon?.discountAmount || 0;
-    const total = subtotal + shipping - discount;
-    
-    return { subtotal, shipping, discount, total };
-  }, [cart.items, cart.shippingFee, cart.coupon]);
-
-  const formatImageUrl = useCallback((imagePath) => {
-    if (!imagePath || typeof imagePath !== "string") return "/placeholder.jpg";
-    const cleanBackendUrl = backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl;
-    const match = imagePath.match(/uploads[\\/][\w\-.]+\.(jpg|jpeg|png|webp|avif)/i);
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return `${cleanBackendUrl}/${relativePath}`;
-  }, [backendUrl]);
-
-  const validateEmail = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
-  const validateAddress = useCallback(() => {
-    const errors = {};
-    if (!addressForm.fullName.trim()) errors.fullName = "Full name is required";
-    if (!addressForm.phone.trim()) errors.phone = "Phone is required";
-    if (!/^[0-9]{10,15}$/.test(addressForm.phone)) errors.phone = "Please enter a valid phone number";
-    if (!addressForm.street.trim()) errors.street = "Street is required";
-    if (!addressForm.city.trim()) errors.city = "City is required";
-    if (!addressForm.state.trim()) errors.state = "State is required";
-    if (!addressForm.postalCode.trim()) errors.postalCode = "Postal code is required";
-    if (!/^[0-9]{6}$/.test(addressForm.postalCode)) errors.postalCode = "Please enter a valid 6-digit postal code";
-    if (!addressForm.country.trim()) errors.country = "Country is required";
-    
-    setAddressErrors(errors);
-    return Object.keys(errors).length === 0;
-  }, [addressForm]);
+  const [busy, setBusy] = useState(null);
+  const [paymentError, setPaymentError] = useState("");
+  const [pendingPayment, setPendingPayment] = useState(null);
+  const lock = useRef(false);
+  const receivedPayment = useRef(false);
+  const savedFingerprint = useRef("");
+  const formElement = useRef(null);
 
   useEffect(() => {
-    let isMounted = true;
-    let paymentTimeout;
-    
-    const fetchData = async () => {
+    let active = true;
+    setLoading(true);
+    setLoadError(false);
+    setPendingPayment(null);
+    setAddressWarning(false);
+    const load = async () => {
       try {
-        const [addressData, cartData] = await Promise.all([
-          getAddresses(),
-          getCart()
+        const [bag, saved] = await Promise.all([
+          getCart(),
+          token
+            ? getAddresses().catch(() => {
+                if (active) setAddressWarning(true);
+                return [];
+              })
+            : Promise.resolve([]),
         ]);
-
-        if (isMounted) {
-          setAddresses(addressData);
-          const defaultAddress = addressData.find((a) => a.isDefault) || addressData[0];
-          setSelectedAddress(defaultAddress);
-          if (defaultAddress) setAddressForm({ ...defaultAddress });
-
-          setCart({
-            ...cartData,
-            subtotal: cartData.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-            shipping: cartData.shippingFee || 1250,
-          });
-
-          // Initialize image loading states
-          const initialLoadingStates = {};
-          cartData.items.forEach(item => {
-            initialLoadingStates[item._id || item.productId] = true;
-          });
-          setImageLoadingStates(initialLoadingStates);
+        if (!active) return;
+        if (!Array.isArray(bag?.items)) throw new Error("Invalid bag response");
+        setCart(bag);
+        const list = Array.isArray(saved) ? saved : [];
+        setAddresses(list);
+        const preferred = list.find((address) => address.isDefault) || list[0];
+        if (preferred) {
+          setSelectedAddress(preferred._id);
+          setForm({ ...blankAddress, ...preferred });
         }
-      } catch (error) {
-        toast.error(error.message || "Failed to load data");
+        if (user?._id) {
+          try {
+            const pending = JSON.parse(
+              sessionStorage.getItem(pendingKey(user._id)) || "null",
+            );
+            if (
+              pending?.razorpay_order_id &&
+              pending?.razorpay_payment_id &&
+              pending?.razorpay_signature
+            )
+              setPendingPayment(pending);
+          } catch {
+            /* Ignore malformed local recovery data. */
+          }
+        }
+      } catch {
+        if (active) setLoadError(true);
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (active) setLoading(false);
       }
     };
-
-    fetchData();
-
+    load();
     return () => {
-      isMounted = false;
-      clearTimeout(paymentTimeout);
+      active = false;
     };
-  }, [getAddresses, getCart]);
+  }, [backendUrl, token, user?._id, retry]);
 
-  useEffect(() => {
-    if (Object.keys(addressErrors).length > 0) {
-      validateAddress();
-    }
-  }, [addressForm, addressErrors, validateAddress]);
+  const items = cart.items || [];
+  const itemCount = items.reduce(
+    (sum, item) => sum + Number(item.quantity || 0),
+    0,
+  );
+  const subtotal =
+    items.reduce(
+      (sum, item) => sum + Math.round(Number(item.price) * 100) * item.quantity,
+      0,
+    ) / 100;
+  const shippingKnown = cart.shippingFee != null;
+  const shipping = Number(cart.shippingFee ?? 0),
+    tax = Number(cart.tax ?? 0);
+  const discount = cart.coupon?.applied
+    ? Number(cart.coupon.discountAmount || 0)
+    : 0;
+  const total = Math.round((subtotal + shipping + tax - discount) * 100) / 100;
+  const countryCode =
+    countries.find((country) => country.name === form.country)?.isoCode || "IN";
+  const states = State.getStatesOfCountry(countryCode);
+  const unavailable = items.some(
+    (item) => item.stockAvailable === false || item.stock === 0,
+  );
 
-  const handleAddressClick = (address) => {
-    setSelectedAddress(address);
-    setAddressForm({ ...address });
-    setAddressErrors({});
+  const change = (event) => {
+    const { name, value } = event.target;
+    setForm((previous) => ({
+      ...previous,
+      [name]: value,
+      ...(name === "country" ? { state: "" } : {}),
+    }));
+    setErrors((previous) => ({ ...previous, [name]: "" }));
   };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setAddressForm(prev => ({ ...prev, [name]: value }));
-    if (addressErrors[name]) {
-      setAddressErrors(prev => ({ ...prev, [name]: "" }));
+  const validate = () => {
+    const next = {};
+    for (const [key, text] of [
+      ["fullName", "Full name"],
+      ["phone", "Phone number"],
+      ["street", "Address"],
+      ["city", "City"],
+      ["state", "State"],
+      ["postalCode", "PIN / postal code"],
+      ["country", "Country"],
+    ])
+      if (!String(form[key]).trim()) next[key] = `${text} is required`;
+    if (form.phone && !/^\+?[\d\s()-]{10,20}$/.test(form.phone.trim()))
+      next.phone = "Enter a valid phone number";
+    if (form.country === "India" && !/^\d{6}$/.test(form.postalCode))
+      next.postalCode = "Enter a valid 6-digit PIN code";
+    setErrors(next);
+    if (Object.keys(next).length) {
+      requestAnimationFrame(() =>
+        formElement.current?.querySelector('[aria-invalid="true"]')?.focus(),
+      );
+      return false;
+    }
+    return true;
+  };
+  const imageUrl = (path) => {
+    if (!path || typeof path !== "string")
+      return "/assets/editorial/image-unavailable.svg";
+    if (/^https?:\/\//i.test(path)) return path;
+    const normalized = path.replace(/\\/g, "/");
+    const relative = normalized.includes("uploads/")
+      ? normalized.slice(normalized.indexOf("uploads/"))
+      : normalized.replace(/^\/+/, "");
+    return `${(backendUrl || "").replace(/\/$/, "")}/${relative}`;
+  };
+  const mutateCart = async (operation) => {
+    if (lock.current || pendingPayment) return;
+    lock.current = true;
+    setBusy("bag");
+    try {
+      const response = await operation();
+      const next = response?.cart ?? response;
+      if (response?.error || !Array.isArray(next?.items))
+        throw new Error(response?.error || "Could not update your bag");
+      setCart(next);
+      window.dispatchEvent(new Event("cartUpdated"));
+    } catch (error) {
+      setPaymentError(error.message || "Could not update your bag");
+    } finally {
+      lock.current = false;
+      setBusy(null);
     }
   };
-
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) {
-      toast.error("Please enter a coupon code");
+  const confirm = async (proof) => {
+    lock.current = true;
+    setBusy("confirming");
+    setPaymentError("");
+    try {
+      const result = await verifyPayment(proof);
+      if (!result?.success || !result.data?.success || !result.data?.order)
+        throw new Error(
+          result?.error ||
+            "Order confirmation is pending. Retry confirmation to check your existing payment.",
+        );
+      try {
+        sessionStorage.removeItem(pendingKey(user._id));
+      } catch {
+        /* Confirmation succeeded even when browser storage is unavailable. */
+      }
+      setPendingPayment(null);
+      window.dispatchEvent(new Event("cartUpdated"));
+      toast.success("Order confirmed. Thank you!");
+      navigate("/orders", { state: { order: result.data.order } });
+    } catch (error) {
+      setPaymentError(
+        error.message ||
+          "Confirmation is pending. Retry your existing payment.",
+      );
+    } finally {
+      lock.current = false;
+      setBusy(null);
+    }
+  };
+  const pay = async () => {
+    if (lock.current) return;
+    if (pendingPayment) {
+      await confirm(pendingPayment);
       return;
     }
-    
-    try {
-      const normalizedCouponCode = couponCode.trim().toUpperCase();
-      const result = await applyCoupon(normalizedCouponCode);
-      
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Coupon applied");
-        setCart(result.cart);
-        setCouponCode("");
-      }
-    } catch (error) {
-      toast.error(error.message || "Failed to apply coupon");
+    if (!token || !user?.email) {
+      navigate("/signin", { state: { returnTo: "/checkout" } });
+      return;
     }
-  };
-
-  const handleRemoveCoupon = async () => {
-    try {
-      const result = await removeCoupon();
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        setCart(result.cart);
-        toast.success("Coupon removed");
-      }
-    } catch (error) {
-      toast.error(error.message || "Failed to remove coupon");
+    if (!validate()) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+      setPaymentError(
+        "Your account needs a valid email address before checkout.",
+      );
+      return;
     }
-  };
-
-  const handleImageLoad = (itemId) => {
-    setImageLoadingStates(prev => ({ ...prev, [itemId]: false }));
-  };
-
-const handlePayment = async () => {
-  // Validate address
-  if (!validateAddress()) {
-    toast.error("Please fix all address errors before proceeding");
-    return;
-  }
-
-  // Validate email
-  if (!validateEmail(user?.email)) {
-    toast.error("Please enter a valid email address");
-    return;
-  }
-
-  // Check if cart is empty
-  if (cart.items.length === 0) {
-    toast.error("Your cart is empty");
-    return;
-  }
-
-  setIsPlacingOrder(true);
-  const paymentTimeout = setTimeout(() => {
-    toast.error("Payment is taking longer than expected. Please check your payment status.");
-    setIsPlacingOrder(false);
-  }, 30000);
-
-  try {
-    // Load Razorpay script
-    await loadScript("https://checkout.razorpay.com/v1/checkout.js");
-
-    // Prepare payment details
-    const receiptId = `rcpt_${Date.now()}`;
-const amountInPaise = Math.round(cartCalculations.total * 100);
-
-if (amountInPaise > 50000000) { // ₹5,00,000
-  toast.error("The order amount exceeds the allowed limit of ₹5,00,000");
-  setIsPlacingOrder(false);
-  return;
-}
-console.log("Cart Total ₹:", cartCalculations.total);
-
-console.log("Amount in Paise:", amountInPaise);
-
-
-    // 🔧 FIXED: Correctly call initiatePayment with 2 arguments
-    const paymentInit = await initiatePayment(amountInPaise, receiptId);
-
-    console.log("paymentInit response:", paymentInit);
-
-  const order = paymentInit?.data?.data?.order;
-
-if (!paymentInit?.success || !order) {
-  throw new Error(paymentInit?.error || "Payment initiation failed");
-}
-
-
-    const rzp = new window.Razorpay({
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-      amount: order.amount,
-      currency: order.currency || "INR",
-      name: "Nike Redesign",
-      description: "Order Payment",
-      order_id: order.id,
-      handler: async (response) => {
-        clearTimeout(paymentTimeout);
-        try {
-          const result = await verifyPayment({
+    if (!items.length || unavailable || !shippingKnown) {
+      setPaymentError(
+        "Refresh your bag to confirm availability and delivery charges.",
+      );
+      return;
+    }
+    lock.current = true;
+    setBusy("starting");
+    setPaymentError("");
+    receivedPayment.current = false;
+    const address = addressPayload(form);
+    try {
+      if (!(await loadScript("https://checkout.razorpay.com/v1/checkout.js")))
+        throw new Error(
+          "The payment window couldn’t load. Check your connection and try again.",
+        );
+      if (saveAddress && savedFingerprint.current !== JSON.stringify(address)) {
+        const existing = addresses.find(
+          (entry) => entry._id === selectedAddress,
+        );
+        const same =
+          existing &&
+          Object.entries(address).every(
+            ([key, value]) => existing[key] === value,
+          );
+        if (!same) {
+          try {
+            const saved = existing
+              ? await updateAddress(existing._id, address)
+              : await addAddress(address);
+            if (saved?._id) {
+              setSelectedAddress(saved._id);
+              setAddresses((previous) => [
+                ...previous.filter((entry) => entry._id !== saved._id),
+                saved,
+              ]);
+            }
+            savedFingerprint.current = JSON.stringify(address);
+          } catch {
+            toast.error(
+              "Your address couldn’t be saved to your account. It will still be used for this delivery.",
+            );
+          }
+        }
+      }
+      const initiated = await initiatePayment(
+        Math.round(total * 100),
+        `rcpt_${Date.now()}`,
+        { address },
+      );
+      const order = initiated?.data?.data?.order,
+        key = initiated?.data?.data?.keyId;
+      if (!initiated?.success || !initiated.data?.success || !order?.id || !key)
+        throw new Error(
+          initiated?.error ||
+            "Could not start payment. Please refresh checkout.",
+        );
+      if (order.amount !== Math.round(total * 100))
+        throw new Error("Your total changed. Refresh checkout before paying.");
+      const gateway = new window.Razorpay({
+        key,
+        amount: order.amount,
+        currency: order.currency || "INR",
+        name: "Nike Redesign",
+        description: "Your next move",
+        order_id: order.id,
+        prefill: {
+          name: address.fullName,
+          email: user.email,
+          contact: address.phone,
+        },
+        theme: { color: "#182011" },
+        handler: async (response) => {
+          if (receivedPayment.current) return;
+          receivedPayment.current = true;
+          const proof = {
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
-            amount: cartCalculations.total,
-            email: user.email,
-            items: cart.items.map(item => ({
-              product: item.productId || item.product,
-              quantity: item.quantity,
-              price: item.price,
-              size: item.size,
-              color:item.color,
-              title:item.name,
-              image:item.image,
-              variantId:item.variantId
-            })),
-            address: addressForm,
-            userId: user._id,
-            couponCode: cart?.coupon?.code || null
-          });
-
-          await clearCart();
-          setCart({ items: [], total: 0, subtotal: 0, shipping: 0, coupon: null });
-          setAddressForm({
-            fullName: "",
-            phone: "",
-            street: "",
-            city: "",
-            state: "",
-            postalCode: "",
-            country: "",
-          });
-
-          toast.success(
-            <div>
-              <p>Order placed successfully!</p>
-              <p>A confirmation has been sent to {user.email}</p>
-            </div>,
-            { duration: 5000 }
+          };
+          setPendingPayment(proof);
+          try {
+            sessionStorage.setItem(pendingKey(user._id), JSON.stringify(proof));
+          } catch {
+            /* Keep recovery available in component state. */
+          }
+          await confirm(proof);
+        },
+        modal: {
+          ondismiss: () => {
+            if (!receivedPayment.current) {
+              lock.current = false;
+              setBusy(null);
+            }
+          },
+        },
+      });
+      gateway.on("payment.failed", (response) => {
+        if (!receivedPayment.current) {
+          setPaymentError(
+            response?.error?.description || "Payment failed. Please try again.",
           );
-
-          navigate("/orders", { state: { order: result.order } });
-        } catch (err) {
-          toast.error(err.message || "Payment verification failed");
-        } finally {
-          setIsPlacingOrder(false);
+          lock.current = false;
+          setBusy(null);
         }
-      },
-      theme: { color: "#000000" },
-      modal: {
-        ondismiss: () => {
-          clearTimeout(paymentTimeout);
-          setIsPlacingOrder(false);
-          toast.info("Payment window closed");
+      });
+      setBusy("gateway");
+      gateway.open();
+    } catch (error) {
+      setPaymentError(error.message || "Could not open payment");
+      lock.current = false;
+      setBusy(null);
+    }
+  };
+  const input = (name, autoComplete, extra = {}) => (
+    <input
+      name={name}
+      autoComplete={autoComplete}
+      value={form[name] || ""}
+      onChange={change}
+      aria-invalid={Boolean(errors[name])}
+      disabled={Boolean(busy) || Boolean(pendingPayment)}
+      {...extra}
+    />
+  );
+  const header = (
+    <header className="checkout-header">
+      <button
+        onClick={() =>
+          window.history.state?.idx > 0 ? navigate(-1) : navigate("/bag")
         }
-      }
-    });
-
-    rzp.on('payment.failed', (response) => {
-      clearTimeout(paymentTimeout);
-      toast.error(`Payment failed: ${response.error.description}`);
-      setIsPlacingOrder(false);
-    });
-
-    rzp.open();
-  } catch (error) {
-    clearTimeout(paymentTimeout);
-    console.error("Payment error:", error);
-    toast.error(error.message || "Payment initiation failed");
-    setIsPlacingOrder(false);
-  }
-};
-
-  if (isLoading) {
+      >
+        <ArrowLeftIcon />
+        <span>Back</span>
+      </button>
+      <Link to="/home" aria-label="Nike home" className="checkout-brand">
+        <img src="/assets/logo/nikeLogo.png" alt="" />
+        <span>NIKE</span>
+      </Link>
+      <Link
+        to="/bag"
+        className="checkout-bag"
+        aria-label={`Shopping bag, ${itemCount} items`}
+      >
+        <ShoppingBagIcon />
+        {itemCount > 0 && <span>{itemCount}</span>}
+      </Link>
+    </header>
+  );
+  if (loading)
     return (
-      <div className="design-page design-customer design-checkout"><CheckoutSkeleton/></div>
-    );
-  }
-
-  if (cart.items.length === 0) {
-    return (
-      <div className="design-page design-customer design-checkout"><>
-          <BackBar/>
-      <div className="max-w-5xl mx-auto p-4 mt-12">
-        <div className="text-center py-12">
-          <h2 data-section="YOUR EVERYDAY / NIKE" className="text-xl font-semibold mb-2">Your cart is empty</h2>
-          <button 
-            onClick={() => navigate('/products')}
-            className="mt-4 bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition"
-          >
-            Continue Shopping
-          </button>
-        </div>
+      <div className="checkout-shell">
+        {header}
+        <main className="checkout-loading">
+          <CheckoutSkeleton />
+        </main>
       </div>
-      </></div>
     );
-  }
+  if (loadError)
+    return (
+      <div className="checkout-shell">
+        {header}
+        <main className="checkout-empty" role="alert">
+          <h1>Let’s get your order ready.</h1>
+          <p>Checkout couldn’t load. Your bag is unchanged.</p>
+          <button
+            className="store-button"
+            onClick={() => setRetry((value) => value + 1)}
+          >
+            Try again <ArrowRightIcon />
+          </button>
+        </main>
+      </div>
+    );
+  if (!items.length && !pendingPayment)
+    return (
+      <div className="checkout-shell">
+        {header}
+        <main className="checkout-empty">
+          <h1>Your bag is empty.</h1>
+          <p>Find your next favourite before checking out.</p>
+          <Link className="store-button" to="/products">
+            Explore the collection <ArrowRightIcon />
+          </Link>
+        </main>
+      </div>
+    );
 
   return (
-    <div className="design-page design-customer design-checkout"><>
-    <BackBar/>
-    <div className="commerce-page checkout-page max-w-5xl mx-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-      
-      <div>
-        <h2 data-section="YOUR EVERYDAY / NIKE" className="text-xl font-semibold mb-4">Delivery Information</h2>
-        <input
-          type="email"
-          defaultValue={user?.email || ""}
-          placeholder="Email"
-          className="w-full border border-black px-4 py-2 mb-2 text-sm rounded"
-          disabled
-        />
-        <p className="text-xs text-gray-500 mb-4">
-          A confirmation email will be sent after checkout.
-        </p>
-
-        {addresses.length > 0 && (
-          <>
-            <label className="block text-sm font-medium mb-1">Select Delivery Address</label>
-            <div className="space-y-2 mb-4">
-              {addresses.map((address) => (
-                <div
-                  key={address._id}
-                  onClick={() => handleAddressClick(address)}
-                  className={`p-3 border rounded cursor-pointer text-sm ${
-                    selectedAddress?._id === address._id ? "border-black" : "border-gray-300"
-                  }`}
-                >
-                  <p className="font-medium">{address.fullName}</p>
-                  <p>{address.street}, {address.city}, {address.state} - {address.postalCode}</p>
-                  <p>{address.country} | {address.phone}</p>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        <h3 className="text-sm font-medium mb-2">
-          {addresses.length > 0 ? "Edit Address" : "Add Delivery Address"}
-        </h3>
-
-    {[
-  ["fullName", "phone"],
-  ["street"],
-  ["city", "state"],
-  ["postalCode", "country"]
-].map((row, rowIndex) => (
-  <div key={`row-${rowIndex}`} className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
-    {row.map((field) => (
-      <div 
-        key={field} 
-        className={field === "street" ? "sm:col-span-2" : ""}
-      >
-        <input
-          name={field}
-          value={addressForm[field] || ""}
-          onChange={handleInputChange}
-          placeholder={field.replace(/([A-Z])/g, " $1").replace(/^./, str => str.toUpperCase())}
-          className={`w-full border px-4 py-2 rounded text-sm ${
-            addressErrors[field] ? "border-red-500" : "border-black"
-          }`}
-        />
-        {addressErrors[field] && (
-          <p className="text-xs text-red-500 mt-1">{addressErrors[field]}</p>
-        )}
-      </div>
-    ))}
-  </div>
-))}
-      </div>
-
-      {/* RIGHT - Summary */}
-      <div className="bg-white border rounded-lg p-6 shadow-sm">
-        <h3 className="text-lg font-semibold mb-4">Review your cart</h3>
-
-        <div className="max-h-96 overflow-y-auto pr-2">
-          {cart.items.map((item) => (
-            <div key={item._id || item.productId} className="flex gap-4 mb-4">
-              <div className="relative">
-                <img
-                  src={formatImageUrl(item.image)}
-                  alt={item.name}
-                  className={`w-20 h-20 border rounded-md object-cover ${
-                    imageLoadingStates[item._id || item.productId] ? 'bg-gray-200' : ''
-                  }`}
-                  onLoad={() => handleImageLoad(item._id || item.productId)}
-                  onError={(e) => {
-                    e.target.src = "/placeholder.jpg";
-                    handleImageLoad(item._id || item.productId);
-                  }}
-                />
-                {imageLoadingStates[item._id || item.productId] && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-gray-400"></div>
-                  </div>
-                )}
-              </div>
-              <div className="text-sm text-gray-800 flex-1">
-                <p className="font-medium">{item.name}</p>
-                <p className="text-gray-600">Qty: {item.quantity}</p>
-                {item.size && <p className="text-gray-600">Size: {item.size}</p>}
-                <p className="font-semibold mt-1">{formatCurrency(item.price * item.quantity)}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="space-y-2 text-sm mt-4 border-t pt-4">
-          <div className="flex justify-between">
-            <span>Subtotal</span>
-            <span>{formatCurrency(cartCalculations.subtotal)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Shipping</span>
-            <span>{formatCurrency(cartCalculations.shipping)}</span>
-          </div>
-          {cart?.coupon?.applied && (
-            <div className="flex justify-between text-green-600">
-              <span>Discount ({cart.coupon.code})</span>
-              <span>-{formatCurrency(cartCalculations.discount)}</span>
-            </div>
+    <div className="checkout-shell">
+      {header}
+      <main className="checkout-main">
+        <section
+          className="checkout-delivery"
+          ref={formElement}
+          aria-labelledby="checkout-delivery-title"
+        >
+          <p className="store-eyebrow">DELIVERY</p>
+          <h1 id="checkout-delivery-title">Delivery Information.</h1>
+          <p className="checkout-intro">
+            Enter your details to get your order.
+          </p>
+          {!token && (
+            <p className="checkout-notice">
+              <Link to="/signin" state={{ returnTo: "/checkout" }}>
+                Sign in
+              </Link>{" "}
+              to confirm your email and continue to payment.
+            </p>
           )}
-          <hr className="my-2" />
-          <div className="flex justify-between font-semibold text-base">
-            <span>Total</span>
-            <span>{formatCurrency(cartCalculations.total)}</span>
-          </div>
-        </div>
-
-        {/* Coupon */}
-        <div className="mt-4">
-          <label htmlFor="coupon" className="text-sm font-medium block mb-1">
-            Discount code
-          </label>
-          <div className="flex gap-2">
-            <input
-              id="coupon"
-              type="text"
-              placeholder="Enter code"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value)}
-              disabled={cart?.coupon?.applied}
-              maxLength={20}
-              className="flex-1 border border-black px-4 py-2 rounded-full text-sm"
-            />
-            {cart?.coupon?.applied ? (
-              <button
-                onClick={handleRemoveCoupon}
-                className="px-2 py-2 text-red-600 border border-red-500 rounded-full hover:bg-red-50 transition"
-                aria-label="Remove coupon"
-              >
-                <XIcon className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                onClick={handleApplyCoupon}
-                disabled={!couponCode.trim()}
-                className="bg-black hover:bg-gray-700 text-white px-4 py-2 rounded-full text-sm disabled:bg-gray-400 transition"
-              >
-                Apply
-              </button>
+          <div className="checkout-email">
+            <EnvelopeIcon />
+            <div>
+              <span>Email address</span>
+              <strong>{user?.email || "Sign in to add your email"}</strong>
+            </div>
+            {token && user?.email && (
+              <span className="checkout-email-check" aria-label="Account email">
+                <CheckIcon />
+              </span>
             )}
           </div>
-        </div>
-
-        <button
-          onClick={handlePayment}
-          disabled={isPlacingOrder || cart.items.length === 0}
-          className="w-full bg-black hover:bg-gray-700 text-white py-3 rounded-full font-medium mt-6 transition flex items-center justify-center gap-2 disabled:bg-gray-400"
-          aria-label="Pay Now"
-          aria-busy={isPlacingOrder}
-        >
-          {isPlacingOrder ? (
-            <>
-              <svg
-                className="animate-spin h-4 w-4 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Processing...
-            </>
-          ) : (
-            `Pay ${formatCurrency(cartCalculations.total)}`
+          <p className="checkout-email-note">
+            A confirmation email will be sent after checkout.
+          </p>
+          <div className="checkout-address-title">
+            <h2>Delivery Address</h2>
+            {token && (
+              <label className="checkout-save">
+                <span>Save to account</span>
+                <input
+                  type="checkbox"
+                  checked={saveAddress}
+                  disabled={Boolean(busy) || Boolean(pendingPayment)}
+                  onChange={(event) => setSaveAddress(event.target.checked)}
+                />
+                <i aria-hidden="true" />
+              </label>
+            )}
+          </div>
+          {addressWarning && (
+            <p className="checkout-notice">
+              Saved addresses couldn’t load. You can enter your delivery details
+              below.
+            </p>
           )}
-        </button>
-
-        <p className="text-xs text-gray-500 mt-2 text-center">
-          By completing your purchase, you agree to our Terms of Service
-        </p>
-      </div>
-     
+          {addresses.length > 0 && (
+            <label className="checkout-saved-address">
+              Saved address
+              <select
+                aria-label="Saved address"
+                value={selectedAddress}
+                disabled={Boolean(busy) || Boolean(pendingPayment)}
+                onChange={(event) => {
+                  const address = addresses.find(
+                    (entry) => entry._id === event.target.value,
+                  );
+                  setSelectedAddress(event.target.value);
+                  setForm(
+                    address ? { ...blankAddress, ...address } : blankAddress,
+                  );
+                  setErrors({});
+                }}
+              >
+                <option value="">Use a new address</option>
+                {addresses.map((address) => (
+                  <option key={address._id} value={address._id}>
+                    {address.fullName} · {address.city} · {address.postalCode}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <div className="checkout-address-grid">
+            <Field label="Full name" icon={UserIcon} error={errors.fullName}>
+              {input("fullName", "name")}
+            </Field>
+            <Field label="Phone number" icon={PhoneIcon} error={errors.phone}>
+              {input("phone", "tel", { type: "tel", inputMode: "tel" })}
+            </Field>
+            <Field
+              label="Address line 1"
+              icon={MapPinIcon}
+              error={errors.street}
+              className="checkout-field-full"
+            >
+              {input("street", "address-line1")}
+            </Field>
+            <Field
+              label="Address line 2 (Optional)"
+              icon={BuildingOfficeIcon}
+              className="checkout-field-full"
+            >
+              {input("street2", "address-line2")}
+            </Field>
+            <Field
+              label="City"
+              error={errors.city}
+              className="checkout-field-full"
+            >
+              {input("city", "address-level2")}
+            </Field>
+            <div className="checkout-region-row">
+              <Field label="State" error={errors.state}>
+                {states.length ? (
+                  <select
+                    name="state"
+                    aria-invalid={Boolean(errors.state)}
+                    value={form.state}
+                    onChange={change}
+                    autoComplete="address-level1"
+                    disabled={Boolean(busy) || Boolean(pendingPayment)}
+                  >
+                    <option value="">Select state</option>
+                    {states.map((state) => (
+                      <option key={state.isoCode} value={state.name}>
+                        {state.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  input("state", "address-level1")
+                )}
+              </Field>
+              <Field
+                label={countryCode === "IN" ? "PIN code" : "Postal code"}
+                error={errors.postalCode}
+              >
+                {input("postalCode", "postal-code", {
+                  inputMode: countryCode === "IN" ? "numeric" : "text",
+                })}
+              </Field>
+              <Field label="Country" error={errors.country}>
+                <select
+                  name="country"
+                  value={form.country}
+                  onChange={change}
+                  autoComplete="country-name"
+                  disabled={Boolean(busy) || Boolean(pendingPayment)}
+                >
+                  {countries.map((country) => (
+                    <option key={country.isoCode} value={country.name}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+          </div>
+        </section>
+        <section
+          className="checkout-order"
+          aria-labelledby="checkout-order-title"
+        >
+          <p className="store-eyebrow">YOUR ORDER</p>
+          <div className="checkout-order-heading">
+            <h2 id="checkout-order-title">Review your cart.</h2>
+            <span>
+              {itemCount} {itemCount === 1 ? "item" : "items"}
+            </span>
+          </div>
+          <ul className="checkout-items">
+            {items.map((item) => {
+              const id =
+                token && item._id
+                  ? item._id
+                  : `${item.productId}${item.variantId}${item.size}`;
+              return (
+                <li key={id}>
+                  <img
+                    src={imageUrl(item.image)}
+                    alt={item.name}
+                    width="936"
+                    height="1170"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src =
+                        "/assets/editorial/image-unavailable.svg";
+                    }}
+                  />
+                  <div className="checkout-item-info">
+                    <h3>{item.name}</h3>
+                    <p>
+                      {item.gender
+                        ? item.gender.charAt(0).toUpperCase() +
+                          item.gender.slice(1)
+                        : ""}
+                      {item.color ? ` | ${item.color}` : ""}
+                    </p>
+                    <p>Size: {item.size}</p>
+                  </div>
+                  <div className="checkout-item-actions">
+                    <div className="checkout-quantity">
+                      <button
+                        aria-label={`Decrease quantity of ${item.name}`}
+                        disabled={
+                          Boolean(busy) ||
+                          Boolean(pendingPayment) ||
+                          item.quantity <= 1
+                        }
+                        onClick={() =>
+                          mutateCart(() =>
+                            updateItemQuantity(id, item.quantity - 1),
+                          )
+                        }
+                      >
+                        <MinusIcon />
+                      </button>
+                      <span>{item.quantity}</span>
+                      <button
+                        aria-label={`Increase quantity of ${item.name}`}
+                        disabled={
+                          Boolean(busy) ||
+                          Boolean(pendingPayment) ||
+                          (item.stock != null && item.quantity >= item.stock)
+                        }
+                        onClick={() =>
+                          mutateCart(() =>
+                            updateItemQuantity(id, item.quantity + 1),
+                          )
+                        }
+                      >
+                        <PlusIcon />
+                      </button>
+                    </div>
+                    <button
+                      className="checkout-remove-item"
+                      aria-label={`Remove ${item.name}`}
+                      disabled={Boolean(busy) || Boolean(pendingPayment)}
+                      onClick={() => mutateCart(() => removeItemFromCart(id))}
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
+                  <strong className="checkout-item-price">
+                    {currency(item.price * item.quantity)}
+                  </strong>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="checkout-coupon">
+            <TagIcon />
+            <label>
+              <span>Discount code</span>
+              <input
+                aria-label="Discount code"
+                placeholder="Enter your code"
+                value={cart.coupon?.applied ? cart.coupon.code : couponCode}
+                onChange={(event) => setCouponCode(event.target.value)}
+                disabled={
+                  Boolean(busy) ||
+                  Boolean(pendingPayment) ||
+                  Boolean(cart.coupon?.applied) ||
+                  !token
+                }
+              />
+            </label>
+            <button
+              disabled={
+                Boolean(busy) ||
+                Boolean(pendingPayment) ||
+                !token ||
+                (!cart.coupon?.applied && !couponCode.trim())
+              }
+              onClick={() =>
+                mutateCart(() =>
+                  cart.coupon?.applied
+                    ? removeCoupon()
+                    : applyCoupon(couponCode.trim().toUpperCase()),
+                )
+              }
+            >
+              {cart.coupon?.applied ? "Remove" : "Apply"}
+              <ChevronRightIcon />
+            </button>
+          </div>
+          <dl className="checkout-totals">
+            <div>
+              <dt>
+                Subtotal ({itemCount} {itemCount === 1 ? "item" : "items"})
+              </dt>
+              <dd>{currency(subtotal)}</dd>
+            </div>
+            <div>
+              <dt>Estimated Delivery &amp; Handling</dt>
+              <dd>{shippingKnown ? currency(shipping) : "After sign-in"}</dd>
+            </div>
+            {tax > 0 && (
+              <div>
+                <dt>Tax</dt>
+                <dd>{currency(tax)}</dd>
+              </div>
+            )}
+            {discount > 0 && (
+              <div className="checkout-discount">
+                <dt>Discount ({cart.coupon.code})</dt>
+                <dd>−{currency(discount)}</dd>
+              </div>
+            )}
+            <div className="checkout-total">
+              <dt>Total</dt>
+              <dd>{currency(total)}</dd>
+            </div>
+          </dl>
+          {pendingPayment && (
+            <div className="checkout-confirmation-notice">
+              <strong>Your payment needs confirmation.</strong>
+              <p>
+                Retry confirmation checks your existing payment and completes
+                your order.
+              </p>
+            </div>
+          )}
+          {paymentError && (
+            <p className="checkout-payment-error" role="alert">
+              {paymentError}
+            </p>
+          )}
+          <button
+            className="checkout-pay"
+            aria-label={
+              pendingPayment
+                ? "Retry payment confirmation"
+                : token
+                  ? "Continue to Payment"
+                  : "Sign in to continue"
+            }
+            aria-busy={Boolean(busy)}
+            disabled={Boolean(busy) || (!pendingPayment && unavailable)}
+            onClick={pay}
+          >
+            {busy === "confirming"
+              ? "Confirming your order…"
+              : busy === "starting"
+                ? "Preparing payment…"
+                : busy === "gateway"
+                  ? "Payment window open…"
+                  : pendingPayment
+                    ? "Retry confirmation"
+                    : token
+                      ? "Continue to Payment"
+                      : "Sign in to continue"}
+            <ArrowRightIcon />
+          </button>
+          <p className="checkout-terms">
+            By completing your purchase, you agree to our{" "}
+            <span>Terms of Service</span>
+          </p>
+        </section>
+      </main>
     </div>
-     <Footer/>
-    </></div>
   );
-};
-
-export default Checkout;
+}

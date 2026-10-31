@@ -6,261 +6,129 @@ const Order = require("../models/Order");
 const User = require("../models/User");
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
+const Cart = require("../models/Cart");
+const CheckoutSession = require("../models/CheckoutSession");
+const { quoteCart } = require("../utils/checkoutQuote");
+const updateProductCartStats = require("../utils/updateProductCartStats");
 const moment = require("moment-timezone");
 const { sendEmail } = require("../utils/email");
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+const getGateway = () => {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    throw Object.assign(new Error("Payments are not configured. Please contact the store."), { status: 503 });
+  }
+  return new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
+};
 
-// Create Razorpay order
-
-// Initialize Razorpay order
+// Create a provider order from the authenticated user's server-side cart.
 exports.createOrder = async (req, res) => {
   try {
-    const { amount, receipt, notes } = req.body;
-    const userId = req.user._id;
-    console.log("🧾 Requested amount (paise):", amount);
-
-    if (amount > 50000000) {
-      return res.status(400).json({
-        success: false,
-        message: "Amount exceeds maximum limit allowed by Razorpay (₹5,00,000)",
-      });
+    const gateway = getGateway();
+    const cart = await Cart.findOne({ userId: req.user._id }).lean();
+    const snapshot = quoteCart(cart, req.body.address);
+    if (Number(req.body.amount) !== snapshot.amount) {
+      return res.status(409).json({ success: false, message: "Your bag total changed. Refresh checkout before paying." });
     }
-
-    const options = {
-      amount,
-      currency: "INR",
-      receipt,
-      notes: {
-        ...notes,
-        userId: userId.toString(),
-      },
-      payment_capture: 1,
-    };
-
-    const razorpayOrder = await razorpay.orders.create(options);
-
-    res.status(200).json({
-      success: true,
-      data: {
-        order: {
-          id: razorpayOrder.id,
-          amount: razorpayOrder.amount,
-          currency: razorpayOrder.currency,
-          receipt: razorpayOrder.receipt,
-        },
-      },
-    });
+    // Check the exact variant, including stores with multiple identically named colors.
+    for (const item of snapshot.items) {
+      const product = await Product.findById(item.product).lean();
+      const variant = product?.variants?.find((value) => value._id.toString() === item.variantId);
+      const size = variant?.sizes?.find((value) => value.size === item.size);
+      if (!size || size.stock < item.quantity) {
+        return res.status(409).json({ success: false, message: `The selected size of ${item.title} is no longer available in this quantity.` });
+      }
+    }
+    const receipt = `rcpt_${crypto.randomBytes(12).toString("hex")}`;
+    const order = await gateway.orders.create({ amount: snapshot.amount, currency: "INR", receipt, notes: { userId: req.user._id.toString() }, payment_capture: 1 });
+    await CheckoutSession.create({ user: req.user._id, razorpayOrderId: order.id, snapshot });
+    return res.status(200).json({ success: true, data: { keyId: process.env.RAZORPAY_KEY_ID, order: { id: order.id, amount: order.amount, currency: order.currency, receipt: order.receipt } } });
   } catch (error) {
-    console.error("Order creation error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to create payment order" });
+    console.error("Payment initialization failed:", { status: error.statusCode || error.status, code: error.error?.code, message: error.error?.description || error.message });
+    return res.status(error.status || 500).json({ success: false, message: error.status ? error.message : "Could not prepare payment. Please try again." });
   }
 };
 
-// Helper function to update stock
-async function updateStock({ product, color, size, quantity, session }) {
-  const result = await Product.findOneAndUpdate(
-    {
-      _id: product,
-      "variants.color": color,
-      "variants.sizes.size": size,
-    },
-    {
-      $inc: {
-        "variants.$[v].sizes.$[s].stock": -quantity,
-        sold: quantity,
-        "variants.$[v].sizes.$[s].sold": quantity,
-      },
-      $set: { lastStockUpdate: new Date() },
-    },
-    {
-      arrayFilters: [{ "v.color": color }, { "s.size": size }],
-      session,
-      new: true,
-    }
-  );
-
-  if (!result)
-    throw new Error(`Stock update failed for ${product} (${color}, ${size})`);
-  return result;
+async function updateStock(item, session) {
+  const product = await Product.findOneAndUpdate({
+    _id: item.product,
+    variants: { $elemMatch: { _id: item.variantId, sizes: { $elemMatch: { size: item.size, stock: { $gte: item.quantity } } } } },
+  }, {
+    $inc: { "variants.$[v].sizes.$[s].stock": -item.quantity },
+  }, { arrayFilters: [{ "v._id": item.variantId }, { "s.size": item.size }], session, new: true });
+  if (!product) throw Object.assign(new Error("Payment received, but stock confirmation is pending. Please retry confirmation or contact the store."), { status: 409 });
 }
 
-// Verify payment and place order
 exports.verifyPayment = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
+  let session;
   try {
-    // 1. Verify Razorpay signature
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      email,
-    } = req.body;
+    const gateway = getGateway();
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    if (![razorpay_order_id, razorpay_payment_id, razorpay_signature].every((value) => typeof value === "string" && value.length > 0)) {
+      return res.status(400).json({ success: false, message: "Payment verification details are required" });
+    }
+    const expected = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET).update(`${razorpay_order_id}|${razorpay_payment_id}`).digest("hex");
+    if (!/^[a-f0-9]{64}$/i.test(razorpay_signature) || !crypto.timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(razorpay_signature, "hex"))) {
+      return res.status(400).json({ success: false, message: "Payment signature could not be verified" });
+    }
+    const checkout = await CheckoutSession.findOne({ user: req.user._id, razorpayOrderId: razorpay_order_id });
+    if (!checkout) return res.status(404).json({ success: false, message: "Payment order not found for this account" });
+    if (checkout.order) {
+      const order = await Order.findById(checkout.order);
+      if (!order) throw new Error("Confirmed order is temporarily unavailable");
+      return res.status(200).json({ success: true, order });
+    }
+    const snapshot = checkout.snapshot;
+    let payment = await gateway.payments.fetch(razorpay_payment_id);
+    if (payment.order_id !== razorpay_order_id || payment.amount !== snapshot.amount || payment.currency !== snapshot.currency) {
+      return res.status(400).json({ success: false, message: "Payment amount or order does not match checkout" });
+    }
+    if (payment.status === "authorized") payment = await gateway.payments.capture(razorpay_payment_id, snapshot.amount, snapshot.currency);
+    if (payment.status !== "captured") return res.status(409).json({ success: false, message: "Payment confirmation is pending. Please retry confirmation." });
 
-    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(body)
-      .digest("hex");
-
-    if (expectedSignature !== razorpay_signature) {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Payment verification failed: Invalid signature",
+    session = await mongoose.startSession();
+    session.startTransaction();
+    const claimed = await CheckoutSession.findOneAndUpdate({ _id: checkout._id, state: "pending", order: null }, { $set: { state: "processing" } }, { session, new: true });
+    if (!claimed) throw Object.assign(new Error("Order confirmation is already in progress. Please retry confirmation."), { status: 409 });
+    // One transaction updates stock, creates the order and records completion.
+    for (const item of snapshot.items) await updateStock(item, session);
+    const [order] = await Order.create([{
+      user: req.user._id, items: snapshot.items, shippingAddress: snapshot.address,
+      paymentMethod: "card", paymentResult: { id: razorpay_payment_id, status: "completed", update_time: new Date().toISOString(), email_address: req.user.email },
+      itemsPrice: snapshot.subtotal, shippingPrice: snapshot.shipping, taxPrice: snapshot.tax, discountPrice: snapshot.discount, couponCode: snapshot.couponCode, totalPrice: snapshot.total,
+      isPaid: true, paidAt: new Date(), status: "processing",
+    }], { session });
+    await CheckoutSession.updateOne({ _id: checkout._id }, { $set: { state: "completed", order: order._id } }, { session });
+    // Remove only purchased quantities; keep items added in another tab intact.
+    const cart = await Cart.findOne({ userId: req.user._id }).session(session);
+    if (cart) {
+      const quantities = new Map(snapshot.items.map((item) => [`${item.product}:${item.variantId}:${item.size}`, item.quantity]));
+      cart.items = cart.items.filter((item) => {
+        const purchased = quantities.get(`${item.productId}:${item.variantId}:${item.size}`) || 0;
+        item.quantity = Math.max(0, item.quantity - purchased);
+        item.total = item.quantity * item.price;
+        return item.quantity > 0;
       });
+      cart.coupon = null;
+      if (!cart.items.length) { cart.shippingFee = 0; cart.tax = 0; }
+      const subtotal = Math.round(cart.items.reduce((sum, item) => sum + item.total, 0) * 100) / 100;
+      // Use an atomic update here: Cart.save's analytics hook writes Product
+      // outside this session and would wait on the stock transaction's locks.
+      await Cart.updateOne({ _id: cart._id, userId: req.user._id }, { $set: {
+        items: cart.items.map((item) => item.toObject ? item.toObject() : item),
+        coupon: null, shippingFee: cart.shippingFee, tax: cart.tax,
+        subtotal, total: Math.round((subtotal + Number(cart.shippingFee || 0) + Number(cart.tax || 0)) * 100) / 100,
+      } }, { session, runValidators: true });
     }
-
-    // 2. Calculate totals
-    const itemsPrice = req.body.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-    const shippingPrice = 1250;
-    const taxPrice = Math.round(itemsPrice * 0.05);
-    const totalPrice = itemsPrice + shippingPrice + taxPrice;
-
-    // 3. Create order document
-    const orderData = {
-      user: req.user._id,
-      items: req.body.items.map((item) => ({
-        product: item.product,
-        title: item.title,
-        image: item.image,
-        price: item.price,
-        quantity: item.quantity,
-        size: item.size,
-        color: item.color,
-        variantId: item.variantId,
-      })),
-      shippingAddress: req.body.address,
-      paymentMethod: "card",
-      paymentResult: {
-        id: razorpay_payment_id,
-        status: "completed",
-        update_time: new Date(),
-        email_address: email,
-      },
-      itemsPrice,
-      shippingPrice,
-      taxPrice,
-      totalPrice,
-      isPaid: true,
-      paidAt: new Date(),
-      status: "processing",
-    };
-
-    // 4. Create order in database
-    const newOrder = await Order.create([orderData], { session });
-
-    // 5. Validate and update stock for all items
-    const stockUpdates = await Promise.all(
-      req.body.items.map(async (item) => {
-        try {
-          const product = await Product.findById(item.product)
-            .session(session)
-            .lean();
-
-          const variant = product?.variants?.find(
-            (v) => v.color === item.color
-          );
-          const sizeObj = variant?.sizes?.find((s) => s.size === item.size);
-
-          if (!variant || !sizeObj || sizeObj.stock < item.quantity) {
-            throw new Error(`
-              Stock validation failed for:
-              Product: ${item.product}
-              Color: ${item.color}
-              Size: ${item.size}
-              Requested: ${item.quantity}
-              Available: ${sizeObj?.stock || 0}
-            `);
-          }
-
-          const updated = await updateStock({
-            product: item.product,
-            color: item.color,
-            size: item.size,
-            quantity: item.quantity,
-            session,
-          });
-
-          return {
-            success: true,
-            productId: item.product,
-            newStock: updated.variants
-              .find((v) => v.color === item.color)
-              .sizes.find((s) => s.size === item.size).stock,
-          };
-        } catch (error) {
-          return {
-            success: false,
-            productId: item.product,
-            error: error.message,
-          };
-        }
-      })
-    );
-
-    // 6. Check for failed stock updates
-    const failedUpdates = stockUpdates.filter((update) => !update.success);
-    if (failedUpdates.length > 0) {
-      throw new Error(
-        `Stock update failed for ${failedUpdates.length} items:\n` +
-          failedUpdates.map((f) => f.error).join("\n")
-      );
-    }
-
-    // 7. Commit transaction
     await session.commitTransaction();
-    console.log(orderData);
-
-    // 8. Send order confirmation email (non-critical)
-try {
-  await sendOrderConfirmation(email, {
-    ...newOrder[0].toObject(),
-    customerName: req.user.name
-  });
-} catch (emailError) {
-  console.error("Order confirmation email failed:", emailError);
-}
-
-
-    // 9. Success response
-    res.status(200).json({
-      success: true,
-      message: "Order placed successfully",
-      order: newOrder[0],
-      stockUpdates: stockUpdates.map((u) => ({
-        productId: u.productId,
-        newStock: u.newStock,
-      })),
-    });
+    updateProductCartStats({ items: snapshot.items.map((item) => ({ productId: item.product })) }).catch((error) => console.error("Cart analytics update failed:", error.message));
+    sendOrderConfirmation(req.user.email, { ...order.toObject(), customerName: req.user.name }).catch((error) => console.error("Order confirmation email failed:", error.message));
+    return res.status(200).json({ success: true, message: "Order placed successfully", order });
   } catch (error) {
-    await session.abortTransaction();
-    console.error("Order processing failed:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Order processing failed",
-      error:
-        process.env.NODE_ENV === "development"
-          ? {
-              message: error.message,
-              stack: error.stack,
-              failedItems: req.body.items,
-            }
-          : undefined,
-    });
+    if (session?.inTransaction()) await session.abortTransaction();
+    console.error("Order confirmation failed:", { status: error.statusCode || error.status, code: error.error?.code, message: error.error?.description || error.message });
+    return res.status(error.status || 500).json({ success: false, message: error.status ? error.message : "Payment confirmation could not complete. Please retry confirmation before making another payment." });
   } finally {
-    session.endSession();
+    if (session) await session.endSession();
   }
 };
 

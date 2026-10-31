@@ -17,6 +17,7 @@ const orderItemSchema = new mongoose.Schema({
   },
   size: String,
   color: String,
+  variantId: { type: mongoose.Schema.Types.ObjectId },
 });
 
 // Schema for shipping address
@@ -61,7 +62,9 @@ const orderSchema = new mongoose.Schema(
     itemsPrice: { type: Number, required: true }, // total of all items
     shippingPrice: { type: Number, default: 0 }, // optional shipping cost
     taxPrice: { type: Number, default: 0 }, // optional tax
-    totalPrice: { type: Number, required: true }, // final total
+    totalPrice: { type: Number, required: true },
+    discountPrice: { type: Number, default: 0 },
+    couponCode: { type: String, default: null }, // final total
 
     // Payment & delivery status
     isPaid: { type: Boolean, default: false },
