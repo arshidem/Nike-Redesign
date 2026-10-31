@@ -1,94 +1,92 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useProductService } from "../../product/services/productService";
 import { useAppContext } from "../../../context/AppContext";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
 
-const ProductSuggestions = ({ productSlug }) => {
+export default function ProductSuggestions({ productSlug }) {
   const [suggestions, setSuggestions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const { token,backendUrl } = useAppContext();
-const {getProductSuggestions}=useProductService()
-
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath || typeof imagePath !== "string") return "/placeholder.jpg";
-    const match = imagePath.match(
-      /uploads[\\/][\w\-.]+\.(jpg|jpeg|avif|png|webp)/i
-    );
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
+  const [loading, setLoading] = useState(true);
+  const { token, backendUrl } = useAppContext();
+  const { getProductSuggestions } = useProductService();
+  const imageUrl = (path) => {
+    if (!path || typeof path !== "string")
+      return "/assets/editorial/image-unavailable.svg";
+    if (/^https?:\/\//i.test(path)) return path;
+    const normalized = path.replace(/\\/g, "/");
+    const relative = normalized.includes("uploads/")
+      ? normalized.slice(normalized.indexOf("uploads/"))
+      : normalized.replace(/^\/+/, "");
+    return `${(backendUrl || "").replace(/\/$/, "")}/${relative}`;
   };
   useEffect(() => {
-    if (!productSlug) return;
-
-    const fetchSuggestions = async () => {
-      setLoading(true);
-      try {
-        const res = await getProductSuggestions(productSlug, token);
-        setSuggestions(res || []);
-      } catch (err) {
-        console.error("Failed to fetch suggestions", err);
-        setSuggestions([]);
-      } finally {
-        setLoading(false);
-      }
+    let active = true;
+    setLoading(true);
+    getProductSuggestions(productSlug, token)
+      .then((products) => {
+        if (active)
+          setSuggestions(
+            Array.isArray(products)
+              ? products.filter((product) => product.slug !== productSlug)
+              : [],
+          );
+      })
+      .catch(() => {
+        if (active) setSuggestions([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
     };
-
-    fetchSuggestions();
   }, [productSlug, token]);
-
-  if (!loading && suggestions.length === 0) return null;
-
+  if (!loading && !suggestions.length) return null;
   return (
-    <div className="design-component design-product-suggestions mt-10">
-      <h2 className="text-lg font-semibold mb-4">You might also like</h2>
-
-      <div className="flex gap-4 overflow-x-auto no-scrollbar">
+    <section
+      className="pdp-recommendations"
+      aria-labelledby="pdp-recommendation-title"
+    >
+      <header>
+        <h2 id="pdp-recommendation-title">You might also like</h2>
+        <Link to="/products">
+          View all <ChevronRightIcon />
+        </Link>
+      </header>
+      <div className="pdp-recommendation-rail">
         {loading
-          ? Array(4)
-              .fill(0)
-              .map((_, idx) => (
-                <div
-                  key={idx}
-                  className="min-w-[180px] max-w-[180px] bg-white rounded-lg p-3 shadow"
-                >
-                  <Skeleton height={150} />
-                  <Skeleton width={100} height={14} className="mt-2" />
-                  <Skeleton height={12} width={80} />
-                  <Skeleton height={16} width={60} />
-                </div>
-              ))
-          : suggestions.map((product) => {
-              const image = product.variants?.[0].images?.[0] || "/placeholder.jpg";
-              return (
-                <Link
-                  to={`/product/${product.slug}`}
-                  key={product._id}
+          ? [0, 1, 2].map((index) => (
+              <div className="pdp-recommendation-skeleton" key={index} />
+            ))
+          : suggestions.map((product) => (
+              <Link
+                className="pdp-recommendation"
+                key={product._id || product.slug}
+                to={`/product/${product.slug}`}
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-
-                  className="min-w-[180px] max-w-[180px] bg-white rounded-lg shadow hover:shadow-lg transition block p-3 flex-shrink-0"
-                >
-                  <img
-                    src={formatImageUrl(image)}
-                    alt={product.name || "Suggested Product"}
-                    className="w-full h-[150px] object-cover mb-2"
-                    loading="lazy"
-                  />
-                  {product.tag && (
-                    <span className="text-red-600 font-semibold text-xs">{product.tag}</span>
+              >
+                <img
+                  src={imageUrl(
+                    product.variants?.[0]?.images?.[0] || product.featuredImg,
                   )}
-                  <h3 className="text-sm font-semibold line-clamp-2">{product.name}</h3>
-                  <p className="text-gray-500 text-xs capitalize">{product.gender}</p>
-                  <p className="text-gray-700 font-medium mt-1 text-sm">
-                    MRP: ₹{product.price?.toLocaleString()}
-                  </p>
-                </Link>
-              );
-            })}
+                  alt={product.name}
+                  loading="lazy"
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src =
+                      "/assets/editorial/image-unavailable.svg";
+                  }}
+                />
+                <h3>{product.name}</h3>
+                <p>
+                  ₹{" "}
+                  {Number(product.finalPrice ?? product.price).toLocaleString(
+                    "en-IN",
+                  )}
+                </p>
+              </Link>
+            ))}
       </div>
-    </div>
+    </section>
   );
-};
-
-export default ProductSuggestions;
+}
