@@ -264,44 +264,29 @@ exports.removeCoupon = async (req, res) => {
 
 
 exports.syncCart = async (req, res) => {
-  const userId = req.user.id;
-  const incomingItems = req.body.items;
-
-  if (!Array.isArray(incomingItems)) {
-    return res.status(400).json({ error: "Invalid cart data" });
-  }
-
+  const userId = req.user._id;
+  if (!Array.isArray(req.body.items)) return res.status(400).json({ error: "Invalid cart data" });
   try {
-    // Fetch or create cart
-    let cart = await Cart.findOne({ user: userId });
-    if (!cart) {
-      cart = new Cart({ user: userId, items: [] });
+    let cart = await Cart.findOne({ userId });
+    if (!cart) cart = new Cart({ userId, items: [] });
+    for (const incoming of req.body.items) {
+      const quantity = Number(incoming.quantity);
+      if (!Number.isSafeInteger(quantity) || quantity < 1) return res.status(400).json({ error: "Invalid bag quantity" });
+      const product = await Product.findById(incoming.productId);
+      const variant = product?.variants.find((entry) => entry._id.toString() === incoming.variantId);
+      const size = variant?.sizes.find((entry) => entry.size === incoming.size);
+      if (!product || !variant || !size) return res.status(400).json({ error: "An item in your guest bag is no longer available" });
+      const existing = cart.items.find((entry) => entry.productId.toString() === incoming.productId && entry.variantId.toString() === incoming.variantId && entry.size === incoming.size);
+      const nextQuantity = (existing?.quantity || 0) + quantity;
+      if (nextQuantity > size.stock) return res.status(400).json({ error: `Only ${size.stock} available for ${product.name}` });
+      const price = product.finalPrice ?? product.price;
+      if (existing) { existing.quantity = nextQuantity; existing.price = price; existing.total = nextQuantity * price; existing.stock = size.stock; existing.stockAvailable = true; }
+      else cart.items.push({ productId: product._id, variantId: variant._id, name: product.name, image: variant.images?.[0], color: variant.color, size: incoming.size, price, quantity, total: quantity * price, stock: size.stock, gender: product.gender, stockAvailable: true });
     }
-
-    // Merge logic (avoid duplicates)
-    for (const incoming of incomingItems) {
-      const exists = cart.items.find(
-        (item) =>
-          item.productId.toString() === incoming.productId &&
-          item.variantId === incoming.variantId &&
-          item.size === incoming.size
-      );
-
-      if (exists) {
-        exists.quantity += incoming.quantity;
-        exists.total = exists.quantity * exists.price;
-      } else {
-        cart.items.push(incoming);
-      }
-    }
-
-    // Update total
-    cart.total = cart.items.reduce((sum, i) => sum + i.total, 0);
-
     await cart.save();
-    res.json({ success: true, cart });
-  } catch (err) {
-    console.error("Sync failed:", err);
-    res.status(500).json({ error: "Cart sync failed" });
+    return res.json({ success: true, cart });
+  } catch (error) {
+    console.error("Guest bag sync failed:", error.message);
+    return res.status(500).json({ error: "Cart sync failed" });
   }
 };
