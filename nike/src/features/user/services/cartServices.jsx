@@ -43,12 +43,17 @@ const useCartServices = () => {
     }
   };
 
-  const addToCart = async (data) => {
-      console.log("Auth?", isAuthenticated, "Token:", token);
+  // Share the authoritative response with the mini cart and existing bag listeners.
+  const publish = (cart, added) => {
+    window.dispatchEvent(new CustomEvent("cartUpdated", { detail: cart }));
+    if (added) window.dispatchEvent(new CustomEvent("cartAdded", { detail: { cart, added } }));
+    return cart;
+  };
 
+  const addToCart = async (data) => {
     if (isAuthenticated) {
       const res = await api.post("/add", data);
-      return res.data;
+      return publish(res.data, data);
     } else {
       const current = getLocalCart();
       const existing = current.find(
@@ -67,7 +72,7 @@ const useCartServices = () => {
       }
 
       setLocalCart(current);
-      return { items: current, total: calculateTotal(current) };
+      return publish({ items: current, total: calculateTotal(current) }, data);
     }
   };
 
@@ -75,7 +80,7 @@ const useCartServices = () => {
     if (isAuthenticated) {
          try {
       const res = await api.put(`/update/${itemId}`, { quantity });
-      return res.data;
+      return publish(res.data);
     } catch (err) {
       const message =
         err?.response?.data?.error || "Failed to update quantity";
@@ -91,14 +96,14 @@ const useCartServices = () => {
           : item;
       });
       setLocalCart(current);
-      return { items: current, total: calculateTotal(current) };
+      return publish({ items: current, total: calculateTotal(current) });
     }
   };
 
   const removeItemFromCart = async (itemId) => {
     if (isAuthenticated) {
       const res = await api.delete(`/remove/${itemId}`);
-      return res.data;
+      return publish(res.data);
     } else {
       const filtered = getLocalCart().filter((item) => {
         const matchKey =
@@ -106,7 +111,7 @@ const useCartServices = () => {
         return matchKey !== itemId;
       });
       setLocalCart(filtered);
-      return { items: filtered, total: calculateTotal(filtered) };
+      return publish({ items: filtered, total: calculateTotal(filtered) });
     }
   };
 
