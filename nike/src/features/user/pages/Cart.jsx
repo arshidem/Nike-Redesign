@@ -180,15 +180,6 @@ export default function Cart() {
         <Link to="/home" className="bag-logo" aria-label="Nike home">
           <img src="/assets/logo/nikeLogo.png" alt="Nike" />
         </Link>
-        <Link
-          className="bag-header-icon"
-          to="/bag"
-          aria-label={`Shopping bag, ${itemCount} ${itemCount === 1 ? "item" : "items"}`}
-          aria-current="page"
-        >
-          <ShoppingBagIcon />
-          {itemCount > 0 && <span>{itemCount}</span>}
-        </Link>
       </header>
       <main className="bag-main" id="main-content">
         <div className="bag-heading">
