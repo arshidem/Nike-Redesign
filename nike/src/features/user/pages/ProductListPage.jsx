@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useId } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowLeftIcon,
+  ArrowRightIcon,
+  CheckIcon,
   ArrowUpRightIcon,
   Squares2X2Icon,
   ListBulletIcon,
@@ -88,6 +90,63 @@ function catalogHeading(params) {
   ];
 }
 
+function FilterGroup({ title, className = "", children }) {
+  const [open, setOpen] = useState(true);
+  const id = useId();
+  return (
+    <fieldset className={`catalog-filter-group ${className}`}>
+      <legend>
+        <button
+          type="button"
+          className="catalog-filter-group-toggle"
+          aria-expanded={open}
+          aria-controls={id}
+          onClick={() => setOpen((value) => !value)}
+        >
+          {title}
+          <ChevronDownIcon />
+        </button>
+      </legend>
+      <div className="catalog-filter-group-body" id={id} hidden={!open}>
+        {children}
+      </div>
+    </fieldset>
+  );
+}
+
+function swatchBackground(value) {
+  const colors = {
+    black: "#1a1d17",
+    white: "#fff",
+    grey: "#999d93",
+    gray: "#999d93",
+    silver: "#bfc1b9",
+    beige: "#ddd6c1",
+    cream: "#eee8d6",
+    pink: "#eeaac0",
+    green: "#637342",
+    olive: "#637342",
+    navy: "#153f67",
+    blue: "#21588b",
+    red: "#ba2929",
+    orange: "#ee852d",
+    yellow: "#f1ce35",
+    purple: "#713ab2",
+    brown: "#85634d",
+    gold: "#c9a34b",
+  };
+  const normalized = value.toLowerCase();
+  if (/multi|rainbow/.test(normalized))
+    return "conic-gradient(#e86b60, #e6cb42, #6ab26c, #4a99ce, #8857ba, #e86b60)";
+  const matches = normalized
+    .split(/[\s/,-]+/)
+    .map((part) => colors[part])
+    .filter(Boolean);
+  return matches.length > 1
+    ? `linear-gradient(135deg, ${matches.join(", ")})`
+    : matches[0] || "#c3c8bc";
+}
+
 function FilterFields({ params, onChange, options }) {
   const toggle = (key, value, checked) => {
     const next = new URLSearchParams(params);
@@ -117,60 +176,78 @@ function FilterFields({ params, onChange, options }) {
       : options.sizes;
   return (
     <div className="catalog-filter-fields">
-      <fieldset>
-        <legend>Collections</legend>
-        {collections.map(([key, text]) => (
-          <label key={key}>
-            <input
-              type="checkbox"
-              checked={params.get(key) === "true"}
-              onChange={(e) => set(key, e.target.checked ? "true" : "")}
-            />
-            {text}
-          </label>
-        ))}
-      </fieldset>
-      <fieldset>
-        <legend>Gender</legend>
-        {[
-          ["", "All"],
-          ["men", "Men"],
-          ["women", "Women"],
-          ["kids", "Kids"],
-          ["unisex", "Unisex"],
-        ].map(([value, text]) => (
-          <label key={value}>
-            <input
-              type="radio"
-              name="catalog-gender"
-              checked={(params.get("gender") || "") === value}
-              onChange={() => set("gender", value)}
-            />
-            {text}
-          </label>
-        ))}
-      </fieldset>
+      <FilterGroup title="Collections" className="catalog-collection-group">
+        <div className="catalog-option-grid">
+          {collections.map(([key, text]) => (
+            <label
+              key={key}
+              className={`catalog-check-card ${params.get(key) === "true" ? "is-selected" : ""}`}
+            >
+              <input
+                type="checkbox"
+                checked={params.get(key) === "true"}
+                onChange={(e) => set(key, e.target.checked ? "true" : "")}
+              />
+              <span>{text}</span>
+            </label>
+          ))}
+        </div>
+      </FilterGroup>
+      <FilterGroup title="Gender">
+        <div className="catalog-gender-options">
+          {[
+            ["", "All"],
+            ["men", "Men"],
+            ["women", "Women"],
+            ["kids", "Kids"],
+            ["unisex", "Unisex"],
+          ].map(([value, text]) => (
+            <label key={value}>
+              <input
+                type="radio"
+                name="catalog-gender"
+                checked={(params.get("gender") || "") === value}
+                onChange={() => set("gender", value)}
+              />
+              <span>{text}</span>
+            </label>
+          ))}
+        </div>
+      </FilterGroup>
       {groups.map(
         ([key, text, values]) =>
           values?.length > 0 && (
-            <fieldset key={key}>
-              <legend>{text}</legend>
-              {values.map((value) => (
-                <label key={value}>
-                  <input
-                    type="checkbox"
-                    checked={params.getAll(key).includes(value)}
-                    onChange={(e) => toggle(key, value, e.target.checked)}
-                  />
-                  {label(value)}
-                </label>
-              ))}
-            </fieldset>
+            <FilterGroup
+              key={key}
+              title={text}
+              className={`catalog-${key}-group`}
+            >
+              <div className="catalog-option-grid">
+                {values.map((value) => (
+                  <label
+                    key={value}
+                    className={`catalog-check-card ${params.getAll(key).includes(value) ? "is-selected" : ""}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={params.getAll(key).includes(value)}
+                      onChange={(e) => toggle(key, value, e.target.checked)}
+                    />
+                    <span>{label(value)}</span>
+                  </label>
+                ))}
+              </div>
+            </FilterGroup>
           ),
       )}
       {sizes?.length > 0 && (
-        <fieldset>
-          <legend>Size</legend>
+        <FilterGroup
+          title={
+            sizes.every((size) => /^UK\b/i.test(String(size)))
+              ? "Size (UK)"
+              : "Size"
+          }
+        >
           <div className="catalog-size-options">
             {sizes.map((size) => (
               <label key={size}>
@@ -185,27 +262,59 @@ function FilterFields({ params, onChange, options }) {
               </label>
             ))}
           </div>
-        </fieldset>
+        </FilterGroup>
       )}
       {options.colors?.length > 0 && (
-        <fieldset>
-          <legend>Color</legend>
-          <select
+        <FilterGroup title="Color">
+          <div
+            className="catalog-color-options"
+            role="radiogroup"
             aria-label="Color"
-            value={params.get("color") || ""}
-            onChange={(e) => set("color", e.target.value)}
           >
-            <option value="">All colors</option>
+            <label className="catalog-color-option" title="All colors">
+              <input
+                type="radio"
+                name="catalog-color"
+                checked={!params.get("color")}
+                onChange={() => set("color", "")}
+              />
+              <span className="catalog-color-swatch catalog-all-colors">
+                <XMarkIcon />
+              </span>
+              <span className="sr-only">All colors</span>
+            </label>
             {options.colors.map((color) => (
-              <option key={color} value={color}>
-                {label(color)}
-              </option>
+              <label
+                key={color}
+                className="catalog-color-option"
+                title={label(color)}
+              >
+                <input
+                  type="radio"
+                  name="catalog-color"
+                  checked={params.get("color") === color}
+                  onChange={() => set("color", color)}
+                />
+                <span
+                  className="catalog-color-swatch"
+                  style={{
+                    background: swatchBackground(color),
+                    "--swatch-check": /white|cream|beige|yellow|silver/i.test(
+                      color,
+                    )
+                      ? "#172011"
+                      : "#fff",
+                  }}
+                >
+                  <CheckIcon />
+                </span>
+                <span className="sr-only">{label(color)}</span>
+              </label>
             ))}
-          </select>
-        </fieldset>
+          </div>
+        </FilterGroup>
       )}
-      <fieldset>
-        <legend>Price (₹)</legend>
+      <FilterGroup title="Price (₹)">
         <div className="catalog-price-inputs">
           <label>
             Minimum
@@ -230,9 +339,8 @@ function FilterFields({ params, onChange, options }) {
             />
           </label>
         </div>
-      </fieldset>
-      <fieldset>
-        <legend>Rating</legend>
+      </FilterGroup>
+      <FilterGroup title="Rating">
         <select
           aria-label="Minimum rating"
           value={params.get("minRating") || ""}
@@ -245,9 +353,8 @@ function FilterFields({ params, onChange, options }) {
             </option>
           ))}
         </select>
-      </fieldset>
-      <fieldset>
-        <legend>Discount</legend>
+      </FilterGroup>
+      <FilterGroup title="Discount">
         <select
           aria-label="Minimum discount"
           value={params.get("minDiscount") || ""}
@@ -260,7 +367,7 @@ function FilterFields({ params, onChange, options }) {
             </option>
           ))}
         </select>
-      </fieldset>
+      </FilterGroup>
     </div>
   );
 }
@@ -392,8 +499,11 @@ export default function ProductListPage() {
           "button:not([disabled]), input, select, a[href]",
         ),
       ];
-      const first = targets[0],
-        last = targets.at(-1);
+      const visibleTargets = targets.filter(
+        (element) => !element.disabled && !element.closest("[hidden]"),
+      );
+      const first = visibleTargets[0],
+        last = visibleTargets.at(-1);
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last?.focus();
@@ -807,10 +917,16 @@ export default function ProductListPage() {
             aria-labelledby="catalog-filter-title"
             ref={drawer}
           >
+            <div className="catalog-filter-handle" aria-hidden="true">
+              <span />
+            </div>
             <header>
               <div>
                 <p className="store-eyebrow">MAKE IT YOURS</p>
                 <h2 id="catalog-filter-title">Filters</h2>
+                <p className="catalog-filter-subtitle">
+                  Refine your search to find your next move.
+                </p>
               </div>
               <button
                 aria-label="Close filters"
@@ -840,7 +956,7 @@ export default function ProductListPage() {
                 Clear all
               </button>
               <button className="store-button" onClick={applyFilters}>
-                Apply filters <ArrowUpRightIcon />
+                Apply filters <ArrowRightIcon />
               </button>
             </footer>
           </section>
