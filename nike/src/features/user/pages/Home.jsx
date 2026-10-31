@@ -5,30 +5,19 @@ import { Navbar } from "../components/Navbar";
 import Footer from "../components/Footer";
 import "../../../css/home.css";
 
-const Featured = lazy(() => import("../components/Featured"));
 const ShopByIcons = lazy(() => import("../components/ShopByIcons"));
-const departments = [
-  {
-    number: "01",
-    title: "Men",
-    caption: "Built for your everyday.",
-    to: "/men/shoes?gender=men&category=shoes",
-    image: "/assets/editorial/dunk.png",
-  },
-  {
-    number: "02",
-    title: "Women",
-    caption: "Make your own moves.",
-    to: "/women/shoes?gender=women&category=shoes",
-    image: "/assets/editorial/air.png",
-  },
-  {
-    number: "03",
-    title: "Kids",
-    caption: "Big energy. Small sizes.",
-    to: "/kids/shoes?gender=kids&category=shoes",
-    image: "/assets/editorial/classic.png",
-  },
+const categories = [
+  { title: "New Arrivals", to: "/new/arrivals?newArrival=true", image: "/assets/editorial/dunk.png" },
+  { title: "Best Sellers", to: "/new/best-sellers?bestSellers=true", image: "/assets/editorial/blazer-low.svg" },
+  { title: "Men", to: "/men/shoes?gender=men&category=shoes", image: "/assets/editorial/air.png" },
+  { title: "Women", to: "/women/shoes?gender=women&category=shoes", image: "/assets/editorial/blazer-mid.svg" },
+];
+
+// These campaign picks link to existing products in the store catalog.
+const campaignPicks = [
+  { name: "Nike Dunk Low Retro", slug: "nike-dunk-low-retro-men", image: "/assets/editorial/dunk.png" },
+  { name: "Nike Blazer Mid ’77", slug: "nike-blazer-mid-77-vintage-men", image: "/assets/editorial/blazer-mid.svg" },
+  { name: "Nike Blazer Low Platform", slug: "nike-blazer-low-platform-women", image: "/assets/editorial/blazer-low.svg" },
 ];
 
 export default function Home() {
@@ -71,11 +60,12 @@ export default function Home() {
               height="500"
               fetchPriority="high"
             />
-            <span className="art-index" aria-hidden="true">
-              DUNK / LOW
-            </span>
+            <div className="art-index" aria-hidden="true">
+              <span>DUNK / LOW</span>
+              <div className="campaign-pagination"><span>01</span><i /><i /><i /></div>
+            </div>
             <Link
-              to="/men/shoes?gender=men&category=shoes"
+              to="/product/nike-dunk-low-retro-men"
               className="hero-product"
             >
               <span>
@@ -94,82 +84,35 @@ export default function Home() {
           <span>✳</span>
           <span>JUST YOUR NEXT MOVE.</span>
           <span>✳</span>
-          <span>NO FINISH LINE.</span>
+          <span>BUILT FOR MORE.</span>
         </div>
 
-        <section className="store-section" aria-labelledby="shop-title">
-          <div className="store-section-heading">
-            <div>
-              <p className="store-eyebrow">FIND YOUR FIT</p>
-              <h2 id="shop-title">A little more you.</h2>
-            </div>
-            <Link
-              className="store-text-link"
-              to="/new/arrivals?newArrival=true"
-            >
-              Shop the collection <ArrowUpRightIcon />
+        <nav className="home-categories" aria-label="Shop collections">
+          {categories.map((category) => (
+            <Link className="home-category" key={category.title} to={category.to}>
+              <span className="home-category-image">
+                <img src={category.image} alt="" width="220" height="220" loading="lazy" />
+              </span>
+              <span>{category.title}</span>
             </Link>
-          </div>
-          <div className="department-grid">
-            {departments.map((department) => (
-              <Link
-                className="department-card"
-                key={department.title}
-                to={department.to}
-              >
-                <div className="department-top">
-                  <span>{department.number} / THE COLLECTION</span>
-                  <ArrowUpRightIcon />
-                </div>
-                <img
-                  src={department.image}
-                  alt=""
-                  loading="lazy"
-                  width="1000"
-                  height="500"
-                />
-                <div className="department-bottom">
-                  <div>
-                    <h3>{department.title}</h3>
-                    <p>{department.caption}</p>
-                  </div>
-                  <span className="round-arrow">
-                    <ArrowUpRightIcon />
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <Suspense
-          fallback={
-            <div className="store-section" role="status">
-              Loading the latest collection…
-            </div>
-          }
-        >
-          <Featured />
-        </Suspense>
+          ))}
+        </nav>
 
         <section className="sport-story" aria-labelledby="story-title">
-          <picture>
-            <source
-              media="(max-width: 600px)"
-              srcSet="/assets/home/mobileImg1.jpg"
-            />
-            <img
-              src="/assets/home/desktopImg.webp"
-              alt="Athletes bringing their own style to basketball and skateboarding"
-              loading="lazy"
-            />
-          </picture>
+          <img
+            className="sport-story-image"
+            src="/assets/editorial/concrete-steps.svg"
+            alt="Black and white Dunk sneakers styled with taupe trousers on concrete steps"
+            width="1942"
+            height="809"
+            loading="lazy"
+          />
           <div className="sport-story-copy">
             <p className="store-eyebrow">MORE THAN A LOOK</p>
             <h2 id="story-title">
-              Different games.
-              <br />
-              Same energy.
+              <span>Different</span>
+              <span>games.</span>
+              <span>Same energy.</span>
             </h2>
             <Link
               className="store-button store-button-light"
@@ -177,6 +120,31 @@ export default function Home() {
             >
               Find your inspiration <ArrowUpRightIcon />
             </Link>
+          </div>
+        </section>
+
+        <section className="store-section home-edit" aria-labelledby="home-edit-title">
+          <div className="store-section-heading">
+            <div>
+              <p className="store-eyebrow">IN THE ROTATION</p>
+              <h2 id="home-edit-title">Your next obsession.</h2>
+            </div>
+            <Link className="store-text-link" to="/new/best-sellers?bestSellers=true">
+              Explore the edit <ArrowUpRightIcon />
+            </Link>
+          </div>
+          <div className="home-edit-grid">
+            {campaignPicks.map((product) => (
+              <Link className="home-edit-card" key={product.slug} to={`/product/${product.slug}`}>
+                <div className="home-edit-image">
+                  <img src={product.image} alt={product.name} width="500" height="350" loading="lazy" />
+                </div>
+                <div className="home-edit-caption">
+                  <div><h3>{product.name}</h3><p>Footwear &amp; apparel</p></div>
+                  <ArrowUpRightIcon />
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
 
