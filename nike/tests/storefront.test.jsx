@@ -45,7 +45,7 @@ test("mobile navigation opens, exposes real category links, and Escape restores 
   expect(toggle.getAttribute("aria-expanded")).toBe("true");
   expect(
     container.querySelector(
-      '#store-mobile-nav a[href="/women/shoes?gender=women&category=shoes"]',
+      '#store-mobile-nav a[href="/products?gender=women&category=shoes"]',
     ),
   ).not.toBeNull();
   expect(document.body.style.overflow).toBe("hidden");
