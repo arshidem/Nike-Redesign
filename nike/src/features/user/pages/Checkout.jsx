@@ -1,3 +1,4 @@
+import AppBar from "../../../shared/ui/AppBar";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Country, State } from "country-state-city";
@@ -417,28 +418,7 @@ export default function Checkout() {
     />
   );
   const header = (
-    <header className="checkout-header">
-      <button
-        onClick={() =>
-          window.history.state?.idx > 0 ? navigate(-1) : navigate("/bag")
-        }
-      >
-        <ArrowLeftIcon />
-        <span>Back</span>
-      </button>
-      <Link to="/home" aria-label="Nike home" className="checkout-brand">
-        <img src="/assets/logo/nikeLogo.png" alt="" />
-        <span>NIKE</span>
-      </Link>
-      <Link
-        to="/bag"
-        className="checkout-bag"
-        aria-label={`Shopping bag, ${itemCount} items`}
-      >
-        <ShoppingBagIcon />
-        {itemCount > 0 && <span>{itemCount}</span>}
-      </Link>
-    </header>
+    <AppBar className="checkout-header" fallback="/bag" hideSearch bagCount={itemCount} />
   );
   if (loading)
     return (

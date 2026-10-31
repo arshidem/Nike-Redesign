@@ -45,7 +45,7 @@ export default function Order() {
     cancelled: "bg-gray-200 text-gray-600",
   };
 
-  if (loading) return <div className="design-page design-customer design-order"><OrderSkeleton/></div>;
+  if (loading) return <div className="design-page design-customer design-order"><BackBar /><OrderSkeleton/></div>;
 
   return (
     <div className="design-page design-customer design-order"><>

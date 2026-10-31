@@ -1,3 +1,4 @@
+import AppBar, { AppBarBrand } from "../../../shared/ui/AppBar";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -139,13 +140,8 @@ export function Navbar() {
           )}
         </div>
       </div>
-      <nav className="store-nav" aria-label="Main navigation">
-        <Link to="/home" className="store-wordmark" aria-label="Nike home">
-          <img src="/assets/logo/nikeLogo.png" alt="Nike" />
-          <span>
-            NIKE<span className="wordmark-star">®</span>
-          </span>
-        </Link>
+      <AppBar home className="store-nav">
+        <AppBarBrand />
         <div className="store-nav-links">
           {menus.map((menu) => (
             <details className="store-dropdown" key={menu.label}>
@@ -198,7 +194,7 @@ export function Navbar() {
             {menuOpen ? <XMarkIcon /> : <Bars2Icon />}
           </button>
         </div>
-      </nav>
+      </AppBar>
       {menuOpen && (
         <nav
           className="store-mobile-nav"

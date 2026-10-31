@@ -1,3 +1,4 @@
+import AppBar from "../../../shared/ui/AppBar";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowIconRight, ArrowIconLeft } from "../../../shared/ui/Icons";
@@ -36,16 +37,7 @@ const AccountSettings = () => {
 
   return (
     <div className="design-page design-customer design-account-settings p-4">
-      {/* Top back button for all screens */}
-      <div className="flex items-center mb-6">
-        <button
-          onClick={handleBackClick}
-          className="flex items-center text-gray-600 hover:text-black transition-colors"
-        >
-          <ArrowIconLeft className="w-5 h-5" />
-          <span className="ml-2 text-sm font-medium">Back</span>
-        </button>
-      </div>
+      <AppBar className="account-appbar" onBack={handleBackClick} />
 
       {/* Desktop View */}
       <div className="hidden md:flex gap-8">

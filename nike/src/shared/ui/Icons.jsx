@@ -1,3 +1,5 @@
+import AppBar from "./AppBar";
+import { useLocation } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import React from "react";
 import { useNavigate } from "react-router-dom";
@@ -907,6 +909,9 @@ export const ConfirmModal = ({
 
 export const BackBar = () => {
   const navigate = useNavigate();
+
+  const location = useLocation();
+  if (!location.pathname.startsWith("/admin")) return <AppBar className="legacy-appbar" fallback="/home" />;
 
   return (
     <div className="commerce-backbar fixed top-0 left-0 w-full z-30 bg-white px-4 py-2 flex items-center">

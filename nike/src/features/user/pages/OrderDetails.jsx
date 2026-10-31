@@ -57,8 +57,8 @@ const OrderDetails = () => {
     fetchOrder();
   }, [orderId]);
 
-  if (loading) return <div className="design-page design-customer design-order-details"><OrderDetailsSkeleton/></div>;
-  if (!order) return <div className="design-page design-customer design-order-details text-center text-red-500 mt-10">Order not found.</div>;
+  if (loading) return <div className="design-page design-customer design-order-details"><BackBar /><OrderDetailsSkeleton/></div>;
+  if (!order) return <div className="design-page design-customer design-order-details text-center text-red-500 mt-10"><BackBar />Order not found.</div>;
 
   const statusStep = getStatusStep(order.status);
 
