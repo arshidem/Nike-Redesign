@@ -1,201 +1,169 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AllProducts } from '../components/AllProducts';
-import { AllOrders } from '../components/AllOrders';
-import { AllUsers } from '../components/AllUsers';
-import { Dashboard } from '../components/Dashboard';
-import { Reports } from '../components/Reports';
-import { HomeIcon,DashboardIcon, ProductsIcon, OrdersIcon, UsersIcon, ReportsIcon,NikeSwoosh, CouponIcon } from '../../../shared/ui/Icons';
-import Coupon from '../components/Coupon';
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  Squares2X2Icon,
+  ShoppingBagIcon,
+  ArchiveBoxIcon,
+  UserIcon,
+  ChartBarIcon,
+  TicketIcon,
+  HomeIcon,
+  Bars3Icon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { AllProducts } from "../components/AllProducts";
+import { AllOrders } from "../components/AllOrders";
+import { AllUsers } from "../components/AllUsers";
+import { Dashboard } from "../components/Dashboard";
+import { Reports } from "../components/Reports";
+import Coupon from "../components/Coupon";
+import "../../../css/admin-dashboard.css";
 
-const AdminDashboard = () => {
-  const [activeView, setActiveView] = useState('dashboard');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-  const navigate = useNavigate();
-
-useEffect(() => {
-  const handleHashChange = () => {
-    const hash = window.location.hash.substring(1);
-    if (hash && menuItems.some(item => item.id === hash)) {
-      setActiveView(hash);
-    }
-  };
-
-  handleHashChange(); // Run once on mount
-  window.addEventListener('hashchange', handleHashChange);
-
-  return () => window.removeEventListener('hashchange', handleHashChange);
-}, []);
-
-
+const sections = [
+  ["dashboard", "Dashboard", Squares2X2Icon],
+  ["products", "Products", ShoppingBagIcon],
+  ["orders", "Orders", ArchiveBoxIcon],
+  ["users", "Users", UserIcon],
+  ["reports", "Reports", ChartBarIcon],
+  ["coupon", "Coupons", TicketIcon],
+];
+export default function AdminDashboard() {
+  const location = useLocation(),
+    navigate = useNavigate();
+  const active = sections.some(([key]) => key === location.hash.slice(1))
+    ? location.hash.slice(1)
+    : "dashboard";
+  const [mobileOpen, setMobileOpen] = useState(false),
+    [orderCount, setOrderCount] = useState(null);
+  const menuButton = useRef(null),
+    sidebar = useRef(null);
+  useEffect(() => setMobileOpen(false), [location.hash, location.pathname]);
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-      if (window.innerWidth >= 1024) {
-        setSidebarCollapsed(true); // Default to collapsed on desktop
+    if (!mobileOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    sidebar.current?.querySelector("button")?.focus();
+    const close = () => {
+      setMobileOpen(false);
+      menuButton.current?.focus();
+    };
+    const keydown = (event) => {
+      if (event.key === "Escape") close();
+      if (event.key === "Tab") {
+        const links = [...sidebar.current.querySelectorAll("button, a")];
+        if (event.shiftKey && document.activeElement === links[0]) {
+          event.preventDefault();
+          links.at(-1)?.focus();
+        } else if (!event.shiftKey && document.activeElement === links.at(-1)) {
+          event.preventDefault();
+          links[0]?.focus();
+        }
       }
     };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-const renderContent = () => {
-  switch (activeView) {
-    case 'products':
-      return <AllProducts navigate={navigate} setActiveView={setActiveView} />;
-    case 'orders':
-      return <AllOrders navigate={navigate} setActiveView={setActiveView} />;
-    case 'users':
-      return <AllUsers navigate={navigate} setActiveView={setActiveView} />;
-    case 'reports':
-      return <Reports navigate={navigate} setActiveView={setActiveView} />;
-    case 'dashboard':
-      return <Dashboard navigate={navigate} setActiveView={setActiveView} />;
-    case 'coupon':
-      return <Coupon navigate={navigate} setActiveView={setActiveView} />;
-    default:
-      return <Dashboard navigate={navigate} setActiveView={setActiveView} />;
-  }
-};
-
-
-  // Custom SVG Icons
-
-
-  const menuItems = [
-    { id: 'dashboard', icon: <DashboardIcon/>, label: 'Dashboard' },
-    { id: 'products', icon: <ProductsIcon/>, label: 'Products' },
-    { id: 'orders', icon: <OrdersIcon/>, label: 'Orders' },
-    { id: 'users', icon: <UsersIcon/>, label: 'Users' },
-    { id: 'reports', icon: <ReportsIcon/>, label: 'Reports' },
-    { id: 'coupon', icon: <CouponIcon/>, label: 'Coupon' }
-  ];
-const handleMenuItemClick = (id) => {
-  setActiveView(id);
-  window.location.hash = id; // 👈 sets URL hash (e.g., /admin#products)
-  if (isMobile) {
-    setSidebarCollapsed(true);
-  }
-};
-
-
-  const handleSidebarHover = (isHovering) => {
-    if (!isMobile) {
-      setSidebarCollapsed(!isHovering);
-    }
+    const resize = () => {
+      if (window.innerWidth >= 1024) setMobileOpen(false);
+    };
+    document.addEventListener("keydown", keydown);
+    window.addEventListener("resize", resize);
+    return () => {
+      document.body.style.overflow = previous;
+      document.removeEventListener("keydown", keydown);
+      window.removeEventListener("resize", resize);
+    };
+  }, [mobileOpen]);
+  const switchView = (key) => navigate(`/admin#${key}`);
+  const content = {
+    dashboard: <Dashboard onSummary={setOrderCount} />,
+    products: <AllProducts navigate={navigate} setActiveView={switchView} />,
+    orders: <AllOrders navigate={navigate} setActiveView={switchView} />,
+    users: <AllUsers navigate={navigate} setActiveView={switchView} />,
+    reports: <Reports navigate={navigate} setActiveView={switchView} />,
+    coupon: <Coupon navigate={navigate} setActiveView={switchView} />,
   };
-
   return (
-    <div className="design-page design-admin design-admin-dashboard relative min-h-screen bg-gray-50">
-      {/* Mobile Hamburger Button */}
-      {isMobile && (
+    <div className={`admin-shell${mobileOpen ? " admin-drawer-open" : ""}`}>
+      <div className="admin-mobile-header">
         <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="fixed top-4 left-4 z-40 p-2 rounded-md bg-white shadow-md lg:hidden"
+          ref={menuButton}
+          type="button"
+          aria-label="Open admin menu"
+          aria-controls="admin-sidebar"
+          aria-expanded={mobileOpen}
+          onClick={() => setMobileOpen(true)}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-
+          <Bars3Icon />
         </button>
-        
-      )}
-
-      {/* Sidebar */}
-     <aside
-  className={`fixed top-0 left-0 z-30 h-full bg-white border-r border-gray-200 transition-all duration-300 ease-in-out
-    ${sidebarCollapsed ? 'w-16' : 'w-64'} ${isMobile && !sidebarCollapsed ? 'shadow-lg' : ''}`}
-  onMouseEnter={() => handleSidebarHover(true)}
-  onMouseLeave={() => handleSidebarHover(false)}
->
-  <div className="flex flex-col h-full justify-between">
-    {/* Top Section */}
-    <div>
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        <h2 data-section="NIKE / STUDIO CONSOLE" className={`flex justify-between gap-5 ${sidebarCollapsed ? 'hidden' : 'block'}`}>
-          <span>{<NikeSwoosh />}</span>
-          <span className='text-xl font-bold text-black'>Admin Panel</span>
-        </h2>
-        {sidebarCollapsed && <NikeSwoosh />}
+        <span>NIKE / ADMIN</span>
+        <Link to="/home" aria-label="Return to store">
+          <HomeIcon />
+        </Link>
       </div>
-
-      <nav className="p-2">
-        <ul className="space-y-1">
-         {menuItems
-  .filter(item => item.id !== 'home')
-  .map((item) => (
-    <li key={item.id} className="relative">
-      <button
-        onClick={() => handleMenuItemClick(item.id)}
-        className={`flex items-center w-full px-3 py-3 rounded-lg transition-colors group relative ${
-          activeView === item.id
-            ? 'bg-gray-300'
-            : 'hover:bg-gray-100 text-gray-700'
-        }`}
+      {mobileOpen && (
+        <button
+          type="button"
+          className="admin-drawer-backdrop"
+          aria-label="Close admin menu"
+          onClick={() => {
+            setMobileOpen(false);
+            menuButton.current?.focus();
+          }}
+        />
+      )}
+      <aside
+        id="admin-sidebar"
+        ref={sidebar}
+        className="admin-sidebar"
+        aria-label="Admin navigation"
+        role={mobileOpen ? "dialog" : undefined}
+        aria-modal={mobileOpen ? true : undefined}
       >
-        <span className="flex-shrink-0">{item.icon}</span>
-        <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>
-          {item.label}
-        </span>
-      </button>
-    </li>
-))}
-
-        </ul>
-      </nav>
-    </div>
-
-    {/* Bottom Section (Home Button) */}
-    <div className="p-2 border-t border-gray-100">
-  <div className="relative group">
-    <button
-      onClick={() => navigate('/home')}
-      className="flex items-center w-full px-3 py-3 rounded-lg hover:bg-gray-200 text-gray-700"
-    >
-      <span className="flex-shrink-0">{<HomeIcon />}</span>
-      <span className={`ml-3 ${sidebarCollapsed ? 'hidden' : 'block'}`}>Home</span>
-    </button>
-
-    {/* Tooltip for collapsed sidebar */}
-    <span
-      className={`absolute left-14 ml-2 bottom-2 bg-black text-white text-xs px-2 py-1 rounded shadow 
-      opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 ${
-        sidebarCollapsed ? 'group-hover:block' : 'hidden'
-      }`}
-    >
-      Return to Home
-    </span>
-  </div>
-</div>
-
-  </div>
-</aside>
-
-
-      {/* Main content */}
-      <main className={`relative h-full min-h-screen transition-all duration-300 ease-in-out ${
-        sidebarCollapsed ? 'pl-16' : 'pl-64'
-      }`}>
-        <div className="max-w-8xl mx-auto p-0">
-          {renderContent()}
-         
+        <div className="admin-sidebar-brand">
+          <Link to="/admin">
+            <img src="/assets/logo/nikeLogo.png" alt="" />
+            <span>
+              <strong>NIKE</strong>
+              <small>Admin Panel</small>
+            </span>
+          </Link>
+          <button
+            type="button"
+            aria-label="Close admin menu"
+            onClick={() => {
+              setMobileOpen(false);
+              menuButton.current?.focus();
+            }}
+          >
+            <XMarkIcon />
+          </button>
         </div>
+        <nav aria-label="Admin sections">
+          {sections.map(([key, label, Icon]) => (
+            <Link
+              key={key}
+              to={`/admin#${key}`}
+              aria-current={active === key ? "page" : undefined}
+            >
+              <Icon />
+              <span>{label}</span>
+              {key === "orders" && orderCount != null && (
+                <small>{orderCount.toLocaleString("en-IN")}</small>
+              )}
+            </Link>
+          ))}
+        </nav>
+        <img
+          className="admin-sidebar-watermark"
+          src="/assets/logo/nikeLogo.png"
+          alt=""
+        />
+        <Link className="admin-sidebar-home" to="/home">
+          <HomeIcon />
+          Home
+        </Link>
+      </aside>
+      <main className="admin-main" id="admin-content">
+        {content[active]}
       </main>
     </div>
   );
-};
-
-export default AdminDashboard;
+}
