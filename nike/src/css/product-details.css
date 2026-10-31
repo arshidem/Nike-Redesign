@@ -4,7 +4,7 @@
   min-height: 100vh;
 }
 .pdp-header {
-  height: 76px;
+  height: var(--store-appbar-height, 56px);
   background: #fff;
   border-bottom: 1px solid #e9ebe3;
   display: grid;
@@ -814,7 +814,7 @@
 }
 @media (max-width: 600px) {
   .pdp-header {
-    height: 64px;
+    height: var(--store-appbar-height, 56px);
     padding: 0 7.5%;
   }
   .pdp-back {
