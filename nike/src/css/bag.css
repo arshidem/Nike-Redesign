@@ -4,7 +4,7 @@
   min-height: 100vh;
 }
 .bag-header {
-  height: 80px;
+  height: var(--store-appbar-height, 56px);
   border-bottom: 1px solid #e6e9df;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -525,7 +525,7 @@
 }
 @media (max-width: 600px) {
   .bag-header {
-    height: 78px;
+    height: var(--store-appbar-height, 56px);
     padding-inline: 5%;
   }
   .bag-header svg {
