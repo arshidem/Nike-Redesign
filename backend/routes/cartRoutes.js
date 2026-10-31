@@ -4,6 +4,7 @@ const cartController = require("../controllers/cartController");
 const { protect } = require("../middleware/authMiddleware"); // ⬅️ import protect
 
 // Guest routes
+router.post("/stock", cartController.getGuestStock);
 router.get("/", protect, cartController.getCart); // if you want getCart to only work for logged-in users
 router.post("/add", protect, cartController.addToCart);
 router.put("/update/:itemId", protect, cartController.updateItemQuantity);
