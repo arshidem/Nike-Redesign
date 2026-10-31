@@ -12,7 +12,9 @@ jest.mock("../src/features/product/services/productService", () => ({
       categories: ["shoes", "clothing"],
       models: ["Nike Dunk", "Blazer"],
       sizes: ["UK 5", "M"],
-      colors: ["black"],
+      colors: ["black", "white"],
+      sportTypes: ["running", "basketball"],
+      activityTypes: ["casual", "training"],
     }),
   }),
 }));
@@ -211,4 +213,19 @@ test("an older request cannot overwrite results after the filters change", async
   );
   expect(container.textContent).toContain("Everyday T-shirt");
   expect(container.querySelector("h1").textContent).toContain("AllProducts");
+});
+
+test("reference-style groups retain every current filter, including selections in collapsed groups", async () => {
+  await render("/products?newArrival=true&gender=men&category=shoes&model=Nike%20Dunk&sportType=running&activityType=casual&size=UK%205&color=black&minPrice=5000&maxPrice=15000&minRating=4&minDiscount=10");
+  await click(container.querySelector('[aria-controls="catalog-filters"]'));
+  const dialog = container.querySelector('[role="dialog"]');
+  expect([...dialog.querySelectorAll("legend button")].map((button) => button.textContent)).toEqual(["Collections", "Gender", "Category", "Model", "Sport", "Activity", "Size", "Color", "Price (₹)", "Rating", "Discount"]);
+  const modelGroup = dialog.querySelector(".catalog-model-group");
+  await click(modelGroup.querySelector("legend button"));
+  expect(modelGroup.querySelector(".catalog-filter-group-body").hidden).toBe(true);
+  expect(modelGroup.querySelector("input").checked).toBe(true);
+  const white = [...dialog.querySelectorAll(".catalog-color-option")].find((option) => option.textContent === "White");
+  await click(white.querySelector("input"));
+  await click(dialog.querySelector("footer .store-button"));
+  expect(mockFetch.mock.calls.at(-1)[0]).toMatchObject({ newArrival: "true", gender: "men", category: ["shoes"], model: ["Nike Dunk"], sportType: ["running"], activityType: ["casual"], size: ["UK 5"], color: "white", minPrice: "5000", maxPrice: "15000", minRating: "4", minDiscount: "10" });
 });
