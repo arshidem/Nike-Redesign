@@ -16,37 +16,37 @@ import "../../../css/navbar.css";
 const menus = [
   {
     label: "New & Featured",
-    to: "/new/arrivals?newArrival=true",
+    to: "/products?newArrival=true",
     items: [
-      ["New arrivals", "/new/arrivals?newArrival=true"],
-      ["Best sellers", "/new/best-sellers?bestSellers=true"],
-      ["Trending now", "/new/trending?isTrending=true"],
+      ["New arrivals", "/products?newArrival=true"],
+      ["Best sellers", "/products?bestSellers=true"],
+      ["Trending now", "/products?isTrending=true"],
     ],
   },
   ...["Men", "Women", "Kids"].map((label) => ({
     label,
-    to: `/${label.toLowerCase()}/shoes?gender=${label.toLowerCase()}&category=shoes`,
+    to: `/products?gender=${label.toLowerCase()}&category=shoes`,
     items: [
       [
         "Shoes",
-        `/${label.toLowerCase()}/shoes?gender=${label.toLowerCase()}&category=shoes`,
+        `/products?gender=${label.toLowerCase()}&category=shoes`,
       ],
       [
         "Clothing",
-        `/${label.toLowerCase()}/clothing?gender=${label.toLowerCase()}&category=clothing`,
+        `/products?gender=${label.toLowerCase()}&category=clothing`,
       ],
       [
         "New arrivals",
-        `/${label.toLowerCase()}/arrivals?gender=${label.toLowerCase()}&newArrival=true`,
+        `/products?gender=${label.toLowerCase()}&newArrival=true`,
       ],
     ],
   })),
   {
     label: "Sale",
-    to: "/sale/shopAllSale?minDiscount=1",
+    to: "/products?minDiscount=1",
     items: [
-      ["Shop all sale", "/sale/shopAllSale?minDiscount=1"],
-      ["Last chance", "/sale/last-chance?minDiscount=40&lastChance=true"],
+      ["Shop all sale", "/products?minDiscount=1"],
+      ["Last chance", "/products?minDiscount=40&lastChance=true"],
     ],
   },
 ];
