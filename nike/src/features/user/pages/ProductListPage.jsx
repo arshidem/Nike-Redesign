@@ -1,3 +1,4 @@
+import AppBar from "../../../shared/ui/AppBar";
 import WishlistSpinner from "../../../shared/ui/WishlistSpinner";
 import React, { useEffect, useMemo, useRef, useState, useId } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -579,36 +580,7 @@ export default function ProductListPage() {
 
   return (
     <div className="catalog-storefront">
-      <header className="catalog-header">
-        <button
-          className="catalog-back"
-          onClick={() =>
-            window.history.state?.idx > 0 ? navigate(-1) : navigate("/home")
-          }
-        >
-          <ArrowLeftIcon />
-          <span>Back</span>
-        </button>
-        <Link
-          to="/home"
-          className="store-wordmark catalog-brand"
-          aria-label="Nike home"
-        >
-          <img src="/assets/logo/nikeLogo.png" alt="" />
-          <span>NIKE</span>
-        </Link>
-        <div className="catalog-header-actions">
-          <button
-            aria-label="Search products"
-            onClick={() => setSearchOpen(true)}
-          >
-            <MagnifyingGlassIcon />
-          </button>
-          <Link to="/bag" aria-label="Shopping bag">
-            <ShoppingBagIcon />
-          </Link>
-        </div>
-      </header>
+      <AppBar className="catalog-header" fallback="/home" onSearch={() => setSearchOpen(true)} />
       {searchOpen && <Search isOpen onClose={() => setSearchOpen(false)} />}
       <main id="main-content">
         <section className="catalog-hero" aria-labelledby="catalog-title">
