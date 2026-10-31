@@ -1,5 +1,5 @@
 // hooks/useWishlist.js
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWishlistService } from "../features/user/services/wishlistServices";
 import { toast } from "react-hot-toast";
@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 export const useWishlist = (user) => {
   const [wishlistIds, setWishlistIds] = useState([]);
   const [wishlistLoading, setWishlistLoading] = useState({});
+  const pendingIds = useRef(new Set());
   const navigate = useNavigate();
   const { toggleWishlist, getWishlist } = useWishlistService();
 
@@ -43,6 +44,8 @@ export const useWishlist = (user) => {
       return;
     }
 
+    if (pendingIds.current.has(productId)) return;
+    pendingIds.current.add(productId);
     try {
       setWishlistLoading((prev) => ({ ...prev, [productId]: true }));
       const response = await toggleWishlist(productId);
@@ -58,6 +61,7 @@ export const useWishlist = (user) => {
       console.error("Failed to toggle wishlist", err);
       toast.error(err.message || "Failed to update wishlist");
     } finally {
+      pendingIds.current.delete(productId);
       setWishlistLoading((prev) => ({ ...prev, [productId]: false }));
     }
   };
