@@ -210,7 +210,7 @@
 }
 @media (max-width: 900px) {
   .store-utility {
-    font-size: 8px;
+    font-size: 10px;
     height: 30px;
     min-height: 30px;
     padding-block: 0;
@@ -272,6 +272,30 @@
   }
   .store-wordmark > span {
     display: block;
+  }
+  .store-utility {
+    justify-content: flex-end;
+  }
+  .store-utility > span {
+    display: none;
+  }
+  .store-wordmark {
+    gap: 14px;
+  }
+  .store-wordmark > span {
+    font-size: 28px;
+  }
+  .store-nav-actions {
+    gap: 8px;
+  }
+  .store-search-button {
+    width: 44px;
+    height: 44px;
+  }
+  .store-icon-button svg {
+    width: 25px;
+    height: 25px;
+    stroke-width: 1.5;
   }
 }
 @media (prefers-reduced-motion: reduce) {
