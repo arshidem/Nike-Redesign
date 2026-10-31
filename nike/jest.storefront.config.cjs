@@ -1,7 +1,7 @@
 module.exports = {
   setupFiles: ["<rootDir>/tests/setup.cjs"],
   testEnvironment: "jsdom",
-  testMatch: ["**/tests/storefront.test.jsx", "**/tests/presentation.test.jsx", "**/tests/catalog.test.jsx", "**/tests/product-details.test.jsx", "**/tests/bag.test.jsx", "**/tests/checkout.test.jsx", "**/tests/wishlist-loading.test.jsx", "**/tests/mini-cart.test.jsx"],
+  testMatch: ["**/tests/storefront.test.jsx", "**/tests/presentation.test.jsx", "**/tests/catalog.test.jsx", "**/tests/product-details.test.jsx", "**/tests/bag.test.jsx", "**/tests/checkout.test.jsx", "**/tests/wishlist-loading.test.jsx", "**/tests/mini-cart.test.jsx", "**/tests/app-bar.test.jsx"],
   transform: {
     "^.+\\.[jt]sx?$": [
       "babel-jest",
