@@ -1,3 +1,4 @@
+const customerProfile = require("../utils/customerProfile");
 // src/controllers/authController.js
 
 const User = require("../models/User");
@@ -168,27 +169,7 @@ exports.logout = async (req, res) => {
 };
 
 // Get Me
-exports.getMe = async (req, res) => {
-  const user = req.user;
-
-  res.status(200).json({
-    _id: user._id,
-    name: user.name,
-    email: user.email,
-    gender: user.gender,
-    role: user.role,
-    isActive: user.isActive,
-    lastLogin: user.lastLogin,
-    lastLogout: user.lastLogout,
-    dob: user.dob,
-    phone: user.phone || "",
-    country: user.country || "",
-    state: user.state || "",
-    city: user.city || "",
-    postalCode: user.postalCode || "",
-  });
-};
-
+exports.getMe = async (req, res) => res.status(200).json(customerProfile(req.user));
 
 // Update User Info (phone, dob, location, etc.)
 exports.updateUserData = async (req, res) => {
@@ -202,7 +183,7 @@ exports.updateUserData = async (req, res) => {
     city,
     postalCode,
   } = req.body;
-console.log(req.body);
+
 
   try {
     const updatedUser = await User.findByIdAndUpdate(
@@ -230,17 +211,7 @@ console.log(req.body);
 
     return res.status(200).json({
       message: "Profile updated successfully",
-      user: {
-        name: updatedUser.name,
-        email: updatedUser.email, // returned but not updatable
-        gender: updatedUser.gender,
-        dob: updatedUser.dob,
-        phone: updatedUser.phone,
-        country: updatedUser.country,
-        state: updatedUser.state,
-        city: updatedUser.city,
-        postalCode: updatedUser.postalCode,
-      },
+      user: customerProfile(updatedUser),
     });
   } catch (error) {
     console.error("Error updating user data:", error);

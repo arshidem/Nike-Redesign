@@ -43,7 +43,7 @@ const UserSchema = new mongoose.Schema(
       type: String,
       validate: {
         validator: function (v) {
-          return /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{3,15}$/.test(v);
+          return !v || /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{3,15}$/.test(v);
         },
         message: (props) => `${props.value} is not a valid phone number!`,
       },

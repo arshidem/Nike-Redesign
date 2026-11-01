@@ -45,3 +45,10 @@ exports.deleteCoupon = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+exports.getAvailable = async (req, res) => {
+  try {
+    const coupons = await Coupon.find({isActive:true,$or:[{expiresAt:null},{expiresAt:{$gt:new Date()}}]})
+      .select("code discountType discountValue minOrderAmount expiresAt").sort({createdAt:-1}).lean();
+    return res.json(coupons);
+  } catch(error) { return res.status(500).json({message:"Could not load offers"}); }
+};

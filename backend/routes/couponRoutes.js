@@ -2,8 +2,9 @@
 const express = require('express');
 const router = express.Router();
 const couponController = require('../controllers/couponController');
-const { verifyAdmin } = require('../middleware/authMiddleware');
+const { verifyAdmin, protect } = require('../middleware/authMiddleware');
 
+router.get('/available',protect,couponController.getAvailable);
 router.post('/',verifyAdmin, couponController.createCoupon);
 router.get('/', verifyAdmin,couponController.getCoupons);
 router.put('/:id',verifyAdmin, couponController.updateCoupon);
