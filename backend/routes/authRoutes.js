@@ -7,6 +7,7 @@ const {
   requestOTP,
   verifyOTP,
   completeRegistration,
+  googleAuth,
   logout,
   getMe,
   updateUserData,
@@ -14,6 +15,7 @@ const {
 } = require("../controllers/authController");
 
 router.post("/request-otp", otpRateLimiter, emailOtpRateLimiter, requestOTP);
+router.post("/google", googleAuth);
 router.post("/verify-otp", verifyOTP);
 router.post("/complete-registration", completeRegistration);
 router.post("/logout", protect, logout);

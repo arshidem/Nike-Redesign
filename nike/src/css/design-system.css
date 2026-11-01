@@ -1059,3 +1059,375 @@
     display: none;
   }
 }
+
+/* ==========================================================================
+   Nike Membership Login Experience (matches reference UI)
+   ========================================================================== */
+
+.auth-membership-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #dce2cc;
+  background: radial-gradient(circle at 75% 65%, #c8d3b2 0%, #dce2cc 50%, #e2e7d5 100%);
+  position: relative;
+  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #111111;
+}
+
+/* Subtle Swoosh watermark in background */
+.auth-membership-page::before {
+  content: "";
+  position: absolute;
+  right: -5%;
+  bottom: 0%;
+  width: 70vw;
+  height: 60vh;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23bcc8a1' opacity='0.35'%3E%3Cpath d='M21.707 5.293c-2.313 1.25-5.26 2.531-8.207 3.551-2.947 1.02-5.467 1.53-7.5 1.53-2.38 0-4.043-.65-5-1.947-.64-.863-.84-1.897-.59-3.09.28-1.33 1.15-2.61 2.59-3.837C3.12 1.39 3.25 1.28 3.4 1.17c.2-.14.43-.22.67-.22.42 0 .79.25.94.64.44 1.16 1.48 2.65 3.12 4.47 1.64 1.82 3.65 3.32 6.03 4.5 2.38 1.18 4.88 1.96 7.5 2.34.62.09.92.51.72 1.04-.15.39-.42.56-.67.35z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: contain;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.auth-membership-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 60px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+/* Left Editorial Section */
+.auth-membership-left {
+  flex: 1;
+  max-width: 580px;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 40px;
+  color: #111111;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.auth-brand-badge:hover {
+  opacity: 0.8;
+}
+
+.auth-membership-tag {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #272c21;
+  margin-bottom: 24px;
+}
+
+.auth-membership-title {
+  font-family: "Anton", Impact, "Arial Black", sans-serif;
+  font-size: clamp(56px, 7vw, 102px);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: #151812;
+  margin: 0 0 28px;
+  text-transform: uppercase;
+}
+
+.auth-membership-title span {
+  color: #55623f;
+}
+
+.auth-membership-sub {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #3b4231;
+  margin: 0 0 20px;
+  max-width: 380px;
+}
+
+.auth-title-bar {
+  width: 36px;
+  height: 4px;
+  background: #55623f;
+  margin-top: 10px;
+}
+
+/* Right Card Section */
+.auth-membership-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  max-width: 520px;
+}
+
+.auth-member-card {
+  width: 100%;
+  max-width: 440px;
+  background: #fbfbf9;
+  border-radius: 28px;
+  padding: 44px 38px;
+  box-shadow: 0 20px 45px rgba(35, 45, 20, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.auth-member-heading {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #111111;
+  margin: 0 0 8px;
+}
+
+.auth-member-desc {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #4a5043;
+  margin: 0 0 24px;
+}
+
+/* Continue with Google button */
+.auth-google-button {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #d4d7cf;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f231d;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.auth-google-button:hover:not(:disabled) {
+  background: #f7f8f5;
+  border-color: #bcc0b5;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.auth-google-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-google-icon {
+  flex-shrink: 0;
+}
+
+/* Divider */
+.auth-or-divider {
+  display: flex;
+  align-items: center;
+  margin: 22px 0;
+  gap: 14px;
+}
+
+.auth-or-line {
+  flex: 1;
+  height: 1px;
+  background: #e2e4dd;
+}
+
+.auth-or-text {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #7a8274;
+}
+
+/* Email Form */
+.auth-email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.auth-input-icon {
+  position: absolute;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  color: #555e4e;
+  pointer-events: none;
+}
+
+.auth-email-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px 0 44px;
+  background: #f3f5ef;
+  border: 1px solid #dcdfd5;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #111111;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.auth-email-input:focus {
+  background: #ffffff;
+  border-color: #111111;
+  box-shadow: 0 0 0 2px rgba(17, 17, 17, 0.1);
+}
+
+.auth-email-input::placeholder {
+  color: #798272;
+}
+
+/* OTP Submit Button */
+.auth-otp-submit-btn {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #111111;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-otp-submit-btn:hover:not(:disabled) {
+  background: #252822;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.auth-otp-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-arrow {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.auth-otp-submit-btn:hover .auth-arrow {
+  transform: translateX(3px);
+}
+
+/* Legal text */
+.auth-legal-text {
+  margin-top: 24px;
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+  color: #636b5c;
+}
+
+.auth-legal-link {
+  color: #151812;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.auth-legal-link:hover {
+  color: #000000;
+}
+
+/* Footer Benefit Strip */
+.auth-membership-footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 3vw, 42px);
+  padding: 24px 20px;
+  border-top: 1px solid rgba(110, 125, 85, 0.2);
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.auth-benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #272d20;
+}
+
+.auth-benefit-item svg {
+  width: 15px;
+  height: 15px;
+  stroke: #272d20;
+}
+
+.auth-benefit-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(110, 125, 85, 0.3);
+}
+
+/* Responsive Styles */
+@media (max-width: 900px) {
+  .auth-membership-main {
+    flex-direction: column;
+    padding: 30px 24px 20px;
+    align-items: stretch;
+    gap: 32px;
+  }
+
+  .auth-membership-left {
+    max-width: 100%;
+  }
+
+  .auth-membership-title {
+    font-size: 54px;
+    margin-bottom: 16px;
+  }
+
+  .auth-brand-badge {
+    margin-bottom: 20px;
+  }
+
+  .auth-membership-right {
+    max-width: 100%;
+    justify-content: center;
+  }
+
+  .auth-member-card {
+    max-width: 100%;
+    padding: 32px 24px;
+    border-radius: 20px;
+  }
+
+  .auth-membership-footer {
+    display: none;
+  }
+}

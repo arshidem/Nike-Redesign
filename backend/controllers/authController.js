@@ -3,7 +3,10 @@ const customerProfile = require("../utils/customerProfile");
 
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require("google-auth-library");
 const { sendEmail } = require("../utils/email");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Helpers
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -216,6 +219,81 @@ exports.updateUserData = async (req, res) => {
   } catch (error) {
     console.error("Error updating user data:", error);
     return res.status(500).json({ message: "Failed to update profile" });
+  }
+};
+
+// Google Sign-In with verified ID Token
+exports.googleAuth = async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) {
+    return res.status(400).json({ message: "Google credential token is required" });
+  }
+
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    return res.status(500).json({ message: "Google authentication is not configured on the server" });
+  }
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: clientId,
+    });
+    const payload = ticket.getPayload();
+
+    if (!payload || !payload.email || !payload.email_verified) {
+      return res.status(401).json({ message: "Google account email is not verified" });
+    }
+
+    const email = payload.email.toLowerCase().trim();
+    const googleId = payload.sub;
+    const name = payload.name || `${payload.given_name || ""} ${payload.family_name || ""}`.trim();
+    const picture = payload.picture || null;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new user with default 'user' role
+      user = new User({
+        email,
+        name: name || "Nike Member",
+        gender: "prefer-not-to-say",
+        googleId,
+        authProvider: "google",
+        profilePicture: picture,
+        role: "user",
+      });
+      await user.save();
+    } else {
+      // Link Google ID if not yet linked
+      let changed = false;
+      if (!user.googleId) {
+        user.googleId = googleId;
+        changed = true;
+      }
+      if (!user.name && name) {
+        user.name = name;
+        changed = true;
+      }
+      if (!user.profilePicture && picture) {
+        user.profilePicture = picture;
+        changed = true;
+      }
+      if (changed) {
+        await user.save();
+      }
+    }
+
+    const activeUser = await User.handleLogin(user._id);
+    const token = generateToken(user._id);
+
+    return res.status(200).json({
+      token,
+      user: customerProfile(activeUser || user),
+    });
+  } catch (error) {
+    console.error("Google authentication failed:", error);
+    return res.status(401).json({ message: "Invalid or expired Google token" });
   }
 };
 

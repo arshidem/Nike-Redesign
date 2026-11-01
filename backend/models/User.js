@@ -113,6 +113,18 @@ const UserSchema = new mongoose.Schema(
       default: null,
     },
 
+    googleId: {
+      type: String,
+      default: null,
+      index: true,
+    },
+
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+
     preferences: {
       notifications: {
         email: { type: Boolean, default: true },
