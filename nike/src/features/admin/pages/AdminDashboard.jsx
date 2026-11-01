@@ -42,10 +42,10 @@ export default function AdminDashboard() {
     if (!mobileOpen) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    sidebar.current?.querySelector("button")?.focus();
+    sidebar.current?.querySelector("button")?.focus({ preventScroll: true });
     const close = () => {
       setMobileOpen(false);
-      menuButton.current?.focus();
+      menuButton.current?.focus({ preventScroll: true });
     };
     const keydown = (event) => {
       if (event.key === "Escape") close();
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
           aria-label="Close admin menu"
           onClick={() => {
             setMobileOpen(false);
-            menuButton.current?.focus();
+            menuButton.current?.focus({ preventScroll: true });
           }}
         />
       )}
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
             aria-label="Close admin menu"
             onClick={() => {
               setMobileOpen(false);
-              menuButton.current?.focus();
+              menuButton.current?.focus({ preventScroll: true });
             }}
           >
             <XMarkIcon />

@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import RouteScrollReset from "./shared/ui/RouteScrollReset";
 import MiniCart from "./features/user/components/MiniCart";
 import Search from "./features/user/components/Search";
 import Home from "./features/user/pages/Home";
@@ -127,6 +128,7 @@ function AppRoutes() {
 function App() {
   return (
     <>
+      <RouteScrollReset />
       <Toaster position="top-center" />
       <MiniCart />
       <ErrorBoundary>

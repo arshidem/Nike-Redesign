@@ -79,7 +79,7 @@ function Dialog({ title, onClose, locked = false, children }) {
       panel.current?.querySelector(
         "button:not(:disabled),select:not(:disabled),input:not(:disabled)",
       ) || panel.current
-    )?.focus();
+    )?.focus({ preventScroll: true });
     const keydown = (event) => {
       if (event.key === "Escape" && !locked) onClose();
       if (event.key === "Tab") {
@@ -90,7 +90,7 @@ function Dialog({ title, onClose, locked = false, children }) {
         ];
         if (!nodes.length) {
           event.preventDefault();
-          panel.current?.focus();
+          panel.current?.focus({ preventScroll: true });
           return;
         }
         if (event.shiftKey && document.activeElement === nodes[0]) {
@@ -106,7 +106,7 @@ function Dialog({ title, onClose, locked = false, children }) {
     return () => {
       document.body.style.overflow = overflow;
       document.removeEventListener("keydown", keydown);
-      if (previous?.isConnected) previous.focus();
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
     };
   }, [locked]);
   return createPortal(
@@ -277,7 +277,7 @@ export const AllProducts = () => {
   }, [selected, products, view]);
   useEffect(() => {
     if (!menu) return;
-    menuRef.current?.querySelector("a,button")?.focus();
+    menuRef.current?.querySelector("a,button")?.focus({ preventScroll: true });
     const close = (event) => {
       if (event.type === "keydown" && event.key !== "Escape") return;
       if (
@@ -285,7 +285,7 @@ export const AllProducts = () => {
         menuRef.current?.contains(event.target)
       )
         return;
-      if (event.type === "keydown") menu.trigger?.focus();
+      if (event.type === "keydown") menu.trigger?.focus({ preventScroll: true });
       setMenu(null);
     };
     document.addEventListener("pointerdown", close);
