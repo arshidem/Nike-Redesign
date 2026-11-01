@@ -1,3 +1,4 @@
+import { useScrollHeader } from "../../../hooks/useScrollHeader";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -35,6 +36,7 @@ export default function AdminDashboard() {
     : "dashboard";
   const [mobileOpen, setMobileOpen] = useState(false),
     [orderCount, setOrderCount] = useState(null);
+  const scrollHeader = useScrollHeader({ locked: mobileOpen });
   const menuButton = useRef(null),
     sidebar = useRef(null);
   useEffect(() => setMobileOpen(false), [location.hash, location.pathname]);
@@ -82,7 +84,13 @@ export default function AdminDashboard() {
   };
   return (
     <div className={`admin-shell${mobileOpen ? " admin-drawer-open" : ""}`}>
-      <div className="admin-mobile-header">
+      <div
+        ref={scrollHeader.ref}
+        className="admin-mobile-header scroll-header scroll-header-sticky"
+        data-scroll-hidden={scrollHeader.hidden}
+        aria-hidden={scrollHeader.hidden || undefined}
+        inert={scrollHeader.hidden || undefined}
+      >
         <button
           ref={menuButton}
           type="button"

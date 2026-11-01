@@ -1,3 +1,4 @@
+import { useScrollHeader } from "../../../hooks/useScrollHeader";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -58,6 +59,7 @@ const states = {
   },
 };
 export default function OrderDetails() {
+  const scrollHeader = useScrollHeader();
   const { orderId } = useParams(),
     { backendUrl, token } = useAppContext();
   const service = useOrderServices(),
@@ -156,8 +158,14 @@ export default function OrderDetails() {
   );
   return (
     <div className="od-page">
-      <div className="od-sticky">
-        <AppBar fallback="/orders" center={center} />
+      <div
+        ref={scrollHeader.ref}
+        className="od-sticky scroll-header"
+        data-scroll-hidden={scrollHeader.hidden}
+        aria-hidden={scrollHeader.hidden || undefined}
+        inert={scrollHeader.hidden || undefined}
+      >
+        <AppBar fallback="/orders" center={center} scrollAware={false} />
       </div>
       <main className="od-main">
         <header className="od-heading">

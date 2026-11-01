@@ -1,0 +1,23 @@
+.scroll-header[data-scroll-hidden] {
+  transition: transform 0.3s cubic-bezier(0.22, 0.75, 0.25, 1);
+  transform: none;
+}
+.scroll-header[data-scroll-hidden="true"] {
+  transform: translateY(calc(-100% - 2px));
+  pointer-events: none;
+}
+.customer-appbar.scroll-header.scroll-header-sticky,
+.store-header.scroll-header-sticky,
+.admin-mobile-header.scroll-header-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-header[data-scroll-hidden] {
+    transition: none !important;
+  }
+}
+.scroll-header.fixed {
+  top: 0;
+}

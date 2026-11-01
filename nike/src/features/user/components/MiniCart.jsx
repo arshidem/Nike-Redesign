@@ -54,10 +54,15 @@ export default function MiniCart() {
       const bag = [...document.querySelectorAll('a[href="/bag"]')].find(
           (el) => el.getBoundingClientRect().width > 0,
         ),
-        rect = bag?.getBoundingClientRect();
+        rect = bag?.getBoundingClientRect(),
+        headerTop =
+          bag?.closest(".scroll-header")?.getBoundingClientRect().top || 0;
       setPosition({
         top: rect
-          ? Math.min(Math.max(rect.bottom + 12, 16), window.innerHeight - 220)
+          ? Math.min(
+              Math.max(rect.bottom - Math.min(0, headerTop) + 12, 16),
+              window.innerHeight - 220,
+            )
           : 80,
         right: rect ? Math.max(16, window.innerWidth - rect.right) : 24,
       });
@@ -89,7 +94,8 @@ export default function MiniCart() {
       document.body.style.overflow = overflow;
       document.removeEventListener("keydown", keydown);
       window.removeEventListener("resize", place);
-      if (previousFocus.current?.isConnected) previousFocus.current.focus({ preventScroll: true });
+      if (previousFocus.current?.isConnected)
+        previousFocus.current.focus({ preventScroll: true });
     };
   }, [open]);
   const item = cart.items.find(
