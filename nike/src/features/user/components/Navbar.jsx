@@ -153,7 +153,7 @@ export function Navbar() {
         </div>
       </div>
       <AppBar home className="store-nav">
-        <AppBarBrand />
+        <AppBarBrand showText={true} />
         <div className="store-nav-links">
           {menus.map((menu) => (
             <details className="store-dropdown" key={menu.label}>

@@ -7,11 +7,11 @@ import {
 } from "@heroicons/react/24/outline";
 import "./app-bar.css";
 
-export function AppBarBrand() {
+export function AppBarBrand({ showText = false }) {
   return (
     <Link to="/home" className="customer-appbar-brand" aria-label="Nike home">
-      <img src="/assets/logo/nikeLogo.png" alt="" />
-      <span>NIKE</span>
+      <img src="/assets/logo/nikeLogo.png" alt="Nike" />
+      {showText && <span>NIKE</span>}
     </Link>
   );
 }

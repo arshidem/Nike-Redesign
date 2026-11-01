@@ -532,22 +532,56 @@
 .store-icons-section {
   min-width: 0;
 }
+.store-icons-section .store-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.store-icons-heading {
+  margin: 0 !important;
+  line-height: 1.15;
+  white-space: nowrap;
+}
 .store-icons-controls {
   display: flex;
-  gap: 12px;
-}
-.store-icons-controls button {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border: 1px solid #c9ccbe;
-  border-radius: 50%;
+  align-items: center;
+  gap: 10px;
   flex-shrink: 0;
+  margin-left: auto;
 }
-.store-icons-controls svg {
-  width: 20px;
-  height: 20px;
+.store-icons-controls .store-control-btn {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dcdfd5;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #11140e;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.store-icons-controls .store-control-btn:hover {
+  background: #11140e;
+  color: #ffffff;
+  border-color: #11140e;
+  transform: scale(1.06);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+}
+.store-icons-controls .store-control-btn:active {
+  transform: scale(0.95);
+}
+.store-icons-controls .store-control-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+  transition: stroke 0.2s ease;
 }
 .store-icon-rail {
   display: grid;
@@ -560,21 +594,43 @@
   scroll-snap-type: x mandatory;
 }
 .store-icon-card {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   min-width: 0;
   text-align: center;
   scroll-snap-align: start;
+  text-decoration: none;
+  padding: 14px 10px;
+  border-radius: 16px;
+  background: #f8f9f5;
+  border: 1px solid #e5e8de;
+  transition: all 0.22s ease;
+}
+.store-icon-card:hover {
+  background: #f2f4ec;
+  border-color: #d1d5c5;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 .store-icon-rail .store-icon-image {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 1;
+  aspect-ratio: 1.15;
   object-fit: contain;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.store-icon-card:hover .store-icon-image {
+  transform: scale(1.08) rotate(-2deg);
 }
 .store-icon-card h3 {
   overflow-wrap: anywhere;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: #151711;
 }
 @media (max-width: 900px) {
   .store-icon-rail {
@@ -589,9 +645,13 @@
   .store-icons-controls {
     gap: 8px;
   }
-  .store-icons-controls button {
-    width: 40px;
-    height: 40px;
+  .store-icons-controls .store-control-btn {
+    width: 38px;
+    height: 38px;
+  }
+  .store-icons-controls .store-control-btn svg {
+    width: 16px;
+    height: 16px;
   }
   .store-icons-section .store-section-heading {
     flex-direction: row;
@@ -617,24 +677,48 @@
 .home-categories {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(10px, 3vw, 40px);
-  padding: 30px var(--store-page-inset);
-  max-width: 1050px;
-  margin: auto;
+  gap: clamp(20px, 4vw, 56px);
+  padding: 48px var(--store-page-inset);
+  max-width: 1280px;
+  margin: 0 auto;
 }
-.home-category { min-width: 0; text-align: center; font-size: 14px; }
+.home-category {
+  min-width: 0;
+  text-align: center;
+  font-size: clamp(16px, 1.4vw, 19px);
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: #151711;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 .home-category-image {
   display: grid;
   place-items: center;
   width: 100%;
+  max-width: 250px;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: #edeee7;
+  background: #f0f1ea;
+  border: 1.5px solid #dfded5;
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.05);
 }
-.home-category-image img { width: 94%; height: 76%; object-fit: contain; mix-blend-mode: multiply; transition: transform .2s; }
-.home-category:hover img { transform: translateY(-3px); }
+.home-category-image img {
+  width: 118%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  transform: rotate(-10deg) scale(1.12);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.home-category:hover .home-category-image img {
+  transform: rotate(-4deg) scale(1.26) translateY(-4px);
+}
 .sport-story h2 > span { display: block; }
 .home-edit .store-section-heading { flex-direction: row; flex-wrap: nowrap; align-items: flex-end; }
 .home-edit-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
@@ -646,10 +730,38 @@
 .home-edit-caption h3 { font-size: 15px; line-height: 1.3; letter-spacing: -.025em; }
 .home-edit-caption p { font-size: 12px; color: #818476; margin-top: 4px; }
 .home-edit-caption > svg { width: 20px; height: 20px; flex-shrink: 0; }
-@media (max-width: 600px) {
-  .home-categories { gap: 12px; padding: 20px var(--store-page-inset); }
-  .home-category { font-size: clamp(9px, 2.1vw, 12px); }
-  .home-category-image { margin-bottom: 8px; }
+@media (max-width: 640px) {
+  .home-categories {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 16px;
+    padding: 24px var(--store-page-inset) 28px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .home-categories::-webkit-scrollbar {
+    display: none;
+  }
+  .home-category {
+    flex: 0 0 160px;
+    scroll-snap-align: start;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .home-category-image {
+    width: 160px;
+    height: 160px;
+    max-width: 160px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  }
+  .home-category-image img {
+    width: 120%;
+    height: 100%;
+    transform: rotate(-8deg) scale(1.15);
+  }
   .home-edit .store-section-heading { gap: 12px; margin-bottom: 20px; }
   .home-edit .store-section-heading h2 { font-size: clamp(21px, 4.8vw, 30px); font-weight: 500; }
   .home-edit .store-eyebrow { font-size: 7px; }

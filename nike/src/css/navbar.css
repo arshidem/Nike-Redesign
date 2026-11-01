@@ -286,16 +286,30 @@
     font-size: 28px;
   }
   .store-nav-actions {
-    gap: 8px;
+    gap: 4px;
+  }
+  .store-icon-button {
+    min-width: 36px;
+    width: 36px;
+    height: 36px;
   }
   .store-search-button {
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
   }
   .store-icon-button svg {
-    width: 25px;
-    height: 25px;
-    stroke-width: 1.5;
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.7;
+  }
+  .store-bag-count {
+    min-width: 15px;
+    height: 15px;
+    line-height: 15px;
+    font-size: 8.5px;
+    top: -2px;
+    right: -2px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -493,17 +507,26 @@
     filter: brightness(0) invert(1);
   }
   .store-menu-account-links {
-    margin-top: 30px;
+    margin-top: 24px;
+    padding-top: 12px;
     border-top: 1px solid #dedfd6;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
   .store-mobile-nav .store-menu-account-links a {
     justify-content: flex-start;
-    gap: 20px;
-    padding: 19px 6px;
-    min-height: 68px;
-    border-bottom: 1px solid #e1e3db;
-    font-size: 17px;
+    gap: 14px;
+    padding: 14px 10px;
+    min-height: 52px;
+    border-radius: 10px;
+    border-bottom: 1px solid #ebece6;
+    font-size: 15px;
     font-weight: 500;
+    transition: background 0.15s ease;
+  }
+  .store-mobile-nav .store-menu-account-links a:hover {
+    background: #f1f2ec;
   }
   .store-menu-account-links a:last-child {
     border-bottom: 0;
@@ -512,13 +535,15 @@
     flex: 1;
   }
   .store-mobile-nav .store-menu-account-links svg {
-    width: 25px;
-    height: 25px;
-    stroke-width: 1.5;
-  }
-  .store-menu-account-links a > svg:last-child {
     width: 20px;
     height: 20px;
+    stroke-width: 1.6;
+    color: #444a3c;
+  }
+  .store-menu-account-links a > svg:last-child {
+    width: 16px;
+    height: 16px;
+    color: #8a8f82;
   }
 }
 @media (max-width: 390px) {
