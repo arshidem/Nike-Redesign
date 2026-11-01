@@ -13,6 +13,7 @@ import AccountSettings from "./features/user/AccountSettings/AccountSettings";
 import { AdminUserDetails } from "./features/admin/pages/AdminUserDetails";
 import { AdminRoute } from "./features/admin/routes/AdminRoute";
 import ProductListPage from "./features/user/pages/ProductListPage"
+const LegalPage = lazy(() => import("./features/legal/LegalPage"));
 const ModelPage = lazy(() => import("./features/user/pages/ModelPage"));
 const ProductDetails = lazy(() => import("./features/user/pages/ProductDetails"));
 const Cart = lazy(() => import("./features/user/pages/Cart"));
@@ -77,9 +78,11 @@ function AppRoutes() {
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/account/*" element={<AccountSettings />} />
-      <Route path="/privacy" element={<AccountSettings publicPage="privacy" />} />
-      <Route path="/terms" element={<AccountSettings publicPage="terms" />} />
+      <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
+      <Route path="/terms" element={<Navigate to="/terms-of-service" replace />} />
       <Route path="/signin" element={<SignIn />} />
+      <Route path="/privacy-policy" element={<LegalPage documentType="privacy" />} />
+      <Route path="/terms-of-service" element={<LegalPage documentType="terms" />} />
       <Route path="/verify-otp" element={<VerifyOtp />} />
       <Route path="/complete-register" element={<CompleteRegister />} />
       <Route path="/verify-register-otp" element={<VerifyRegisterOtp />} />

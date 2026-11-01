@@ -1,7 +1,7 @@
 import AuthFrame from "../../../shared/ui/AuthFrame";
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../../context/AppContext.jsx";
 import toast, { Toaster } from "react-hot-toast";
 import { NikeSwoosh } from "../../../shared/ui/Icons.jsx";
@@ -84,9 +84,9 @@ const SignIn = () => {
 
         {/* Terms and Privacy */}
         <p className="text-center text-xs text-gray-600 mt-6">
-          By continuing, I agree to Nike's{" "}
-          <span className="underline cursor-pointer">Privacy Policy</span> and{" "}
-          <span className="underline cursor-pointer">Terms of Use</span>.
+          By continuing, I agree to this storefront’s{" "}
+          <Link to="/privacy-policy" className="underline">Privacy Policy</Link> and{" "}
+          <Link to="/terms-of-service" className="underline">Terms of Service</Link>.
         </p>
 
       

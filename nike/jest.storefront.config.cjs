@@ -1,7 +1,7 @@
 module.exports = {
   setupFiles: ["<rootDir>/tests/setup.cjs"],
   testEnvironment: "jsdom",
-  testMatch: [
+  testMatch: ["**/tests/legal.test.jsx",
     "**/tests/settings.test.jsx",
     "**/tests/storefront.test.jsx",
     "**/tests/presentation.test.jsx",

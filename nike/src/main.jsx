@@ -8,6 +8,7 @@ import './index.css';
 import './css/home.css';
 import './css/storefront.css';
 import './css/design-system.css';
+import './css/legal.css';
 
 const queryClient = new QueryClient();
 
