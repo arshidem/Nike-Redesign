@@ -18,6 +18,10 @@ router.post("/verify-otp", verifyOTP);
 router.post("/complete-registration", completeRegistration);
 router.post("/logout", protect, logout);
 router.get("/me", protect, getMe);
+const account = require("../controllers/accountController");
+router.get("/preferences", protect, account.getPreferences);
+router.put("/preferences", protect, account.updatePreferences);
+router.get("/data", protect, account.exportData);
 router.put("/me", protect, updateUserData);
 router.delete("/me", protect, deleteUser);
 

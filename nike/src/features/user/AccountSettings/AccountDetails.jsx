@@ -1,253 +1,174 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAppContext } from "../../../context/AppContext";
 import useAuthService from "../services/authServices";
-import toast, { Toaster } from "react-hot-toast";
-import { ConfirmModal, EditIcon } from "../../../shared/ui/Icons";
-import { Country, State } from "country-state-city";
-import { AccountDetailsSkeleton } from "../../../shared/ui/Skeleton";
-
-const AccountDetails = () => {
-  const { logout, setUser } = useAppContext();
-  const { getMe, updateUserData, deleteUser } = useAuthService();
-
-  const [initialFormData, setInitialFormData] = useState({
-    name: "",
-    phoneNumber: "",
-    dob: "",
-    country: "",
-    state: "",
-    city: "",
-    postalCode: "",
-  });
-
-  const [formData, setFormData] = useState({ ...initialFormData });
-  const [countries, setCountries] = useState([]);
-  const [states, setStates] = useState([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-
+import { Field, Resource, message, useSettingsResource } from "./SettingsUI";
+const fields = {
+  name: "",
+  phone: "",
+  gender: "",
+  dob: "",
+  country: "",
+  state: "",
+  city: "",
+  postalCode: "",
+};
+export default function AccountDetails() {
+  const auth = useAuthService(),
+    { setUser } = useAppContext(),
+    resource = useSettingsResource(() => auth.getMe());
+  const [form, setForm] = useState(fields),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState(""),
+    [saved, setSaved] = useState(false);
   useEffect(() => {
-    const countryList = Country.getAllCountries().map((c) => ({
-      name: c.name,
-      code: c.isoCode,
+    if (resource.data)
+      setForm(
+        Object.fromEntries(
+          Object.keys(fields).map((key) => [key, resource.data[key] || ""]),
+        ),
+      );
+  }, [resource.data]);
+  const change = (event) => {
+    setForm((previous) => ({
+      ...previous,
+      [event.target.name]: event.target.value,
     }));
-    setCountries(countryList);
-  }, []);
-
-useEffect(() => {
-  if (!formData.country || countries.length === 0) return;
-
-  const selected = countries.find((c) => c.name === formData.country);
-  if (selected) {
-    const stateList = State.getStatesOfCountry(selected.code).map((s) => s.name);
-    setStates(stateList);
-  } else {
-    setStates([]);
-  }
-}, [formData.country, countries]);
-
- const fetchUserDetails = async () => {
-      try {
-        const data = await getMe();
-        const userData = {
-          name: data.name || "",
-          phone: data.phone || "",
-          dob: data.dob || "",
-          country: data.country || "",
-          state: data.state || "",
-          city: data.city || "",
-          postalCode: data.postalCode || "",
-        };
-        setInitialFormData(userData);
-        setFormData(userData);
-        setEmail(data.email);
-if (data && data._id) {
-  setUser((prev) => ({ ...prev, ...data }));
-}
-      } catch (err) {
-        toast.error("Failed to load user data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-  useEffect(() => {
-    fetchUserDetails();
-  }, []);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setSaved(false);
   };
-
-  const handleCountryChange = (e) => {
-    const countryName = e.target.value;
-    setFormData((prev) => ({ ...prev, country: countryName, state: "" }));
-  };
-
-  const toggleEditing = () => {
-    setIsEditing(!isEditing);
-  };
-
-  const handleUpdate = async () => {
+  const save = async (event) => {
+    event.preventDefault();
+    if (busy) return;
+    setError("");
+    setSaved(false);
+    if (form.name.trim().length < 2 || form.name.trim().length > 50) {
+      setError("Enter a name between 2 and 50 characters.");
+      return;
+    }
+    if (form.phone && !/^\+?[\d\s().-]{7,20}$/.test(form.phone)) {
+      setError("Enter a valid phone number.");
+      return;
+    }
+    setBusy(true);
     try {
-      const res = await updateUserData(formData);
-      toast.success("Profile updated successfully");
-      const updated = {
-        name: res.user.name || "",
-        phone: res.user.phone || "",
-        dob: res.user.dob || "",
-        country: res.user.country || "",
-        state: res.user.state || "",
-        city: res.user.city || "",
-        postalCode: res.user.postalCode || "",
-      };
-      setInitialFormData(updated);
-      setFormData(updated);
-      setUser({ ...res.user, isAuthenticated: true });
-      setIsEditing(false);
+      const result = await auth.updateUserData({
+        ...form,
+        gender: form.gender || undefined,
+        name: form.name.trim(),
+      });
+      resource.setData({ ...resource.data, ...result.user });
+      setUser((previous) => ({
+        ...previous,
+        ...result.user,
+        isAuthenticated: true,
+      }));
+      setSaved(true);
     } catch (err) {
-      toast.error("Failed to update profile");
+      setError(message(err));
+    } finally {
+      setBusy(false);
     }
   };
-
-  const handleDeleteAccount = async () => {
-    try {
-      await deleteUser();
-      toast.success("Account deleted successfully");
-      logout();
-      Navigate("/home")
-    } catch (err) {
-      toast.error("Failed to delete account");
-    }
-  };
-
-  const hasChanges = () =>
-    Object.keys(formData).some((key) => formData[key] !== initialFormData[key]);
-
-  const renderField = (label, name, type = "text") => (
-    <div>
-      <label className="block text-sm font-medium">{label}*</label>
-      <input
-        name={name}
-        type={type}
-        value={
-          name === "dob"
-            ? formData.dob
-              ? new Date(formData.dob).toISOString().slice(0, 10)
-              : ""
-            : formData[name]
-        }
-        onChange={handleChange}
-        readOnly={!isEditing}
-        className={`w-full mt-1 border rounded p-2 ${
-          !isEditing ? "bg-gray-100 cursor-not-allowed" : ""
-        }`}
-      />
-    </div>
-  );
-
-  const renderSelectField = (label, name, options) => (
-    <div>
-      <label className="block text-sm font-medium">{label}*</label>
-      <select
-        name={name}
-        value={formData[name]}
-        onChange={name === "country" ? handleCountryChange : handleChange}
-        disabled={!isEditing}
-        className={`w-full mt-1 border rounded p-2 ${
-          !isEditing ? "bg-gray-100 cursor-not-allowed" : ""
-        }`}
-      >
-        <option value="">Select {label}</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-
-  if (loading) return <div className="design-page design-customer design-account-details"><AccountDetailsSkeleton/></div>;
-
   return (
-    <div className="design-page design-customer design-account-details max-w-2xl mx-auto p-6">
-      <Toaster position="top-center" />
-      <div className="flex justify-between items-center mb-6">
-        <h1 data-section="YOUR SPACE / MEMBERSHIP" className="text-2xl font-semibold">Account Details</h1>
-        <button
-          onClick={toggleEditing}
-          className="p-2 rounded-full hover:bg-gray-100"
-        >
-          <EditIcon className="w-5 h-5" />
-        </button>
-      </div>
-
-      <div className="space-y-5">
-        {renderField("Name", "name")}
-        <div>
-          <label className="block text-sm font-medium">Email*</label>
-          <input
-            value={email}
-            disabled
-            className="w-full mt-1 border rounded p-2 bg-gray-100"
+    <Resource value={resource}>
+      <form className="settings-card settings-form" onSubmit={save}>
+        <div className="settings-fields">
+          <Field
+            label="Full name"
+            name="name"
+            autoComplete="name"
+            required
+            minLength={2}
+            maxLength={50}
+            value={form.name}
+            onChange={change}
+          />
+          <Field
+            label="Email address"
+            type="email"
+            value={resource.data?.email || ""}
+            readOnly
+          />
+          <Field
+            label="Phone number"
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            value={form.phone}
+            onChange={change}
+          />
+          <Field
+            label="Date of birth"
+            name="dob"
+            type="date"
+            max={new Date().toISOString().slice(0, 10)}
+            value={String(form.dob).slice(0, 10)}
+            onChange={change}
+          />
+          <Field label="Gender">
+            <select name="gender" value={form.gender} onChange={change}>
+              <option value="">Choose gender</option>
+              {[
+                ["male", "Male"],
+                ["female", "Female"],
+                ["other", "Other"],
+                ["prefer-not-to-say", "Prefer not to say"],
+              ].map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field
+            label="Country / Region"
+            name="country"
+            autoComplete="country-name"
+            value={form.country}
+            onChange={change}
+          />
+          <Field
+            label="State / Province"
+            name="state"
+            autoComplete="address-level1"
+            value={form.state}
+            onChange={change}
+          />
+          <Field
+            label="Town / City"
+            name="city"
+            autoComplete="address-level2"
+            value={form.city}
+            onChange={change}
+          />
+          <Field
+            label="Postcode"
+            name="postalCode"
+            autoComplete="postal-code"
+            value={form.postalCode}
+            onChange={change}
           />
         </div>
-        {renderField("Phone", "phone")}
-        {renderField("Date of Birth", "dob", "date")}
-
-        <div className="mt-6">
-          <h3 className="font-medium">Location</h3>
-          <div className="mt-4 space-y-4">
-            {renderSelectField("Country/Region", "country", countries.map((c) => c.name))}
-            {renderSelectField("State/Province", "state", states)}
-            {renderField("Town/City", "city")}
-            {renderField("Postcode", "postalCode")}
-          </div>
-        </div>
-
-        <div className="border-t pt-6 mt-6">
-          <div className="flex justify-between items-center">
-            <p className="font-medium">Delete Account</p>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="border px-4 py-1 rounded-full hover:bg-gray-100"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-
-        {isEditing && (
-          <button
-            className={`w-full py-2 mt-4 rounded-full transition ${
-              hasChanges()
-                ? "bg-black text-white hover:bg-opacity-90"
-                : "bg-white text-black border border-black hover:bg-gray-100"
-            }`}
-            onClick={handleUpdate}
-            disabled={!hasChanges()}
-          >
-            Save Changes
-          </button>
+        <p className="settings-muted">
+          Your email is used for OTP sign-in and order confirmations.
+        </p>
+        {error && (
+          <p className="settings-error" role="alert">
+            {error}
+          </p>
         )}
-      </div>
-
-      {showDeleteModal && (
-        <ConfirmModal
-          title="Delete Account"
-          description="Are you sure you want to delete your account? This action cannot be undone."
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
-          onClose={() => setShowDeleteModal(false)}
-          onConfirm={handleDeleteAccount}
-        />
-      )}
-    </div>
+        {saved && (
+          <p className="settings-success" role="status">
+            Your information is saved.
+          </p>
+        )}
+        <button className="settings-primary" disabled={busy} type="submit">
+          {busy ? "Saving…" : "Save Changes"}
+        </button>
+        <Link className="settings-text-link" to="/account/privacy">
+          Privacy and account deletion
+        </Link>
+      </form>
+    </Resource>
   );
-};
-
-export default AccountDetails;
+}

@@ -71,6 +71,7 @@ const wishlistRoutes =require( "./routes/wishlistRoutes.js");
 // Mount routes
 app.use("/api/products", productRouter);
 app.use("/api/auth", authRoutes);
+app.use("/api/support", require("./routes/supportRoutes"));
 app.use("/api/admin", adminRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/coupons", couponRoutes);

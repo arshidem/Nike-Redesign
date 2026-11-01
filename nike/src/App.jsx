@@ -76,7 +76,9 @@ function AppRoutes() {
       <Route path="/orders/:orderId" element={<OrderDetails />} />
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/profile" element={<Profile />} />
-      <Route path="/account" element={<AccountSettings />} />
+      <Route path="/account/*" element={<AccountSettings />} />
+      <Route path="/privacy" element={<AccountSettings publicPage="privacy" />} />
+      <Route path="/terms" element={<AccountSettings publicPage="terms" />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="/verify-otp" element={<VerifyOtp />} />
       <Route path="/complete-register" element={<CompleteRegister />} />

@@ -8,6 +8,7 @@ import {
   UserIcon,
   ChartBarIcon,
   TicketIcon,
+  ChatBubbleLeftRightIcon,
   HomeIcon,
   Bars3Icon,
   XMarkIcon,
@@ -17,6 +18,7 @@ import { AllOrders } from "../components/AllOrders";
 import { AllUsers } from "../components/AllUsers";
 import { Dashboard } from "../components/Dashboard";
 import { Reports } from "../components/Reports";
+import SupportRequests from "../components/SupportRequests";
 import Coupon from "../components/Coupon";
 import "../../../css/admin-dashboard.css";
 
@@ -27,6 +29,7 @@ const sections = [
   ["users", "Users", UserIcon],
   ["reports", "Reports", ChartBarIcon],
   ["coupon", "Coupons", TicketIcon],
+  ["support", "Support", ChatBubbleLeftRightIcon],
 ];
 export default function AdminDashboard() {
   const location = useLocation(),
@@ -80,6 +83,7 @@ export default function AdminDashboard() {
     orders: <AllOrders navigate={navigate} setActiveView={switchView} />,
     users: <AllUsers navigate={navigate} setActiveView={switchView} />,
     reports: <Reports navigate={navigate} setActiveView={switchView} />,
+    support: <SupportRequests />,
     coupon: <Coupon navigate={navigate} setActiveView={switchView} />,
   };
   return (
