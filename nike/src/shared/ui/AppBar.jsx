@@ -1,3 +1,4 @@
+import { useScrollHeader } from "../../hooks/useScrollHeader";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -28,12 +29,18 @@ export default function AppBar({
   home = false,
   children,
   center,
+  scrollAware = true,
 }) {
   const navigate = useNavigate();
+  const scroll = useScrollHeader({ enabled: scrollAware && !home });
   const Tag = home ? "nav" : "header";
   return (
     <Tag
-      className={`customer-appbar ${home ? "customer-appbar-home" : ""} ${className}`}
+      ref={scroll.ref}
+      data-scroll-hidden={scrollAware && !home ? scroll.hidden : undefined}
+      aria-hidden={scroll.hidden || undefined}
+      inert={scroll.hidden || undefined}
+      className={`customer-appbar ${scrollAware && !home ? "scroll-header scroll-header-sticky" : ""} ${home ? "customer-appbar-home" : ""} ${className}`}
       aria-label={home ? "Main navigation" : "Page navigation"}
     >
       {home ? (

@@ -1,3 +1,4 @@
+import { useScrollHeader } from "../../../hooks/useScrollHeader";
 import AppBar, { AppBarBrand } from "../../../shared/ui/AppBar";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -57,6 +58,10 @@ export function Navbar() {
   const location = useLocation();
   const menuButton = useRef(null);
   const header = useRef(null);
+  const scroll = useScrollHeader({
+    elementRef: header,
+    locked: menuOpen || searchOpen,
+  });
   useEffect(() => {
     setMenuOpen(false);
     setSearchOpen(false);
@@ -128,7 +133,10 @@ export function Navbar() {
   };
   return (
     <header
-      className={`store-header${menuOpen ? " store-menu-open" : ""}`}
+      data-scroll-hidden={scroll.hidden}
+      aria-hidden={scroll.hidden || undefined}
+      inert={scroll.hidden || undefined}
+      className={`store-header scroll-header scroll-header-sticky${menuOpen ? " store-menu-open" : ""}`}
       ref={header}
     >
       <a className="store-skip" href="#main-content">
