@@ -11,6 +11,7 @@ import {
   ArrowUpRightIcon,
   UserIcon,
   ChevronRightIcon,
+  ChevronLeftIcon,
   CubeIcon,
   ComputerDesktopIcon,
 } from "@heroicons/react/24/outline";
@@ -54,6 +55,13 @@ export function Navbar() {
   const { user, logout, backendUrl } = useAppContext();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [activeMenu, setActiveMenu] = useState(null);
+  const lastMenu = useRef(0),
+    previousMenu = useRef(null),
+    categoryButtons = useRef([]),
+    submenuBack = useRef(null),
+    submenu = useRef(null);
+  const selectedMenu = menus[activeMenu ?? lastMenu.current];
   const [bagItemCount, setBagItemCount] = useState(0);
   const location = useLocation();
   const menuButton = useRef(null);
@@ -65,6 +73,7 @@ export function Navbar() {
   });
   useEffect(() => {
     setMenuOpen(false);
+    setActiveMenu(null);
     setSearchOpen(false);
     header.current?.querySelectorAll("details[open]").forEach((item) => {
       item.open = false;
@@ -120,6 +129,26 @@ export function Navbar() {
     document.addEventListener("keydown", close);
     return () => document.removeEventListener("keydown", close);
   }, []);
+  useEffect(() => {
+    if (!menuOpen) {
+      setActiveMenu(null);
+      previousMenu.current = null;
+      return;
+    }
+    if (activeMenu != null) {
+      submenu.current?.scrollTo?.({ top: 0 });
+      submenuBack.current?.focus({ preventScroll: true });
+    } else if (previousMenu.current != null) {
+      categoryButtons.current[previousMenu.current]?.focus({
+        preventScroll: true,
+      });
+    }
+    previousMenu.current = activeMenu;
+  }, [menuOpen, activeMenu]);
+  const openSubmenu = (index) => {
+    lastMenu.current = index;
+    setActiveMenu(index);
+  };
   const signOut = async () => {
     try {
       await fetch(`${backendUrl}/api/auth/logout`, {
@@ -222,92 +251,96 @@ export function Navbar() {
           id="store-mobile-nav"
           aria-label="Mobile navigation"
         >
-          <div className="store-menu-categories">
-            {menus.map((menu, index) => (
-              <details
-                key={menu.label}
-                className={`store-menu-category store-menu-category-${index}`}
-              >
-                <summary>
-                  <span className="store-menu-card-copy">
-                    <strong>{menu.label}</strong>
-                    <span>
-                      {index === 0 ? (
-                        "Latest drops, stories and more"
-                      ) : index === 4 ? (
-                        <mark>Up to 70% off</mark>
-                      ) : index === 3 ? (
-                        "Shoes, apparel and more"
-                      ) : (
-                        "Shoes, apparel and accessories"
-                      )}
-                    </span>
-                  </span>
-                  {index === 0 ? (
-                    <img
-                      className="store-menu-shoe"
-                      src="/assets/editorial/dunk.png"
-                      alt=""
-                    />
-                  ) : index === 4 ? (
-                    <span className="store-menu-sale-art" aria-hidden="true">
-                      <span />
-                      <img src="/assets/logo/nikeLogo.png" alt="" />
-                    </span>
-                  ) : (
-                    <span
-                      className={`store-menu-person store-menu-person-${index}`}
-                      aria-hidden="true"
-                    />
-                  )}
-                  <ChevronRightIcon className="store-menu-chevron" />
-                </summary>
-                <div className="store-menu-subcategories">
-                  <Link
-                    to={
-                      index === 0
-                        ? "/products"
-                        : index > 0 && index < 4
-                          ? `/products?gender=${menu.label.toLowerCase()}`
-                          : menu.to
-                    }
+          <div
+            className={`store-mobile-slider${activeMenu != null ? " store-mobile-submenu-open" : ""}`}
+          >
+            <section
+              className="store-menu-page"
+              aria-label="Main menu"
+              aria-hidden={activeMenu != null}
+              inert={activeMenu != null || undefined}
+            >
+              <div className="store-menu-categories">
+                {menus.map((menu, index) => (
+                  <button
+                    type="button"
+                    key={menu.label}
+                    ref={(element) => {
+                      categoryButtons.current[index] = element;
+                    }}
+                    aria-expanded={activeMenu === index}
+                    aria-controls="store-mobile-submenu"
+                    onClick={() => openSubmenu(index)}
                   >
-                    Shop all {menu.label.toLowerCase()}
-                    <ArrowUpRightIcon />
+                    <span>{menu.label}</span>
+                    <ChevronRightIcon />
+                  </button>
+                ))}
+              </div>
+              <div className="store-menu-account-links">
+                <Link to="/wishlist">
+                  <HeartIcon />
+                  <span>Your favourites</span>
+                  <ChevronRightIcon />
+                </Link>
+                <Link to={user ? "/account" : "/signin"}>
+                  <UserIcon />
+                  <span>{user ? "Your account" : "Join us / Sign in"}</span>
+                  <ChevronRightIcon />
+                </Link>
+                <Link to="/orders">
+                  <CubeIcon />
+                  <span>Your orders</span>
+                  <ArrowUpRightIcon />
+                </Link>
+                {user?.role === "admin" && (
+                  <Link to="/admin">
+                    <ComputerDesktopIcon />
+                    <span>Admin dashboard</span>
+                    <ChevronRightIcon />
                   </Link>
-                  {menu.items.map(([label, to]) => (
-                    <Link key={to} to={to}>
-                      {label}
-                      <ArrowUpRightIcon />
-                    </Link>
-                  ))}
-                </div>
-              </details>
-            ))}
-          </div>
-          <div className="store-menu-account-links">
-            <Link to="/wishlist">
-              <HeartIcon />
-              <span>Your favourites</span>
-              <ChevronRightIcon />
-            </Link>
-            <Link to={user ? "/account" : "/signin"}>
-              <UserIcon />
-              <span>{user ? "Your account" : "Join us / Sign in"}</span>
-              <ChevronRightIcon />
-            </Link>
-            <Link to="/orders">
-              <CubeIcon />
-              <span>Your orders</span>
-              <ArrowUpRightIcon />
-            </Link>
-            {user?.role === "admin" && (
-              <Link to="/admin">
-                <ComputerDesktopIcon />
-                <span>Admin dashboard</span>
-                <ChevronRightIcon />
-              </Link>
-            )}
+                )}
+              </div>
+            </section>
+            <section
+              ref={submenu}
+              className="store-menu-page store-menu-submenu-page"
+              id="store-mobile-submenu"
+              aria-label={`${selectedMenu.label} menu`}
+              aria-hidden={activeMenu == null}
+              inert={activeMenu == null || undefined}
+            >
+              <button
+                ref={submenuBack}
+                type="button"
+                className="store-submenu-back"
+                onClick={() => setActiveMenu(null)}
+              >
+                <ChevronLeftIcon />
+                All categories
+              </button>
+              <h2>{selectedMenu.label}</h2>
+              <div className="store-submenu-links">
+                <Link
+                  to={
+                    lastMenu.current === 0
+                      ? "/products"
+                      : lastMenu.current > 0 && lastMenu.current < 4
+                        ? `/products?gender=${selectedMenu.label.toLowerCase()}`
+                        : selectedMenu.to
+                  }
+                >
+                  Shop all {selectedMenu.label.toLowerCase()}
+                  <ArrowUpRightIcon />
+                </Link>
+                {selectedMenu.items.map(([label, to]) => (
+                  <Link key={to} to={to}>
+                    {label}
+                    <ChevronRightIcon />
+                  </Link>
+                ))}
+              </div>
+            </section>
           </div>
         </nav>
       )}

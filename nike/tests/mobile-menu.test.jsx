@@ -37,10 +37,20 @@ test("guest menu keeps all category destinations and signs in without exposing a
   await render();
   await open();
   const menu = host.querySelector("#store-mobile-nav");
-  expect(menu.querySelectorAll(".store-menu-category")).toHaveLength(5);
+  expect(menu.querySelectorAll(".store-menu-categories > button")).toHaveLength(
+    5,
+  );
   expect(
-    menu.querySelectorAll(".store-menu-category summary strong")[0].textContent,
+    menu.querySelectorAll(".store-menu-categories > button")[0].textContent,
   ).toBe("New & Featured");
+  expect(menu.querySelector("img")).toBeNull();
+  await act(async () =>
+    menu.querySelectorAll(".store-menu-categories > button")[1].click(),
+  );
+  expect(menu.querySelector(".store-mobile-submenu-open")).not.toBeNull();
+  expect(
+    menu.querySelector('[aria-label="Main menu"]').hasAttribute("inert"),
+  ).toBe(true);
   expect(menu.querySelector('a[href="/products?gender=men"]')).not.toBeNull();
   expect(
     menu.querySelector('a[href="/products?gender=men&category=clothing"]'),
@@ -67,4 +77,26 @@ test("admin gets account and dashboard links, and choosing a destination dismiss
   await act(async () => menu.querySelector('a[href="/orders"]').click());
   expect(host.querySelector("#store-mobile-nav")).toBeNull();
   expect(document.body.style.overflow).toBe("");
+});
+
+test("submenu Back reverses the panel and restores category focus; reopening starts at the main menu", async () => {
+  await render();
+  await open();
+  const men = host.querySelectorAll(".store-menu-categories > button")[1];
+  await act(async () => men.click());
+  expect(host.querySelector(".store-menu-submenu-page h2").textContent).toBe(
+    "Men",
+  );
+  expect(document.activeElement).toBe(
+    host.querySelector(".store-submenu-back"),
+  );
+  await act(async () => host.querySelector(".store-submenu-back").click());
+  expect(host.querySelector(".store-mobile-submenu-open")).toBeNull();
+  expect(document.activeElement).toBe(men);
+  await act(async () => men.click());
+  await act(async () =>
+    host.querySelector('[aria-label="Close menu"]').click(),
+  );
+  await open();
+  expect(host.querySelector(".store-mobile-submenu-open")).toBeNull();
 });
