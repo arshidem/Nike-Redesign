@@ -67,7 +67,7 @@ const SignIn = () => {
         <input
           type="email"
           placeholder="Enter your email"
-          className="w-full border px-4 py-3 rounded-md text-sm mb-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black bg-white/60 backdrop-blur-sm"
+          className="w-full border px-4 py-3 rounded-md text-sm mb-4 placeholder-gray-400 bg-white/60 backdrop-blur-sm"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required

@@ -354,7 +354,7 @@ const handleWishlistToggle = async (productId, e) => {
                 name="sortBy"
                 checked={filters.sortBy === option.value}
                 onChange={() => handleSortChange(option.value)}
-                className="h-4 w-4 text-black border-gray-300 focus:ring-black"
+                className="h-4 w-4 text-black border-gray-300"
               />
               <span>{option.label}</span>
             </label>
@@ -376,7 +376,7 @@ const handleWishlistToggle = async (productId, e) => {
                 name="gender"
                 checked={filters.gender === option.value}
                 onChange={() => handleGenderChange(option.value)}
-                className="h-4 w-4 text-black border-gray-300 focus:ring-black"
+                className="h-4 w-4 text-black border-gray-300"
               />
               <span>{option.label}</span>
             </label>
@@ -397,7 +397,7 @@ const handleWishlistToggle = async (productId, e) => {
                   onChange={() =>
                     setFilters((prev) => ({ ...prev, color: "" }))
                   }
-                  className="h-4 w-4 text-black border-gray-300 focus:ring-black"
+                  className="h-4 w-4 text-black border-gray-300"
                 />
                 <span className="text-sm">All</span>
               </label>
@@ -413,7 +413,7 @@ const handleWishlistToggle = async (productId, e) => {
                     name="color"
                     checked={filters.color === color}
                     onChange={() => setFilters((prev) => ({ ...prev, color }))}
-                    className="h-4 w-4 text-black border-gray-300 focus:ring-black"
+                    className="h-4 w-4 text-black border-gray-300"
                   />
                   <div className="flex items-center">
                     <span
@@ -468,7 +468,7 @@ const handleWishlistToggle = async (productId, e) => {
                 name="rating"
                 checked={filters.minRating === option.value}
                 onChange={() => handleRatingChange(option.value)}
-                className="h-4 w-4 text-black border-gray-300 focus:ring-black"
+                className="h-4 w-4 text-black border-gray-300"
               />
               <span className="flex items-center">
                 {option.value && (
@@ -499,7 +499,7 @@ const handleWishlistToggle = async (productId, e) => {
                 name="discount"
                 checked={filters.minDiscount === option.value}
                 onChange={() => handleDiscountChange(option.value)}
-                className="h-4 w-4 text-black border-gray-300 focus:ring-black"
+                className="h-4 w-4 text-black border-gray-300"
               />
               <span>{option.label}</span>
             </label>

@@ -62,10 +62,6 @@
 .customer-orders-search input::placeholder {
   color: #72766a;
 }
-.customer-orders-search:focus-within {
-  outline: 2px solid #9aa778;
-  outline-offset: 2px;
-}
 .customer-orders-search button {
   width: 35px;
   height: 40px;

@@ -174,7 +174,7 @@ const FilterSection = ({
                     onChange={(e) =>
                       handleChange(option.value || option, e.target.checked)
                     }
-                    className={`h-4 w-4 text-black border-gray-300 focus:ring-black ${
+                    className={`h-4 w-4 text-black border-gray-300 ${
                       type === "radio" ? "rounded-full" : "rounded"
                     }`}
                   />

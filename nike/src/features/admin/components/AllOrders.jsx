@@ -1067,7 +1067,7 @@ export const AllOrders = () => {
                 <select
                   value={filters.status}
                   onChange={(e) => handleFilterChange("status", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-black focus:border-black"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                 >
                   <option value="">All Statuses</option>
                   <option value="processing">Processing</option>
@@ -1088,7 +1088,7 @@ export const AllOrders = () => {
                     onChange={(e) =>
                       handleFilterChange("startDate", e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-black focus:border-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                   />
                 </div>
                 <div>
@@ -1101,7 +1101,7 @@ export const AllOrders = () => {
                     onChange={(e) =>
                       handleFilterChange("endDate", e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-black focus:border-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                   />
                 </div>
               </div>
@@ -1117,7 +1117,7 @@ export const AllOrders = () => {
                     onChange={(e) =>
                       handleFilterChange("minTotalPrice", e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-black focus:border-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                   />
                 </div>
                 <div>
@@ -1131,7 +1131,7 @@ export const AllOrders = () => {
                     onChange={(e) =>
                       handleFilterChange("maxTotalPrice", e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-black focus:border-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                   />
                 </div>
               </div>
@@ -1183,7 +1183,7 @@ export const AllOrders = () => {
         setCurrentPage(1);
         handleSearch();
       }}
-      className="w-full text-sm pl-3 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 h-9"
+      className="w-full text-sm pl-3 pr-8 py-2 border border-gray-300 rounded-lg h-9"
     />
     <button
       onClick={handleSearch}

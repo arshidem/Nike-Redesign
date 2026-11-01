@@ -642,12 +642,6 @@
   background: #14180f;
   color: white;
 }
-.catalog-gender-options input:focus-visible + span,
-.catalog-size-options input:focus-visible + span,
-.catalog-color-option input:focus-visible + span {
-  outline: 2px solid #56743c;
-  outline-offset: 3px;
-}
 .catalog-size-options {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
