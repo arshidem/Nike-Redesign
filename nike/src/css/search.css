@@ -13,7 +13,7 @@
   position: absolute;
   inset: 0;
   background: #1619108c;
-  backdrop-filter: blur(5px);
+  /* A flat scrim avoids a full-page blur pass when Search opens. */
 }
 .nike-search-panel {
   position: relative;
@@ -449,6 +449,40 @@
     animation: none;
   }
   .nike-search-product {
+    transition: none;
+  }
+}
+
+/* Keep the field visible from the first frame; only its position animates. */
+.nike-search-panel {
+  animation: search-enter 120ms ease-out;
+}
+.nike-search-overlay {
+  opacity: 1;
+  transition: opacity 120ms ease-out;
+}
+.nike-search-overlay.is-closing {
+  opacity: 0;
+  pointer-events: none;
+}
+.nike-search-overlay.is-closing .nike-search-panel {
+  transform: translateY(-8px);
+  transition: transform 120ms ease-out;
+}
+@keyframes search-enter {
+  from {
+    transform: translateY(-8px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nike-search-panel {
+    animation: none;
+  }
+  .nike-search-overlay,
+  .nike-search-overlay.is-closing .nike-search-panel {
     transition: none;
   }
 }

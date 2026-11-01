@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   MagnifyingGlassIcon,
   XMarkIcon,
@@ -29,7 +28,9 @@ export default function Search({ isOpen, onClose }) {
   const input = useRef(null),
     panel = useRef(null),
     closeTimer = useRef(null);
-  const reduced = useReducedMotion();
+  const reduced = window.matchMedia?.(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
   const active = isOpen && !closing;
   const close = () => {
     if (closeTimer.current) return;
@@ -39,7 +40,7 @@ export default function Search({ isOpen, onClose }) {
         closeTimer.current = null;
         onClose();
       },
-      reduced ? 0 : 200,
+      reduced ? 0 : 120,
     );
   };
   useEffect(() => () => clearTimeout(closeTimer.current), []);
@@ -51,7 +52,7 @@ export default function Search({ isOpen, onClose }) {
       setStatus("idle");
     }
   }, [isOpen]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!active) return;
     const previous = document.activeElement,
       overflow = document.body.style.overflow;
@@ -115,7 +116,7 @@ export default function Search({ isOpen, onClose }) {
       } catch (error) {
         if (current && !controller.signal.aborted) setStatus("error");
       }
-    }, 300);
+    }, 180);
     return () => {
       current = false;
       clearTimeout(timer);
@@ -148,215 +149,199 @@ export default function Search({ isOpen, onClose }) {
   };
 
   return createPortal(
-    <AnimatePresence>
-      {active && (
-        <motion.div
-          className="nike-search-overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: reduced ? 0 : 0.2 }}
+    isOpen && (
+      <div className={`nike-search-overlay${closing ? " is-closing" : ""}`}>
+        <div
+          className="nike-search-backdrop"
+          aria-hidden="true"
+          onClick={close}
+        />
+        <section
+          className="nike-search-panel"
+          ref={panel}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Search Nike products"
         >
-          <div
-            className="nike-search-backdrop"
-            aria-hidden="true"
-            onClick={close}
-          />
-          <motion.section
-            className="nike-search-panel"
-            ref={panel}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Search Nike products"
-            initial={{ y: -18, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -12, opacity: 0 }}
-            transition={{ duration: reduced ? 0 : 0.2 }}
-          >
-            <div className="nike-search-top">
-              <Link
-                to="/home"
-                className="nike-search-brand"
-                aria-label="Nike home"
-                onClick={close}
-              >
-                <img src="/assets/logo/nikeLogo.png" alt="" />
-              </Link>
-              <form
-                role="search"
-                onSubmit={submit}
-                className="nike-search-form"
-              >
-                <MagnifyingGlassIcon />
-                <input
-                  ref={input}
-                  aria-label="Search products"
-                  placeholder="Search Nike"
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  autoComplete="off"
-                  spellCheck="false"
-                />
-                {query && (
-                  <button
-                    type="button"
-                    aria-label="Clear search"
-                    onClick={() => {
-                      setQuery("");
-                      input.current?.focus({ preventScroll: true });
-                    }}
-                  >
-                    <XMarkIcon />
-                  </button>
-                )}
-              </form>
-              <button
-                type="button"
-                className="nike-search-cancel"
-                onClick={close}
-              >
-                Cancel
-              </button>
-            </div>
-            <div className="nike-search-content">
-              <nav
-                className="nike-search-suggestions"
-                aria-label={
-                  term
-                    ? "Suggested searches"
-                    : recent.length
-                      ? "Recent searches"
-                      : "Popular searches"
-                }
-              >
-                {suggestions.map((value, index) => (
-                  <Link
-                    key={`${value}-${index}`}
-                    to={searchRoute(value)}
-                    onClick={close}
-                  >
-                    <MagnifyingGlassIcon />
-                    <span>
-                      {term && value.startsWith(term) ? (
-                        <>
-                          {term}
-                          <strong>{value.slice(term.length)}</strong>
-                        </>
-                      ) : (
-                        value
-                      )}
-                    </span>
-                    <ArrowUpRightIcon />
-                  </Link>
-                ))}
-              </nav>
-              {term.length >= 2 ? (
-                <section
-                  className="nike-search-products"
-                  aria-label="Product results"
-                  aria-busy={status === "loading"}
+          <div className="nike-search-top">
+            <Link
+              to="/home"
+              className="nike-search-brand"
+              aria-label="Nike home"
+              onClick={close}
+            >
+              <img src="/assets/logo/nikeLogo.png" alt="" />
+            </Link>
+            <form role="search" onSubmit={submit} className="nike-search-form">
+              <MagnifyingGlassIcon />
+              <input
+                ref={input}
+                aria-label="Search products"
+                placeholder="Search Nike"
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                autoComplete="off"
+                spellCheck="false"
+              />
+              {query && (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => {
+                    setQuery("");
+                    input.current?.focus({ preventScroll: true });
+                  }}
                 >
-                  <div className="nike-search-results-heading">
-                    <h2>
-                      Products {status === "ready" && <span>({count})</span>}
-                    </h2>
-                    <Link to={searchRoute(term)} onClick={close}>
-                      View all <ArrowRightIcon />
-                    </Link>
-                  </div>
-                  <p className="nike-search-status" role="status">
-                    {status === "loading"
-                      ? "Finding your next pair…"
-                      : status === "ready"
-                        ? `${count} ${count === 1 ? "product" : "products"} found`
-                        : ""}
-                  </p>
-                  {status === "loading" ? (
-                    <div className="nike-search-loading" aria-hidden="true">
-                      {[0, 1, 2].map((value) => (
-                        <div key={value}>
-                          <span />
-                          <span />
-                        </div>
-                      ))}
-                    </div>
-                  ) : status === "error" ? (
-                    <div className="nike-search-empty" role="alert">
-                      <p>We couldn’t search right now.</p>
-                      <button
-                        type="button"
-                        onClick={() => setRetry((value) => value + 1)}
-                      >
-                        Try again
-                      </button>
-                    </div>
-                  ) : status === "ready" && !results.length ? (
-                    <div className="nike-search-empty">
-                      <p>No products found for “{term}”.</p>
-                      <span>Try a style, color, or a different name.</span>
-                    </div>
-                  ) : (
-                    <ul className="nike-search-results">
-                      {results.slice(0, 5).map((product) => {
-                        const price = Number(
-                            product.finalPrice ?? product.price ?? 0,
-                          ),
-                          original = Number(product.price ?? price),
-                          discount =
-                            original > price
-                              ? Math.round((1 - price / original) * 100)
-                              : 0;
-                        return (
-                          <li key={product._id}>
-                            <Link
-                              className="nike-search-product"
-                              to={`/product/${product.slug}`}
-                              onClick={close}
-                            >
-                              <div className="nike-search-image">
-                                <img
-                                  src={image(
-                                    product.image ||
-                                      product.variants?.[0]?.images?.[0],
-                                  )}
-                                  alt=""
-                                  onError={(event) => {
-                                    event.currentTarget.onerror = null;
-                                    event.currentTarget.src =
-                                      "/assets/editorial/image-unavailable.svg";
-                                  }}
-                                />
-                              </div>
-                              <div className="nike-search-product-info">
-                                <h3>{product.name}</h3>
-                                <div className="nike-search-price">
-                                  <strong>{money(price)}</strong>
-                                  {discount > 0 && (
-                                    <>
-                                      <del>{money(original)}</del>
-                                      <span>{discount}% OFF</span>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </section>
-              ) : (
-                <p className="nike-search-hint">
-                  Find your next move. Search by style, product, or color.
-                </p>
+                  <XMarkIcon />
+                </button>
               )}
-            </div>
-          </motion.section>
-        </motion.div>
-      )}
-    </AnimatePresence>,
+            </form>
+            <button
+              type="button"
+              className="nike-search-cancel"
+              onClick={close}
+            >
+              Cancel
+            </button>
+          </div>
+          <div className="nike-search-content">
+            <nav
+              className="nike-search-suggestions"
+              aria-label={
+                term
+                  ? "Suggested searches"
+                  : recent.length
+                    ? "Recent searches"
+                    : "Popular searches"
+              }
+            >
+              {suggestions.map((value, index) => (
+                <Link
+                  key={`${value}-${index}`}
+                  to={searchRoute(value)}
+                  onClick={close}
+                >
+                  <MagnifyingGlassIcon />
+                  <span>
+                    {term && value.startsWith(term) ? (
+                      <>
+                        {term}
+                        <strong>{value.slice(term.length)}</strong>
+                      </>
+                    ) : (
+                      value
+                    )}
+                  </span>
+                  <ArrowUpRightIcon />
+                </Link>
+              ))}
+            </nav>
+            {term.length >= 2 ? (
+              <section
+                className="nike-search-products"
+                aria-label="Product results"
+                aria-busy={status === "loading"}
+              >
+                <div className="nike-search-results-heading">
+                  <h2>
+                    Products {status === "ready" && <span>({count})</span>}
+                  </h2>
+                  <Link to={searchRoute(term)} onClick={close}>
+                    View all <ArrowRightIcon />
+                  </Link>
+                </div>
+                <p className="nike-search-status" role="status">
+                  {status === "loading"
+                    ? "Finding your next pair…"
+                    : status === "ready"
+                      ? `${count} ${count === 1 ? "product" : "products"} found`
+                      : ""}
+                </p>
+                {status === "loading" ? (
+                  <div className="nike-search-loading" aria-hidden="true">
+                    {[0, 1, 2].map((value) => (
+                      <div key={value}>
+                        <span />
+                        <span />
+                      </div>
+                    ))}
+                  </div>
+                ) : status === "error" ? (
+                  <div className="nike-search-empty" role="alert">
+                    <p>We couldn’t search right now.</p>
+                    <button
+                      type="button"
+                      onClick={() => setRetry((value) => value + 1)}
+                    >
+                      Try again
+                    </button>
+                  </div>
+                ) : status === "ready" && !results.length ? (
+                  <div className="nike-search-empty">
+                    <p>No products found for “{term}”.</p>
+                    <span>Try a style, color, or a different name.</span>
+                  </div>
+                ) : (
+                  <ul className="nike-search-results">
+                    {results.slice(0, 5).map((product) => {
+                      const price = Number(
+                          product.finalPrice ?? product.price ?? 0,
+                        ),
+                        original = Number(product.price ?? price),
+                        discount =
+                          original > price
+                            ? Math.round((1 - price / original) * 100)
+                            : 0;
+                      return (
+                        <li key={product._id}>
+                          <Link
+                            className="nike-search-product"
+                            to={`/product/${product.slug}`}
+                            onClick={close}
+                          >
+                            <div className="nike-search-image">
+                              <img
+                                src={image(
+                                  product.image ||
+                                    product.variants?.[0]?.images?.[0],
+                                )}
+                                alt=""
+                                onError={(event) => {
+                                  event.currentTarget.onerror = null;
+                                  event.currentTarget.src =
+                                    "/assets/editorial/image-unavailable.svg";
+                                }}
+                              />
+                            </div>
+                            <div className="nike-search-product-info">
+                              <h3>{product.name}</h3>
+                              <div className="nike-search-price">
+                                <strong>{money(price)}</strong>
+                                {discount > 0 && (
+                                  <>
+                                    <del>{money(original)}</del>
+                                    <span>{discount}% OFF</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </section>
+            ) : (
+              <p className="nike-search-hint">
+                Find your next move. Search by style, product, or color.
+              </p>
+            )}
+          </div>
+        </section>
+      </div>
+    ),
     document.body,
   );
 }

@@ -146,3 +146,19 @@ test.each(["escape", "outside", "cancel"])(
     expect(document.body.style.overflow).toBe("");
   },
 );
+test("search field and suggestions are immediately available without waiting for timers or network", async () => {
+  await render();
+  expect(document.querySelector('[role="dialog"] input')).toBe(
+    document.activeElement,
+  );
+  expect(document.querySelectorAll(".nike-search-suggestions a")).toHaveLength(
+    3,
+  );
+  expect(axios.get).not.toHaveBeenCalled();
+  axios.get.mockImplementation(() => new Promise(() => {}));
+  await type("Nike");
+  await settle();
+  expect(document.querySelector('[role="dialog"] input').value).toBe("Nike");
+  expect(document.querySelector(".nike-search-loading")).not.toBeNull();
+  expect(document.querySelector(".nike-search-cancel").disabled).toBe(false);
+});

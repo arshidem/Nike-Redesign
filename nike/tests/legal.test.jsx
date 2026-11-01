@@ -1,3 +1,6 @@
+jest.mock("../src/context/AppContext", () => ({
+  useAppContext: () => ({ backendUrl: "https://store.test" }),
+}));
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";

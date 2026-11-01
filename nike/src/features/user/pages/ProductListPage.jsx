@@ -19,7 +19,6 @@ import {
 import { useProductService } from "../../product/services/productService";
 import { useAppContext } from "../../../context/AppContext";
 import { useWishlist } from "../../../hooks/useWishlist";
-import Search from "../components/Search";
 import Footer from "../components/Footer";
 import "../../../css/catalog.css";
 
@@ -406,7 +405,6 @@ export default function ProductListPage() {
   const [optionsError, setOptionsError] = useState(false);
   const [retry, setRetry] = useState(0);
   const [view, setView] = useState("grid");
-  const [searchOpen, setSearchOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [draft, setDraft] = useState(new URLSearchParams());
   const [draftError, setDraftError] = useState("");
@@ -476,15 +474,7 @@ export default function ProductListPage() {
 
   useEffect(() => {
     setFiltersOpen(false);
-    setSearchOpen(false);
   }, [location.pathname, location.search]);
-  useEffect(() => {
-    const closeSearch = (event) => {
-      if (event.key === "Escape") setSearchOpen(false);
-    };
-    document.addEventListener("keydown", closeSearch);
-    return () => document.removeEventListener("keydown", closeSearch);
-  }, []);
   useEffect(() => {
     if (!filtersOpen) return;
     const previousOverflow = document.body.style.overflow;
@@ -580,8 +570,7 @@ export default function ProductListPage() {
 
   return (
     <div className="catalog-storefront">
-      <AppBar className="catalog-header" fallback="/home" onSearch={() => setSearchOpen(true)} />
-      {searchOpen && <Search isOpen onClose={() => setSearchOpen(false)} />}
+      <AppBar className="catalog-header" fallback="/home" />
       <main id="main-content">
         <section className="catalog-hero" aria-labelledby="catalog-title">
           <div className="catalog-hero-copy">
