@@ -32,6 +32,12 @@ test.each([
       ),
     );
     expect(container.querySelector("h1").textContent).toBe(heading);
+    expect(container.querySelector(".customer-appbar")).not.toBeNull();
+    if (documentType === "privacy") {
+      expect(container.textContent).toContain("Brevo");
+      expect(container.textContent).not.toContain("SMTP2GO");
+      expect(container.textContent).toContain("download your profile");
+    }
     const anchors = [
       ...container.querySelectorAll('[aria-label="Document contents"] a'),
     ];

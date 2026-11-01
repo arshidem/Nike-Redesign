@@ -1,6 +1,8 @@
 import React, { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import RouteScrollReset from "./shared/ui/RouteScrollReset";
+import MiniCart from "./features/user/components/MiniCart";
 import Search from "./features/user/components/Search";
 import Home from "./features/user/pages/Home";
 import SignIn from "./features/auth/pages/SignIn";
@@ -56,11 +58,17 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+function SearchPage() {
+  const navigate = useNavigate();
+  return <Search isOpen onClose={() => window.history.state?.idx > 0 ? navigate(-1) : navigate("/products")} />;
+}
+
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/home" element={<Home />} />
+      <Route path="/products" element={<ProductListPage />} />
       <Route path="/model/:modelName" element={<ModelPage />} />
       <Route path="/product/:productSlug" element={<ProductDetails />} />
       <Route path="/bag" element={<Cart />} />
@@ -69,7 +77,9 @@ function AppRoutes() {
       <Route path="/orders/:orderId" element={<OrderDetails />} />
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/profile" element={<Profile />} />
-      <Route path="/account" element={<AccountSettings />} />
+      <Route path="/account/*" element={<AccountSettings />} />
+      <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
+      <Route path="/terms" element={<Navigate to="/terms-of-service" replace />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="/privacy-policy" element={<LegalPage documentType="privacy" />} />
       <Route path="/terms-of-service" element={<LegalPage documentType="terms" />} />
@@ -77,7 +87,7 @@ function AppRoutes() {
       <Route path="/complete-register" element={<CompleteRegister />} />
       <Route path="/verify-register-otp" element={<VerifyRegisterOtp />} />
 
-        <Route path="/search" element={<Search isOpen={true} onClose={() => { window.history.back(); }} />} />
+        <Route path="/search" element={<SearchPage />} />
 
       <Route path="/new/arrivals" element={<ProductListPage title="New Arrivals" />} />
       <Route path="/new/best-sellers" element={<ProductListPage title="Best Sellers" />} />
@@ -123,7 +133,9 @@ function AppRoutes() {
 function App() {
   return (
     <>
+      <RouteScrollReset />
       <Toaster position="top-center" />
+      <MiniCart />
       <ErrorBoundary>
         <Suspense fallback={<Loading />}>
           <AppRoutes />

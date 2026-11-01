@@ -36,7 +36,7 @@
 .legal-index {
   align-self: start;
   position: sticky;
-  top: 30px;
+  top: 80px;
 }
 .legal-index nav {
   display: flex;
@@ -64,7 +64,7 @@
   padding: 0 0 32px;
   margin-bottom: 32px;
   border-bottom: 1px solid #daddd0;
-  scroll-margin-top: 30px;
+  scroll-margin-top: 80px;
 }
 .legal-article h2 {
   font-size: 24px;

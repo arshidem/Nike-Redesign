@@ -11,6 +11,10 @@ dotenv.config();
 // Initialize express app
 const app = express();
 
+// Render terminates requests at its reverse proxy. Trust the nearest hop
+// so rate limiting uses the forwarded client IP instead of the proxy IP.
+app.set("trust proxy", 1);
+
 // Connect to MongoDB
 connectDB();
 
@@ -22,6 +26,8 @@ const corsOptions = {
   process.env.FRONTEND_URL_HOST,
   "https://nike-redesign-six.vercel.app",
   "https://nike-redesign-six.vercel.app/",
+  "http://localhost:5173",
+  "http://localhost:3000",
 ];
 
     if (!origin) return callback(null, true);
@@ -50,6 +56,7 @@ app.get("/", (req, res) => {
   });
 });
 
+
 // Import route files
 const productRouter = require("./routes/productRoutes");
 const authRoutes = require("./routes/authRoutes");
@@ -64,6 +71,7 @@ const wishlistRoutes =require( "./routes/wishlistRoutes.js");
 // Mount routes
 app.use("/api/products", productRouter);
 app.use("/api/auth", authRoutes);
+app.use("/api/support", require("./routes/supportRoutes"));
 app.use("/api/admin", adminRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/coupons", couponRoutes);
@@ -79,5 +87,5 @@ app.use(errorHandler);
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`ðŸš€ Server running on port ${PORT}`);
 });

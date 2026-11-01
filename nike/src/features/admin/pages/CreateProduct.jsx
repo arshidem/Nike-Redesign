@@ -1,3 +1,4 @@
+import { useScrollHeader } from "../../../hooks/useScrollHeader";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -6,6 +7,7 @@ import { useAppContext } from "../../../context/AppContext";
 import toast, { Toaster } from 'react-hot-toast';
 
 const CreateProduct = () => {
+  const scrollHeader = useScrollHeader();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const { backendUrl, token } = useAppContext();
@@ -434,7 +436,7 @@ const CreateProduct = () => {
   return (
     <div className="design-page design-admin design-create-product min-h-screen bg-gray-50">
       {/* Back Button Container */}
-      <div className="fixed bg-white p-2 w-full shadow flex items-center z-10">
+      <div ref={scrollHeader.ref} data-scroll-hidden={scrollHeader.hidden} aria-hidden={scrollHeader.hidden || undefined} inert={scrollHeader.hidden || undefined} className="scroll-header fixed bg-white p-2 w-full shadow flex items-center z-10">
         <button
           onClick={() => navigate('/admin#products')}
           className="px-3 py-1 sm:px-4 sm:py-2 border border-black rounded hover:bg-gray-200 transition sm:w-auto"

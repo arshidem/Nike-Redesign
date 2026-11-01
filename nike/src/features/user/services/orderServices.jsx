@@ -26,13 +26,14 @@ const useOrderServices = () => {
 
   /**
    * Initiate Razorpay payment
-   * @param {number} amount - Amount in rupees
+   * @param {number} amount - Amount in paise
    * @param {string} receipt - Receipt string (e.g. "rcpt_123")
    */
-  const initiatePayment = async (amount, receipt) => {
+  const initiatePayment = async (amount, receipt, checkout = {}) => {
     const payload = {
       amount: amount,
       receipt,
+      address: checkout.address,
       notes: {
         userId: user?._id || "guest",
         email: user?.email || "no-email@placeholder.com",
@@ -42,7 +43,7 @@ const useOrderServices = () => {
     };
 
     if (!amount || amount < 1 || !receipt) {
-      console.warn("initiatePayment: Invalid input:", payload);
+      console.warn("Payment input validation failed");
       return {
         success: false,
         error: "Invalid payment input (amount or receipt)",
@@ -58,7 +59,7 @@ const useOrderServices = () => {
         data: response.data,
       };
     } catch (error) {
-      console.error("Payment initiation failed:", error);
+      console.error("Payment initiation failed:", error.response?.status);
 
       const errorMessage =
         error.response?.data?.message ||
@@ -92,7 +93,7 @@ const useOrderServices = () => {
         data: response.data,
       };
     } catch (error) {
-      console.error("Payment verification failed:", error);
+      console.error("Payment verification failed:", error.response?.status);
       const message =
         error.response?.data?.message || "Payment verification failed";
 
@@ -109,12 +110,13 @@ const useOrderServices = () => {
   /**
    * Get logged-in user's paginated orders
    */
-  const getUserOrders = async (page = 1, limit = 10) => {
+  const getUserOrders = async (page = 1, limit = 10, filters = {}) => {
     try {
-      const response = await api.get(`/my-orders?page=${page}&limit=${limit}`);
+      const response = await api.get("/my-orders", { params: { page, limit, ...filters } });
       return {
         success: true,
         orders: response.data.orders,
+        statusCounts: response.data.statusCounts,
         pagination: response.data.pagination,
       };
     } catch (error) {

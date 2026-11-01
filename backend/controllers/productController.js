@@ -180,11 +180,13 @@ exports.getAllProducts = async (req, res) => {
     const query = {};
 
     // Basic filters
-    if (req.query.category) query.category = req.query.category;
-    if (req.query.model) query.model = req.query.model;
+    // Repeated query parameters represent multi-select filters.
+    const values = (value) => Array.isArray(value) ? value : [value];
+    if (req.query.category) query.category = { $in: values(req.query.category) };
+    if (req.query.model) query.model = { $in: values(req.query.model) };
     if (req.query.gender) query.gender = req.query.gender;
-    if (req.query.activityType) query.activityType = req.query.activityType;
-    if (req.query.sportType) query.sportType = req.query.sportType;
+    if (req.query.activityType) query.activityType = { $in: values(req.query.activityType) };
+    if (req.query.sportType) query.sportType = { $in: values(req.query.sportType) };
     if (req.query.isFeatured)
       query.isFeatured = req.query.isFeatured === "true";
     if (req.query.isTrending)
@@ -218,8 +220,8 @@ exports.getAllProducts = async (req, res) => {
           // each matched variant must have a sizes[] entry where:
           sizes: {
             $elemMatch: {
-              size: req.query.size,
-              stock: { $gt: 1 },
+              size: { $in: values(req.query.size) },
+              stock: { $gt: 0 },
             },
           },
         },
@@ -229,12 +231,20 @@ exports.getAllProducts = async (req, res) => {
 
 
     if (req.query.search) {
-      query.name = { $regex: req.query.search, $options: "i" };
+      if (req.query.searchFields === "management") {
+        const term = String(req.query.search).trim();
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        query.$or = [{ name: { $regex: escaped, $options: "i" } }, { model: { $regex: escaped, $options: "i" } }];
+        if (/^[a-f0-9]{24}$/i.test(term)) query.$or.push({ _id: new mongoose.Types.ObjectId(term) });
+      } else query.name = { $regex: req.query.search, $options: "i" };
     }
 
     // Price range
-    const minPrice = Number(req.query.minPrice) || 0;
-    const maxPrice = Number(req.query.maxPrice) || Number.MAX_SAFE_INTEGER;
+    const minPrice = req.query.minPrice != null && req.query.minPrice !== "" ? Number(req.query.minPrice) : 0;
+    const maxPrice = req.query.maxPrice != null && req.query.maxPrice !== "" ? Number(req.query.maxPrice) : Number.MAX_SAFE_INTEGER;
+    if (!Number.isFinite(minPrice) || !Number.isFinite(maxPrice) || minPrice < 0 || maxPrice < minPrice) {
+      return res.status(400).json({ success: false, message: "Invalid price range" });
+    }
     query.$expr = {
       $and: [
         { $gte: [{ $ifNull: ["$finalPrice", "$price"] }, minPrice] },
@@ -269,22 +279,77 @@ exports.getAllProducts = async (req, res) => {
     }
 
   
+    // Apply rating before counting and paginating, rather than removing
+    // products from an already paginated page.
+    if (req.query.minRating) {
+      const minRating = Number(req.query.minRating);
+      if (!Number.isFinite(minRating) || minRating < 0 || minRating > 5) {
+        return res.status(400).json({ success: false, message: "Invalid minimum rating" });
+      }
+      const rated = await Review.aggregate([
+        { $group: { _id: "$product", average: { $avg: "$rating" } } },
+        { $match: { average: { $gte: minRating } } },
+      ]);
+      const ids = rated.map((item) => item._id.toString());
+      query._id = { $in: bestSellerIds ? bestSellerIds.filter((id) => ids.includes(id)) : ids };
+    }
+
     // Sorting
     if (req.query.sortBy === "sold") sortOption = { sold: -1 };
     if (req.query.sortBy === "priceAsc") sortOption = { finalPrice: 1 };
     if (req.query.sortBy === "priceDesc") sortOption = { finalPrice: -1 };
 
+    if (req.query.sortBy === "nameAsc") sortOption = { name: 1 };
+    if (req.query.sortBy === "nameDesc") sortOption = { name: -1 };
+
     // Pagination
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 10));
     const skip = (page - 1) * limit;
 
-    const totalItems = await Product.countDocuments(query);
-    let products = await Product.find(query)
-      .sort(sortOption)
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    const otherFilters = { ...query };
+    delete otherFilters.gender;
+    // Gender pills retain all other active filters, so their counts remain
+    // useful when switching between Men, Women, Kids and All.
+    const [totalItems, allCount, menCount, womenCount, kidsCount] = await Promise.all([
+      Product.countDocuments(query),
+      Product.countDocuments(otherFilters),
+      Product.countDocuments({ ...otherFilters, gender: "men" }),
+      Product.countDocuments({ ...otherFilters, gender: "women" }),
+      Product.countDocuments({ ...otherFilters, gender: "kids" }),
+    ]);
+    const genderCounts = { all: allCount, men: menCount, women: womenCount, kids: kidsCount };
+    const useSalesRank = bestSellerIds && (!req.query.sortBy || req.query.sortBy === "sold");
+    const managementSalesSort = req.query.searchFields === "management" && req.query.sortBy === "sold";
+    let products;
+    if (managementSalesSort) products = await Product.find(query).lean();
+    else if (useSalesRank) {
+      // Best sellers are capped at 20 IDs. Rank that small result set before
+      // slicing a page so page one always contains the strongest sellers.
+      products = await Product.find(query).lean();
+      products.sort((a, b) => bestSellerIds.indexOf(a._id.toString()) - bestSellerIds.indexOf(b._id.toString()));
+      products = products.slice(skip, skip + limit);
+    } else {
+      products = await Product.find(query)
+        .sort({ ...sortOption, _id: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+    }
+
+    if (req.query.searchFields === "management" && products.length) {
+      const sales = await Order.aggregate([
+        { $unwind: "$items" },
+        { $match: { "items.product": { $in: products.map(product => product._id) } } },
+        { $group: { _id: "$items.product", sold: { $sum: "$items.quantity" } } }
+      ]);
+      const salesByProduct = new Map(sales.map(row => [row._id.toString(), row.sold]));
+      products = products.map(product => ({ ...product, sold: salesByProduct.get(product._id.toString()) || 0 }));
+      if (managementSalesSort) {
+        products.sort((a, b) => b.sold - a.sold || a._id.toString().localeCompare(b._id.toString()));
+        products = products.slice(skip, skip + limit);
+      }
+    }
 
     const totalPages = Math.ceil(totalItems / limit);
 
@@ -310,7 +375,7 @@ exports.getAllProducts = async (req, res) => {
     });
 
     // Add ratings to products
-    let enrichedProducts = products.map((product) => {
+    const enrichedProducts = products.map((product) => {
       const rating = ratingMap[product._id.toString()] || {
         average: 0,
         total: 0,
@@ -318,28 +383,13 @@ exports.getAllProducts = async (req, res) => {
       return { ...product, rating };
     });
 
-    // Filter by rating
-    if (req.query.minRating) {
-      const min = Number(req.query.minRating);
-      enrichedProducts = enrichedProducts.filter(
-        (p) => p.rating.average >= min
-      );
-    }
-
-    // Preserve order of best sellers
-    if (req.query.bestSellers === "true" && bestSellerIds) {
-      enrichedProducts.sort(
-        (a, b) =>
-          bestSellerIds.indexOf(a._id.toString()) -
-          bestSellerIds.indexOf(b._id.toString())
-      );
-    }
 
     res.json({
       success: true,
       products: enrichedProducts,
+      genderCounts,
       pagination: {
-        totalItems: enrichedProducts.length,
+        totalItems,
         totalPages,
         currentPage: page,
       },
@@ -1049,9 +1099,11 @@ exports.getProductAnalytics = async (req, res) => {
       coldProducts: [],
     };
 
-    const [totalReviews] = await Promise.all([Review.countDocuments()]);
-
-    analytics.totalReviews = totalReviews;
+    const reviewSummary = await Review.aggregate([
+      { $group: { _id: null, total: { $sum: 1 }, average: { $avg: "$rating" } } }
+    ]);
+    analytics.totalReviews = reviewSummary[0]?.total || 0;
+    analytics.averageRating = Number((reviewSummary[0]?.average || 0).toFixed(1));
 
     // Calculate sales by time period from orders
     for (const order of allOrders) {

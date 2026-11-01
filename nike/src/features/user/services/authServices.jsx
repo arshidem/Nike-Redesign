@@ -14,27 +14,35 @@ const useAuthService = () => {
 
   // Request OTP (login/register)
   const requestOTP = async (email) => {
-    const res = await axios.post(`${backendUrl}/api/auth/request-otp`, { email });
+    const res = await axios.post(`${backendUrl}/api/auth/request-otp`, {
+      email,
+    });
     return res.data;
   };
 
   // Verify OTP
   const verifyOTP = async (email, otp) => {
-    const res = await axios.post(`${backendUrl}/api/auth/verify-otp`, { email, otp });
+    const res = await axios.post(`${backendUrl}/api/auth/verify-otp`, {
+      email,
+      otp,
+    });
     return res.data;
   };
 
   // Complete Registration
   const completeRegistration = async (name, gender, email) => {
-    const res = await axios.post(`${backendUrl}/api/auth/complete-registration`, {
-      name,
-      gender,
-      email,
-    });
+    const res = await axios.post(
+      `${backendUrl}/api/auth/complete-registration`,
+      {
+        name,
+        gender,
+        email,
+      },
+    );
     if (res.data.token) {
       localStorage.setItem("token", res.data.token);
       setToken(res.data.token);
-      setUser({ ...res.data.user, isAuthenticated: true });
+      setUser(res.data.user);
     }
     return res.data;
   };
@@ -47,8 +55,16 @@ const useAuthService = () => {
 
   // Update user info (name, dob, phone, location etc.)
   const updateUserData = async (payload) => {
-    const res = await axios.put(`${backendUrl}/api/auth/me`, payload, authHeaders);
-    setUser({ ...res.data.user, isAuthenticated: true });
+    const res = await axios.put(
+      `${backendUrl}/api/auth/me`,
+      payload,
+      authHeaders,
+    );
+    setUser((previous) => ({
+      ...previous,
+      ...res.data.user,
+      isAuthenticated: true,
+    }));
     return res.data;
   };
 

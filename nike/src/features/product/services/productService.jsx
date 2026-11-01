@@ -4,7 +4,7 @@ import { useAppContext } from '../../../context/AppContext';
 export const useProductService = () => {
   const { backendUrl, token } = useAppContext();
 
-const fetchProducts = async (filters = {}) => {
+const fetchProducts = async (filters = {}, { signal, throwOnError = false } = {}) => {
   try {
     const cleanedFilters = Object.fromEntries(
       Object.entries(filters).filter(
@@ -14,14 +14,18 @@ const fetchProducts = async (filters = {}) => {
 
     const response = await axios.get(`${backendUrl}/api/products`, {
       params: cleanedFilters,
+      paramsSerializer: { indexes: null },
+      signal,
     });
 
     // Return both products and pagination data
     return {
       products: response.data.products || [],
       pagination: response.data.pagination || {},
+      genderCounts: response.data.genderCounts || {},
     };
   } catch (err) {
+    if (throwOnError) throw err;
     console.error("Failed to fetch products", err);
     return {
       products: [],

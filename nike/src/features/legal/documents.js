@@ -1,5 +1,5 @@
 export const legalContact = "triodewebstudio@gmail.com";
-export const legalUpdated = "29 October 2026";
+export const legalUpdated = "1 November 2026";
 
 export const privacyPolicy = {
   title: "PRIVACY POLICY.",
@@ -18,7 +18,7 @@ export const privacyPolicy = {
       title: "02 / Information you provide",
       paragraphs: [
         "Sign-in uses your email address and a one-time verification code. Registration and account settings can store your name, gender, date of birth, phone number, location, profile preferences, and account activity such as sign-in times.",
-        "Shopping features can store favourites, bag contents, delivery addresses, order items, totals, order status, and payment references. Reviews and interests you submit are also associated with your account where those features are enabled. Provide only information needed for the feature you choose to use.",
+        "Shopping features can store favourites, bag contents, delivery addresses, order items, totals, order status, and payment references. Support requests store the topic, message, order reference and request status. Reviews and interests you submit are also associated with your account where those features are enabled. Provide only information needed for the feature you choose to use.",
       ],
     },
     {
@@ -40,7 +40,7 @@ export const privacyPolicy = {
       id: "providers",
       title: "05 / Service providers",
       paragraphs: [
-        "The application uses hosting and database services to run the frontend, backend, and stored records. Its transactional email integration supports SMTP2GO or Resend, depending on the backend configuration. Its payment integration uses Razorpay, and product media integration uses Cloudinary. Providers receive information needed for the feature in use, such as your email for a verification message or payment details supplied to a payment provider.",
+        "The application uses hosting and database services to run the frontend, backend, and stored records. Its transactional emails, including sign-in codes and order confirmations, are sent through Brevo. Its payment integration uses Razorpay, and product media integration uses Cloudinary. Providers receive information needed for the feature in use, such as your email for a verification message or payment details supplied to a payment provider.",
         "Payment references and status may be stored with an order. Enter payment credentials only in the payment provider’s checkout. Third-party services apply their own privacy terms, and their processing may take place in other countries.",
       ],
     },
@@ -48,7 +48,7 @@ export const privacyPolicy = {
       id: "retention",
       title: "06 / Retention and account controls",
       paragraphs: [
-        "Account information remains in the application until it is updated or deleted, subject to the operation of the relevant feature. Account settings include controls to update information and delete an account.",
+        "Account information remains in the application until it is updated or deleted, subject to the operation of the relevant feature. Account settings include controls to update information, save promotional email preferences, download your profile, addresses, order history and wishlist as JSON, and delete an account. Essential sign-in and order messages are separate from promotional preferences.",
         "Deleting an account does not necessarily delete separate order records, provider logs, or backups. Transaction and operational records may need to remain for support, security, or applicable legal requirements. The application does not currently define one fixed retention period for every record type. Contact us for a request about a specific record.",
       ],
     },

@@ -1,31 +1,59 @@
+const customerProfile = require("../utils/customerProfile");
 // src/controllers/authController.js
 
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const { sendOTP } = require("../services/transactionalEmail");
+const { sendEmail } = require("../utils/email");
 
 // Helpers
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 const generateToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
+const sendOTP = async (email, otp) => {
+  try {
+    await sendEmail({
+      to: email,
+      subject: "Your OTP Code",
+      html: `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`,
+    });
+  } catch (error) {
+    let details = error?.response?.body ?? error?.body;
+    if (typeof details === "string") {
+      try { details = JSON.parse(details); } catch { details = undefined; }
+    }
+    // Log only provider diagnostics, never the request headers, API key or OTP.
+    console.error("Failed to send OTP:", {
+      status: error?.response?.statusCode ?? error?.response?.status ?? error?.statusCode,
+      code: details?.code ?? error?.code,
+      message: details?.message ?? error?.message ?? "Unknown email provider error",
+    });
+    throw new Error("OTP sending failed");
+  }
+};
+
+// In-memory store for new user OTPs (not yet in DB)
+// { email -> { otp, expiresAt } }
+const pendingOtps = new Map();
 
 // Request OTP
-// src/controllers/authController.js
-
 exports.requestOTP = async (req, res) => {
   const { email } = req.body;
   const otp = generateOTP();
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min
 
-  // Only update OTP for existing users
   const user = await User.findOne({ email });
+
   if (user) {
+    // Existing user — save OTP to DB
     user.otp = otp;
-    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+    user.otpExpires = expiresAt;
     await user.save();
+  } else {
+    // New user — store OTP in memory until they complete registration
+    pendingOtps.set(email, { otp, expiresAt });
   }
 
-  // Send OTP regardless
   await sendOTP(email, otp);
   return res
     .status(200)
@@ -34,8 +62,6 @@ exports.requestOTP = async (req, res) => {
 
 
 // Verify OTP
-// src/controllers/authController.js
-
 exports.verifyOTP = async (req, res) => {
   const { email, otp } = req.body;
   if (!email || !otp)
@@ -43,12 +69,23 @@ exports.verifyOTP = async (req, res) => {
 
   const user = await User.findOne({ email }).select("+otp +otpExpires");
 
-  // CASE A: No user in DB → new user flow
+  // CASE A: No user in DB → check pending (new user) OTP
   if (!user) {
+    const pending = pendingOtps.get(email);
+    if (!pending) {
+      return res.status(400).json({ message: "OTP not found. Please request a new one." });
+    }
+    const isExpired = pending.expiresAt < new Date();
+    const isMismatch = pending.otp !== otp;
+    if (isExpired || isMismatch) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+    // Valid OTP for new user — clear it and proceed to registration
+    pendingOtps.delete(email);
     return res.status(200).json({ newUser: true, email });
   }
 
-  // CASE B: Existing user, validate OTP
+  // CASE B: Existing user — validate OTP from DB
   const isExpired = !user.otpExpires || user.otpExpires < new Date();
   const isMismatch = user.otp !== otp;
   if (isExpired || isMismatch) {
@@ -70,13 +107,13 @@ exports.verifyOTP = async (req, res) => {
   const token = generateToken(user._id);
   return res.status(200).json({
     token,
-    user: { 
+    user: {
       _id: activeUser._id,
       name: activeUser.name,
       email: activeUser.email,
       gender: activeUser.gender,
       isActive: activeUser.isActive,
-      lastLogin: activeUser.lastLogin
+      lastLogin: activeUser.lastLogin,
     },
   });
 };
@@ -109,8 +146,8 @@ exports.completeRegistration = async (req, res) => {
       email: activeUser.email,
       gender: activeUser.gender,
       isActive: activeUser.isActive,
-      lastLogin: activeUser.lastLogin
-    }
+      lastLogin: activeUser.lastLogin,
+    },
   });
 };
 
@@ -132,27 +169,7 @@ exports.logout = async (req, res) => {
 };
 
 // Get Me
-exports.getMe = async (req, res) => {
-  const user = req.user;
-
-  res.status(200).json({
-    _id: user._id,
-    name: user.name,
-    email: user.email,
-    gender: user.gender,
-    role: user.role,
-    isActive: user.isActive,
-    lastLogin: user.lastLogin,
-    lastLogout: user.lastLogout,
-    dob: user.dob,
-    phone: user.phone || "",
-    country: user.country || "",
-    state: user.state || "",
-    city: user.city || "",
-    postalCode: user.postalCode || "",
-  });
-};
-
+exports.getMe = async (req, res) => res.status(200).json(customerProfile(req.user));
 
 // Update User Info (phone, dob, location, etc.)
 exports.updateUserData = async (req, res) => {
@@ -166,7 +183,7 @@ exports.updateUserData = async (req, res) => {
     city,
     postalCode,
   } = req.body;
-console.log(req.body);
+
 
   try {
     const updatedUser = await User.findByIdAndUpdate(
@@ -194,17 +211,7 @@ console.log(req.body);
 
     return res.status(200).json({
       message: "Profile updated successfully",
-      user: {
-        name: updatedUser.name,
-        email: updatedUser.email, // returned but not updatable
-        gender: updatedUser.gender,
-        dob: updatedUser.dob,
-        phone: updatedUser.phone,
-        country: updatedUser.country,
-        state: updatedUser.state,
-        city: updatedUser.city,
-        postalCode: updatedUser.postalCode,
-      },
+      user: customerProfile(updatedUser),
     });
   } catch (error) {
     console.error("Error updating user data:", error);
@@ -225,7 +232,7 @@ exports.deleteUser = async (req, res) => {
 
     res.status(200).json({
       message: "Account deleted successfully",
-      userId: deletedUser._id
+      userId: deletedUser._id,
     });
   } catch (error) {
     console.error("Error deleting user:", error);

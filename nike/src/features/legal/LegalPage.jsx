@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Navbar } from "../user/components/Navbar";
+import AppBar from "../../shared/ui/AppBar";
 import Footer from "../user/components/Footer";
 import {
   legalContact,
@@ -15,7 +15,7 @@ export default function LegalPage({ documentType }) {
   const document = privacy ? privacyPolicy : termsOfService;
   return (
     <div className="storefront legal-page">
-      <Navbar />
+      <AppBar fallback="/account" />
       <main id="main-content">
         <header className="legal-hero">
           <p className="store-eyebrow">

@@ -39,16 +39,29 @@ const useCartServices = () => {
       return res.data;
     } else {
       const items = getLocalCart();
-      return { items, total: calculateTotal(items) };
+      if (!items.length) return { items, total: 0 };
+      const response = await api.post("/stock", { items: items.map(({ productId, variantId, size }) => ({ productId, variantId, size })) });
+      const refreshed = items.map(item => {
+        const snapshot = response.data.items.find(entry => entry.productId === item.productId && entry.variantId === item.variantId && entry.size === item.size);
+        if (!snapshot) throw new Error("Could not check bag availability");
+        return { ...item, stock: snapshot.stock, stockAvailable: snapshot.stockAvailable };
+      });
+      setLocalCart(refreshed);
+      return { items: refreshed, total: calculateTotal(refreshed) };
     }
   };
 
-  const addToCart = async (data) => {
-      console.log("Auth?", isAuthenticated, "Token:", token);
+  // Share the authoritative response with the mini cart and existing bag listeners.
+  const publish = (cart, added) => {
+    window.dispatchEvent(new CustomEvent("cartUpdated", { detail: cart }));
+    if (added) window.dispatchEvent(new CustomEvent("cartAdded", { detail: { cart, added } }));
+    return cart;
+  };
 
+  const addToCart = async (data) => {
     if (isAuthenticated) {
       const res = await api.post("/add", data);
-      return res.data;
+      return publish(res.data, data);
     } else {
       const current = getLocalCart();
       const existing = current.find(
@@ -67,15 +80,16 @@ const useCartServices = () => {
       }
 
       setLocalCart(current);
-      return { items: current, total: calculateTotal(current) };
+      return publish({ items: current, total: calculateTotal(current) }, data);
     }
   };
 
   const updateItemQuantity = async (itemId, quantity) => {
+    if (!Number.isSafeInteger(quantity) || quantity < 1) throw new Error("Quantity must be a positive whole number");
     if (isAuthenticated) {
          try {
       const res = await api.put(`/update/${itemId}`, { quantity });
-      return res.data;
+      return publish(res.data);
     } catch (err) {
       const message =
         err?.response?.data?.error || "Failed to update quantity";
@@ -86,19 +100,20 @@ const useCartServices = () => {
         const matchKey =
           item.productId + item.variantId + item.size;
         const isMatch = matchKey === itemId;
+        if (isMatch && quantity > item.quantity && quantity > Number(item.stock || 0)) throw new Error(`Only ${item.stock || 0} available`);
         return isMatch
           ? { ...item, quantity, total: item.price * quantity }
           : item;
       });
       setLocalCart(current);
-      return { items: current, total: calculateTotal(current) };
+      return publish({ items: current, total: calculateTotal(current) });
     }
   };
 
   const removeItemFromCart = async (itemId) => {
     if (isAuthenticated) {
       const res = await api.delete(`/remove/${itemId}`);
-      return res.data;
+      return publish(res.data);
     } else {
       const filtered = getLocalCart().filter((item) => {
         const matchKey =
@@ -106,7 +121,7 @@ const useCartServices = () => {
         return matchKey !== itemId;
       });
       setLocalCart(filtered);
-      return { items: filtered, total: calculateTotal(filtered) };
+      return publish({ items: filtered, total: calculateTotal(filtered) });
     }
   };
 

@@ -1,3 +1,4 @@
+import { useScrollHeader } from "../../../hooks/useScrollHeader";
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../../context/AppContext";
@@ -41,6 +42,7 @@ const TimelineChart = ({ data, lines }) => {
   );
 };
 const AdminProductDetails = () => {
+  const scrollHeader = useScrollHeader();
   const { slug } = useParams();
   const { backendUrl } = useAppContext();
   const navigate = useNavigate();
@@ -314,7 +316,7 @@ const AdminProductDetails = () => {
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
 
       {/* Header with back button */}
-      <div className="fixed bg-white p-2 w-full shadow flex items-center z-10">
+      <div ref={scrollHeader.ref} data-scroll-hidden={scrollHeader.hidden} aria-hidden={scrollHeader.hidden || undefined} inert={scrollHeader.hidden || undefined} className="scroll-header fixed bg-white p-2 w-full shadow flex items-center z-10">
         <button
           onClick={() => navigate(`/admin#products`)}
           className="px-3 py-1 mb-2 sm:px-4 sm:py-2 border border-black rounded hover:bg-gray-200 transition sm:w-auto flex items-center gap-2"

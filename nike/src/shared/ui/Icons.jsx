@@ -1,3 +1,6 @@
+import { useScrollHeader } from "../../hooks/useScrollHeader";
+import AppBar from "./AppBar";
+import { useLocation } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import React from "react";
 import { useNavigate } from "react-router-dom";
@@ -908,8 +911,12 @@ export const ConfirmModal = ({
 export const BackBar = () => {
   const navigate = useNavigate();
 
+  const location = useLocation();
+  const scroll = useScrollHeader({ enabled: location.pathname.startsWith("/admin") });
+  if (!location.pathname.startsWith("/admin")) return <AppBar className="legacy-appbar" fallback="/home" />;
+
   return (
-    <div className="commerce-backbar fixed top-0 left-0 w-full z-30 bg-white px-4 py-2 flex items-center">
+    <div ref={scroll.ref} data-scroll-hidden={scroll.hidden} aria-hidden={scroll.hidden || undefined} inert={scroll.hidden || undefined} className="scroll-header commerce-backbar fixed top-0 left-0 w-full z-30 bg-white px-4 py-2 flex items-center">
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-1 px-3 py-2 border border-black rounded hover:bg-gray-100 transition sm:w-auto"

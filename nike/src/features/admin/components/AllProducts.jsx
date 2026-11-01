@@ -1,817 +1,1011 @@
-import React, { useEffect, useState } from "react";
-import { useProductService } from "../../product/services/productService";
-import { useNavigate } from "react-router-dom";
-import { useAppContext } from "../../../context/AppContext";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
-import toast from "react-hot-toast";
-import { CheckIcon, ConfirmModal } from "../../../shared/ui/Icons";
-
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { Link } from "react-router-dom";
 import {
-  DeleteIcon,
-  FilterIcon,
-  HomeIcon,
-  PlusIconWhite,
-  RefreshIcon,
-  SearchIcon,
+  CubeIcon,
+  Square3Stack3DIcon,
+  ShoppingCartIcon,
   StarIcon,
-  XIcon,
-} from "../../../shared/ui/Icons";
-import ProductAnalytics from "./ProductAnalytics";
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  BarsArrowDownIcon,
+  ArrowPathIcon,
+  Squares2X2Icon,
+  ListBulletIcon,
+  PlusIcon,
+  PencilSquareIcon,
+  EllipsisVerticalIcon,
+  XMarkIcon,
+  ChevronRightIcon,
+  TrashIcon,
+  ArrowUpRightIcon,
+} from "@heroicons/react/24/outline";
+import toast from "react-hot-toast";
+import { useProductService } from "../../product/services/productService";
+import { useAppContext } from "../../../context/AppContext";
+import "../../../css/product-management.css";
 
-export const AllProducts = () => {
-  const { fetchProducts, fetchFilterOptions, bulkDeleteProducts } =
-    useProductService();
-  const { backendUrl } = useAppContext();
-  const navigate = useNavigate();
-
-  const [filterOptions, setFilterOptions] = useState({
-    categories: [],
-    genders: [],
-    models: [],
-    activityTypes: [],
-    sportTypes: [],
-    colors: [],
-    sizes: [],
-    sizesByCategory: {},
-  });
-
-  const [loading, setLoading] = useState(false);
-  const [loadingFilters, setLoadingFilters] = useState(true);
-  const [showFilters, setShowFilters] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(false);
-  const [category, setCategory] = useState("");
-  const [gender, setGender] = useState("");
-  const [model, setModel] = useState("");
-  const [activityType, setActivityType] = useState("");
-  const [sportType, setSportType] = useState("");
-  const [minRating, setMinRating] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [minDiscount, setMinDiscount] = useState("");
-  const [isFeatured, setIsFeatured] = useState(false);
-  const [isTrending, setIsTrending] = useState(false);
-  const [isNewArrival, setIsNewArrival] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortKey, setSortKey] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedSize, setSelectedSize] = useState("");
-  const [pagination, setPagination] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectMode, setSelectMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-
-  const [products, setProducts] = useState(() => {
-    const loadInitialProducts = async () => {
-      try {
-        const initialProducts = await fetchProducts();
-        return initialProducts;
-      } catch (err) {
-        console.error("Error loading initial products:", err);
-        return [];
+const money = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
+const defaults = {
+  category: "",
+  gender: "",
+  model: "",
+  activityType: "",
+  sportType: "",
+  minRating: "",
+  minPrice: "",
+  maxPrice: "",
+  minDiscount: "",
+  color: "",
+  size: "",
+  isFeatured: false,
+  isTrending: false,
+  newArrival: false,
+};
+const optionDefaults = {
+  categories: [],
+  genders: [],
+  models: [],
+  activityTypes: [],
+  sportTypes: [],
+  colors: [],
+  sizesByCategory: {},
+};
+const sorting = [
+  ["", "Newest first"],
+  ["nameAsc", "Name A–Z"],
+  ["nameDesc", "Name Z–A"],
+  ["priceAsc", "Price: low to high"],
+  ["priceDesc", "Price: high to low"],
+  ["sold", "Most sold"],
+];
+const stock = (product) =>
+  (product.variants || []).reduce(
+    (sum, variant) =>
+      sum +
+      (variant.sizes || []).reduce(
+        (total, size) => total + Number(size.stock || 0),
+        0,
+      ),
+    0,
+  );
+function Dialog({ title, onClose, locked = false, children }) {
+  const panel = useRef(null);
+  useEffect(() => {
+    const previous = document.activeElement,
+      overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    (
+      panel.current?.querySelector(
+        "button:not(:disabled),select:not(:disabled),input:not(:disabled)",
+      ) || panel.current
+    )?.focus({ preventScroll: true });
+    const keydown = (event) => {
+      if (event.key === "Escape" && !locked) onClose();
+      if (event.key === "Tab") {
+        const nodes = [
+          ...panel.current.querySelectorAll(
+            "button:not(:disabled),select:not(:disabled),input:not(:disabled)",
+          ),
+        ];
+        if (!nodes.length) {
+          event.preventDefault();
+          panel.current?.focus({ preventScroll: true });
+          return;
+        }
+        if (event.shiftKey && document.activeElement === nodes[0]) {
+          event.preventDefault();
+          nodes.at(-1)?.focus();
+        } else if (!event.shiftKey && document.activeElement === nodes.at(-1)) {
+          event.preventDefault();
+          nodes[0]?.focus();
+        }
       }
     };
-
-    loadInitialProducts();
-    return [];
-  });
-
-  const handleRefresh = () => {
-    setRefreshTrigger((prev) => !prev);
-  };
-  const handleBulkDelete = async () => {
-    setShowConfirmDelete(false); // Close modal immediately
-
-    try {
-      // Optimistically update UI
-      setProducts((prevProducts) =>
-        prevProducts.filter((product) => !selectedIds.includes(product._id))
-      );
-
-      const { deletedCount, message } = await bulkDeleteProducts(selectedIds);
-      toast.success(message);
-
-      // Refresh data in background
-      setRefreshTrigger((prev) => !prev);
-    } catch (err) {
-      // Revert UI if error occurs
-      setRefreshTrigger((prev) => !prev);
-      toast.error(err.response?.data?.error || "Bulk delete failed");
-    } finally {
-      setSelectedIds([]);
-      setSelectMode(false);
-    }
-  };
-  useEffect(() => {
-    if (selectedIds.length === 0) {
-      setSelectMode(false);
-    }
-  }, [selectedIds]);
-
-  // Toggle select all
-  const toggleSelectAll = () => {
-    if (selectedIds.length === products.length) setSelectedIds([]);
-    else setSelectedIds(products.map((o) => o._id));
-  };
-  const toggleSelect = (id) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-  };
-
-  const handleRightClick = (e, productId) => {
-    e.preventDefault(); // Prevent browser context menu
-    setSelectMode(true); // Enable select mode
-
-    setSelectedIds((prev) => {
-      // If already selected, just keep it (or optionally toggle)
-      if (prev.includes(productId)) return prev;
-      // Otherwise, add it
-      return [...prev, productId];
-    });
-  };
-
-  let pressTimer;
-
-  const handleTouchStart = (productId) => {
-    pressTimer = setTimeout(() => {
-      setSelectMode(true);
-      toggleSelect(productId); // Select the first item
-    }, 600); // 600ms = long press
-  };
-
-  const handleTouchEnd = () => {
-    clearTimeout(pressTimer);
-  };
-
-  useEffect(() => {
-    loadProducts();
-  }, [refreshTrigger, currentPage]);
-
-  const sizeMap = filterOptions.sizesByCategory || {};
-
-  useEffect(() => {
-    const loadFilterOptions = async () => {
-      try {
-        const opts = await fetchFilterOptions();
-        setFilterOptions(opts);
-      } catch (err) {
-        console.error("Error loading filter options:", err);
-      } finally {
-        setLoadingFilters(false);
-      }
+    document.addEventListener("keydown", keydown);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener("keydown", keydown);
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
     };
-    loadFilterOptions();
-  }, []);
-
-  const loadProducts = async () => {
-    setLoading(true);
-    try {
-      const filters = {
-        category,
-        gender,
-        model,
-        activityType,
-        sportType,
-        minRating,
-        minPrice,
-        maxPrice,
-        minDiscount,
-        isFeatured: isFeatured ? true : undefined,
-        isTrending: isTrending ? true : undefined,
-        newArrival: isNewArrival ? true : undefined,
-        search: searchTerm,
-        color: selectedColor,
-        size: selectedSize,
-        sortBy: sortKey || undefined,
-        page: currentPage,
-         limit: 10 // Add this line to request 10 products per page
-
-      };
-
-      const res = await fetchProducts(filters);
-      setProducts(res.products);
-      setPagination(res.pagination);
-      setShowFilters(false);
-    } catch (err) {
-      console.error("Error fetching products:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resetFilters = () => {
-    setCategory("");
-    setGender("");
-    setModel("");
-    setActivityType("");
-    setSportType("");
-    setMinRating("");
-    setMinPrice("");
-    setMaxPrice("");
-    setMinDiscount("");
-    setIsFeatured(false);
-    setIsTrending(false);
-    setIsNewArrival(false);
-    setSearchTerm("");
-    setSortKey("");
-    setSelectedColor("");
-    setSelectedSize("");
-    setCurrentPage(); // important
-    handleRefresh();
-  };
-
-  const handleProductClick = (slug) => {
-    navigate(`/admin/product/${slug}`, { state: { fromView: "products" } });
-  };
-
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath) return "/placeholder.jpg";
-    const match = imagePath.match(
-      /uploads[\\/][\w\-.]+\.(jpg|jpeg|avif|png|webp)/i
-    );
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return backendUrl ? `${backendUrl}/${relativePath}` : `/${relativePath}`;
-  };
-
-  const getProductImage = (product) => {
-    const firstImage = product?.variants?.[0]?.images?.[0];
-    return firstImage ? formatImageUrl(firstImage) : "/placeholder.jpg";
-  };
-
-  const getSortIcon = (key) => {
-    if (sortKey === key) return "↑";
-    if (sortKey === `-${key}`) return "↓";
-    return "";
-  };
-
-  const handleSort = (key) => {
-    if (sortKey === key) setSortKey(`-${key}`);
-    else if (sortKey === `-${key}`) setSortKey("");
-    else setSortKey(key);
-    setCurrentPage(1); // reset pagination
-  };
-
-  if (loading) {
-    return (
-      <div className="design-component design-all-products p-4 space-y-6">
-        <Skeleton height={32} width={200} />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} height={80} />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} height={300} />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="design-component design-all-products"><>
-      <div className="p-4">
-              <h1 className="text-2xl font-bold mb-4">Product Management</h1>
-<div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 w-full">
-  {/* Left: Search + Icons */}
-  <div className="flex w-full items-center gap-2">
-    {/* Search Input */}
-    <div className="relative flex-grow">
-      <input
-        type="text"
-        placeholder="Search products..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && loadProducts()}
-        onClick={() => {
-          setCurrentPage(1);
-          loadProducts();
-        }}
-        className="w-full text-sm pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 h-10"
+  }, [locked]);
+  return createPortal(
+    <div className="pm-modal-layer">
+      <div
+        className="pm-modal-backdrop"
+        onClick={() => !locked && onClose()}
+        aria-hidden="true"
       />
-      <button
-        onClick={loadProducts}
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+      <section
+        ref={panel}
+        tabIndex={-1}
+        className="pm-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
       >
-        <SearchIcon />
+        <header>
+          <div>
+            <small>MAKE IT YOURS</small>
+            <h2>{title}</h2>
+          </div>
+          <button
+            type="button"
+            aria-label={`Close ${title.toLowerCase()}`}
+            disabled={locked}
+            onClick={onClose}
+          >
+            <XMarkIcon />
+          </button>
+        </header>
+        {children}
+      </section>
+    </div>,
+    document.body,
+  );
+}
+export const AllProducts = () => {
+  const service = useProductService(),
+    latest = useRef(service);
+  latest.current = service;
+  const { backendUrl, token } = useAppContext();
+  const [products, setProducts] = useState([]),
+    [pagination, setPagination] = useState({}),
+    [page, setPage] = useState(1),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState(""),
+    [refresh, setRefresh] = useState(0);
+  const [stats, setStats] = useState(null),
+    [statsError, setStatsError] = useState(false);
+  const [options, setOptions] = useState(optionDefaults),
+    [optionsLoading, setOptionsLoading] = useState(true),
+    [optionsError, setOptionsError] = useState(false);
+  const [draft, setDraft] = useState(defaults),
+    [filters, setFilters] = useState(defaults),
+    [search, setSearch] = useState(""),
+    [query, setQuery] = useState(""),
+    [sort, setSort] = useState("");
+  const [showFilters, setShowFilters] = useState(false),
+    [filterError, setFilterError] = useState(""),
+    [view, setView] = useState(() =>
+      window.innerWidth < 768 ? "grid" : "table",
+    );
+  const [selected, setSelected] = useState([]),
+    [deleting, setDeleting] = useState(false),
+    [deleteIds, setDeleteIds] = useState(null),
+    [menu, setMenu] = useState(null);
+  const deleteLock = useRef(false),
+    checkAll = useRef(null),
+    menuRef = useRef(null);
+  useEffect(() => {
+    if (search.trim() === query) return;
+    const timer = setTimeout(() => {
+      setQuery(search.trim());
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search, query]);
+  useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
+    setLoading(true);
+    setError("");
+    setSelected([]);
+    setMenu(null);
+    latest.current
+      .fetchProducts(
+        {
+          ...filters,
+          isFeatured: filters.isFeatured || undefined,
+          isTrending: filters.isTrending || undefined,
+          newArrival: filters.newArrival || undefined,
+          search: query,
+          searchFields: "management",
+          sortBy: sort,
+          page,
+          limit: 10,
+        },
+        { signal: controller.signal, throwOnError: true },
+      )
+      .then((result) => {
+        if (!active) return;
+        if (!Array.isArray(result?.products))
+          throw new Error("Unexpected product response");
+        const totalPages = Number(result.pagination?.totalPages || 0);
+        if (totalPages > 0 && page > totalPages) {
+          setPage(totalPages);
+          return;
+        }
+        if (!totalPages && page > 1) {
+          setPage(1);
+          return;
+        }
+        setProducts(result.products);
+        setPagination(result.pagination || {});
+      })
+      .catch((err) => {
+        if (active && !controller.signal.aborted)
+          setError(
+            err?.response?.data?.message ||
+              err.message ||
+              "Couldn’t load products.",
+          );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [backendUrl, token, filters, query, sort, page, refresh]);
+  useEffect(() => {
+    let active = true;
+    setStats(null);
+    setStatsError(false);
+    setOptionsLoading(true);
+    setOptionsError(false);
+    latest.current
+      .fetchProductAnalytics()
+      .then((data) => {
+        if (!data) throw new Error();
+        if (active) setStats(data);
+      })
+      .catch(() => {
+        if (active) setStatsError(true);
+      });
+    latest.current
+      .fetchFilterOptions()
+      .then((data) => {
+        if (!data) throw new Error();
+        if (active) setOptions({ ...optionDefaults, ...data });
+      })
+      .catch(() => {
+        if (active) setOptionsError(true);
+      })
+      .finally(() => {
+        if (active) setOptionsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [backendUrl, token, refresh]);
+  useEffect(() => {
+    if (checkAll.current)
+      checkAll.current.indeterminate =
+        selected.length > 0 && selected.length < products.length;
+  }, [selected, products, view]);
+  useEffect(() => {
+    if (!menu) return;
+    menuRef.current?.querySelector("a,button")?.focus({ preventScroll: true });
+    const close = (event) => {
+      if (event.type === "keydown" && event.key !== "Escape") return;
+      if (
+        event.type === "pointerdown" &&
+        menuRef.current?.contains(event.target)
+      )
+        return;
+      if (event.type === "keydown") menu.trigger?.focus({ preventScroll: true });
+      setMenu(null);
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", close);
+    window.addEventListener("resize", close);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", close);
+      window.removeEventListener("resize", close);
+    };
+  }, [menu]);
+  const toggle = (id) =>
+    setSelected((previous) =>
+      previous.includes(id)
+        ? previous.filter((value) => value !== id)
+        : [...previous, id],
+    );
+  const reset = () => {
+    setDraft(defaults);
+    setFilters(defaults);
+    setSearch("");
+    setQuery("");
+    setSort("");
+    setPage(1);
+    setFilterError("");
+    setShowFilters(false);
+  };
+  const apply = (event) => {
+    event.preventDefault();
+    if (
+      (draft.minPrice !== "" && Number(draft.minPrice) < 0) ||
+      (draft.maxPrice !== "" &&
+        (Number(draft.maxPrice) < 0 ||
+          Number(draft.maxPrice) < Number(draft.minPrice || 0)))
+    ) {
+      setFilterError("Enter a valid price range.");
+      return;
+    }
+    setFilters({ ...draft });
+    setPage(1);
+    setShowFilters(false);
+  };
+  const remove = async () => {
+    if (deleteLock.current || !deleteIds?.length) return;
+    deleteLock.current = true;
+    setDeleting(true);
+    try {
+      const result = await latest.current.bulkDeleteProducts(deleteIds);
+      toast.success(
+        result.message ||
+          `${result.deletedCount ?? deleteIds.length} products deleted`,
+      );
+      setDeleteIds(null);
+      setSelected([]);
+      setRefresh((value) => value + 1);
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.error ||
+          "Couldn’t delete products. Please try again.",
+      );
+    } finally {
+      setDeleting(false);
+      deleteLock.current = false;
+    }
+  };
+  const image = (path) => {
+    if (typeof path !== "string" || !path)
+      return "/assets/editorial/image-unavailable.svg";
+    if (/^https?:\/\//i.test(path)) return path;
+    const normalized = path.replace(/\\/g, "/");
+    return `${(backendUrl || "").replace(/\/$/, "")}/${normalized.includes("uploads/") ? normalized.slice(normalized.indexOf("uploads/")) : normalized.replace(/^\/+/, "")}`;
+  };
+  const fallback = (event) => {
+    event.currentTarget.onerror = null;
+    event.currentTarget.src = "/assets/editorial/image-unavailable.svg";
+  };
+  const activeFilters = Object.entries(filters).filter(
+    ([, value]) => value !== "" && value !== false,
+  ).length;
+  const summary = [
+    ["Total Products", CubeIcon, stats?.totalProducts],
+    ["Total Variants", Square3Stack3DIcon, stats?.totalVariants],
+    [
+      "Total Sold",
+      ShoppingCartIcon,
+      typeof stats?.totalUnitsSold === "object"
+        ? stats.totalUnitsSold.allTime
+        : stats?.totalUnitsSold,
+    ],
+    [
+      "Average Rating",
+      StarIcon,
+      stats?.averageRating != null
+        ? Number(stats.averageRating).toFixed(1)
+        : null,
+    ],
+  ];
+  const details = (product) => (
+    <Link
+      className="pm-product-link"
+      to={`/admin/product/${product.slug}`}
+      state={{ fromView: "products" }}
+    >
+      <img
+        src={image(product.variants?.[0]?.images?.[0] || product.featuredImg)}
+        alt=""
+        onError={fallback}
+      />
+      <span>
+        <strong>{product.name}</strong>
+        <small>ID: {product._id}</small>
+        {product.model && <small>Model: {product.model}</small>}
+      </span>
+    </Link>
+  );
+  const finalPrice = (product) => {
+    const price = Number(product.finalPrice ?? product.price),
+      discount =
+        Number(product.price) > price
+          ? Math.round((1 - price / Number(product.price)) * 100)
+          : 0;
+    return (
+      <span className="pm-final-price">
+        {money(price)}
+        {discount > 0 && <mark>{discount}% OFF</mark>}
+      </span>
+    );
+  };
+  const rating = (product) => (
+    <span className="pm-rating">
+      <StarIcon />
+      {Number(product.rating?.average || 0).toFixed(1)}
+      <small>({product.rating?.total || 0})</small>
+    </span>
+  );
+  const variants = (product) => (
+    <span className="pm-variants">
+      {(product.variants || []).slice(0, 3).map((variant, index) => (
+        <img
+          key={variant._id || index}
+          src={image(variant.images?.[0])}
+          title={variant.color}
+          alt={variant.color || "Variant"}
+          onError={fallback}
+        />
+      ))}
+      {product.variants?.length > 3 && (
+        <small>+{product.variants.length - 3}</small>
+      )}
+    </span>
+  );
+  const status = (product) => (
+    <span
+      className={`pm-stock-badge${stock(product) > 0 ? "" : " pm-stock-empty"}`}
+    >
+      <i />
+      {stock(product) > 0 ? "In stock" : "Out of stock"}
+    </span>
+  );
+  const actions = (product) => (
+    <div className="pm-row-actions">
+      <Link
+        to={`/admin/product/update/${product.slug}`}
+        aria-label={`Edit ${product.name}`}
+      >
+        <PencilSquareIcon />
+      </Link>
+      <button
+        type="button"
+        aria-label={`More actions for ${product.name}`}
+        aria-expanded={menu?.product._id === product._id}
+        onClick={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          setMenu({
+            trigger: event.currentTarget,
+            product,
+            top:
+              rect.bottom + 130 > window.innerHeight
+                ? rect.top - 125
+                : rect.bottom + 6,
+            left: Math.min(rect.right - 175, window.innerWidth - 185),
+          });
+        }}
+      >
+        <EllipsisVerticalIcon />
       </button>
     </div>
-
-    {/* Action Icons */}
-    {selectMode ? (
-      <>
-        <button
-          onClick={toggleSelectAll}
-          className="h-10 px-2 sm:px-3 border rounded-lg flex items-center gap-1 bg-white hover:bg-gray-200 text-sm transition"
-        >
-          <CheckIcon className="w-4 h-4" />
-          <span className="hidden md:inline">
-            {selectedIds.length === products.length ? "Deselect All" : "Select All"}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setShowConfirmDelete(true)}
-          className="h-10 px-2 sm:px-3 rounded-lg bg-white hover:bg-gray-200 flex items-center gap-1 text-sm transition"
-        >
-          <DeleteIcon className="w-4 h-4" />
-          <span className="hidden md:inline">Delete</span>
-        </button>
-      </>
-    ) : (
-      <>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="h-10 px-2 sm:px-3 rounded-lg hover:bg-gray-200 flex items-center gap-1 text-sm transition"
-        >
-          <FilterIcon className="w-4 h-4" />
-          <span className="hidden sm:inline">Filter</span>
-        </button>
-
-        <button
-          onClick={handleRefresh}
-          className="h-10 px-2 sm:px-3 rounded-lg hover:bg-gray-200 flex items-center gap-1 text-sm transition"
-        >
-          <RefreshIcon className="w-4 h-4" />
-          <span className="hidden sm:inline">Refresh</span>
-        </button>
-      </>
-    )}
-  </div>
-
-  {/* New Product Button */}
-  <button
-    onClick={() => navigate("/admin/create-product")}
-    className="h-10 flex items-center justify-center bg-black gap-2 border border-black rounded-lg hover:bg-gray-700 transition w-full sm:w-44 text-sm text-white"
-  >
-    <span>New Product</span>
-  </button>
-</div>
-
-
-        {showConfirmDelete && (
-          <ConfirmModal
-            open={showConfirmDelete}
-            onClose={() => setShowConfirmDelete(false)}
-            onConfirm={handleBulkDelete}
-            title={`Delete ${selectedIds.length} product(s)?`}
-            message={`Are you sure you want to permanently delete the selected products? This action cannot be undone.`}
-            confirmText="Delete"
-            cancelText="Cancel"
-          />
-        )}
-
-        {/* Filters Modal */}
-        {showFilters && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white p-4 border-b border-gray-200 flex justify-between items-center">
-                <h2 className="text-xl font-bold">Filters</h2>
-                <button
-                  onClick={() => setShowFilters(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <XIcon />
-                </button>
-              </div>
-
-              <div className="p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                  {/* Category Filter */}
-                  <div>
-                    <label className="block text-xs sm:text-xs sm:text-sm font-medium mb-1">
-                      Category
-                    </label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded text-xs sm:text-xs sm:text-sm"
-                    >
-                      <option value="">All Categories</option>
-                      {filterOptions.categories.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Gender Filter */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1">
-                      Gender
-                    </label>
-                    <select
-                      value={gender}
-                      onChange={(e) => setGender(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded text-xs sm:text-sm"
-                    >
-                      <option value="">All Genders</option>
-                      {filterOptions.genders.map((g) => (
-                        <option key={g} value={g}>
-                          {g}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Model Filter */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1">
-                      Model
-                    </label>
-                    <select
-                      value={model}
-                      onChange={(e) => setModel(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded text-xs sm:text-sm"
-                    >
-                      <option value="">All Models</option>
-                      {filterOptions.models.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Activity Type Filter */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1">
-                      Activity Type
-                    </label>
-                    <select
-                      value={activityType}
-                      onChange={(e) => setActivityType(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded text-xs sm:text-sm"
-                    >
-                      <option value="">All Activity Types</option>
-                      {filterOptions.activityTypes.map((a) => (
-                        <option key={a} value={a}>
-                          {a}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Sport Type Filter */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1">
-                      Sport Type
-                    </label>
-                    <select
-                      value={sportType}
-                      onChange={(e) => setSportType(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded text-xs sm:text-sm"
-                    >
-                      <option value="">All Sport Types</option>
-                      {filterOptions.sportTypes.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Min Rating Filter */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1">
-                      Min Rating
-                    </label>
-                    <select
-                      value={minRating}
-                      onChange={(e) => setMinRating(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded text-xs sm:text-sm"
-                    >
-                      <option value="">Any Rating</option>
-                      {[1, 2, 3, 4, 5].map((r) => (
-                        <option key={r} value={r}>
-                          {r} ★ & up
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Min Discount Filter */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1">
-                      Min Discount
-                    </label>
-                    <select
-                      value={minDiscount}
-                      onChange={(e) => setMinDiscount(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded text-xs sm:text-sm"
-                    >
-                      <option value="">Any Discount</option>
-                      {[5, 10, 20, 30, 40, 50].map((d) => (
-                        <option key={d} value={d}>
-                          {d}% or more
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Price Range Filter */}
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs sm:text-sm font-medium mb-1">
-                      Price Range
-                    </label>
-                    <div className="flex space-x-2">
-                      <input
-                        type="number"
-                        value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value)}
-                        placeholder="Min ₹"
-                        className="w-full px-3 py-2 border border-gray-300 rounded text-xs sm:text-sm"
-                      />
-                      <input
-                        type="number"
-                        value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
-                        placeholder="Max ₹"
-                        className="w-full px-3 py-2 border border-gray-300 rounded text-xs sm:text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Sort By Filter */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1">
-                      Sort By
-                    </label>
-                    <select
-                      value={sortKey}
-                      onChange={(e) => setSortKey(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded text-xs sm:text-sm"
-                    >
-                      <option value="">Default</option>
-                      <option value="sold">Top Sold</option>
-                      <option value="priceAsc">Price ↑</option>
-                      <option value="priceDesc">Price ↓</option>
-                    </select>
-                  </div>
-
-                  {/* Color Filter */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1">
-                      Color
-                    </label>
-                    <select
-                      value={selectedColor}
-                      onChange={(e) => setSelectedColor(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded text-xs sm:text-sm"
-                    >
-                      <option value="">All Colors</option>
-                      {filterOptions?.colors?.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Size Filter */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium mb-1">
-                      Size
-                    </label>
-                    <select
-                      value={selectedSize}
-                      onChange={(e) => setSelectedSize(e.target.value)}
-                      disabled={!category}
-                      className="w-full px-3 py-2 border border-gray-300 rounded text-xs sm:text-sm disabled:opacity-50"
-                    >
-                      <option value="">All Sizes</option>
-                      {sizeMap[category]?.map((sz) => (
-                        <option key={sz} value={sz}>
-                          {sz}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Checkbox Filters */}
-                <div className="flex flex-wrap gap-6 mt-6">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="featured"
-                      checked={isFeatured}
-                      onChange={(e) => setIsFeatured(e.target.checked)}
-                      className="h-4 w-4 border-gray-300 rounded"
-                    />
-                    <label htmlFor="featured" className="text-xs sm:text-sm">
-                      Featured
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="trending"
-                      checked={isTrending}
-                      onChange={(e) => setIsTrending(e.target.checked)}
-                      className="h-4 w-4 border-gray-300 rounded"
-                    />
-                    <label htmlFor="trending" className="text-xs sm:text-sm">
-                      Trending
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="newArrival"
-                      checked={isNewArrival}
-                      onChange={(e) => setIsNewArrival(e.target.checked)}
-                      className="h-4 w-4 border-gray-300 rounded"
-                    />
-                    <label htmlFor="newArrival" className="text-xs sm:text-sm">
-                      New Arrival
-                    </label>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-4 mt-8">
-                  <button
-                    onClick={loadProducts}
-                    disabled={loading}
-                    className={`px-6 py-2 rounded text-white text-xs sm:text-sm ${
-                      loading ? "bg-gray-500" : "bg-black hover:bg-gray-800"
-                    }`}
-                  >
-                    {loading ? "Applying..." : "Apply Filters"}
-                  </button>
-                  <button
-                    onClick={resetFilters}
-                    className="px-6 py-2 rounded border border-gray-300 text-xs sm:text-sm hover:bg-gray-100"
-                  >
-                    Reset Filters
-                  </button>
-                </div>
-              </div>
+  );
+  const change = (key, value) =>
+    setDraft((previous) => ({
+      ...previous,
+      [key]: value,
+      ...(key === "category" ? { size: "" } : {}),
+    }));
+  const filterSelect = (label, key, values, emptyLabel) => (
+    <label key={key}>
+      {label}
+      <select
+        aria-label={label}
+        value={draft[key]}
+        onChange={(event) => change(key, event.target.value)}
+        disabled={optionsLoading || (key === "size" && !draft.category)}
+      >
+        <option value="">{emptyLabel || `All ${label.toLowerCase()}`}</option>
+        {values.map((value) => (
+          <option value={value} key={value}>
+            {value}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+  return (
+    <section className="pm-page">
+      <nav className="pm-breadcrumb" aria-label="Breadcrumb">
+        <Link to="/admin#dashboard">Dashboard</Link>
+        <ChevronRightIcon />
+        <span>Products</span>
+      </nav>
+      <header className="pm-heading">
+        <div>
+          <h1>Product Management</h1>
+          <p>Manage your product catalog, inventory, and pricing.</p>
+        </div>
+        <Link className="pm-add" to="/admin/create-product">
+          <PlusIcon />
+          Add New Product
+        </Link>
+      </header>
+      <div className="pm-summary">
+        {summary.map(([label, Icon, value], index) => (
+          <div className="pm-summary-card" key={label}>
+            <span className={`pm-summary-icon pm-summary-icon-${index}`}>
+              <Icon />
+            </span>
+            <div>
+              <strong>
+                {statsError ? (
+                  "—"
+                ) : !stats ? (
+                  <span className="pm-skeleton" />
+                ) : value == null ? (
+                  "—"
+                ) : typeof value === "number" ? (
+                  value.toLocaleString("en-IN")
+                ) : (
+                  value
+                )}
+              </strong>
+              <span>{label}</span>
             </div>
           </div>
-        )}
-        {/* Product Table */}
-
-      <div className="bg-white rounded-lg border border-gray-200 overflow-auto max-h-[100vh]">
-  <div className="w-full overflow-x-auto">
-    <table className="min-w-[900px] w-full text-sm border-separate border-spacing-0">
-      <thead className="bg-black text-white sticky top-0 z-10">
-        <tr>
-          <th className="px-4 py-3 text-sm cursor-pointer" onClick={() => handleSort("name")}>
-            Product {getSortIcon("name")}
-          </th>
-          <th className="px-4 py-3 text-sm cursor-pointer" onClick={() => handleSort("gender")}>
-            Gender {getSortIcon("gender")}
-          </th>
-          <th className="px-4 py-3 text-sm cursor-pointer" onClick={() => handleSort("price")}>
-            Price {getSortIcon("price")}
-          </th>
-          <th className="px-6 py-3 text-sm cursor-pointer" onClick={() => handleSort("finalPrice")}>
-            Final Price {getSortIcon("finalPrice")}
-          </th>
-          <th className="px-4 py-3 text-sm cursor-pointer" onClick={() => handleSort("rating")}>
-            Rating {getSortIcon("rating")}
-          </th>
-          <th className="px-4 py-3 cursor-pointer text-sm" onClick={() => handleSort("sold")}>
-            Sold {getSortIcon("sold")}
-          </th>
-          <th className="px-4 py-3 text-sm">Variants</th>
-        </tr>
-      </thead>
-
-      <tbody className="divide-y divide-gray-200">
-        {products.length > 0 ? (
-          products.map((product) => {
-            const isSelected = selectedIds.includes(product._id);
-
-            const handleRowClick = () => {
-              if (selectMode) toggleSelect(product._id);
-              else handleProductClick(product.slug);
-            };
-
-            return (
-              <tr
-                key={product._id}
-                onClick={handleRowClick}
-                onTouchStart={() => handleTouchStart(product._id)}
-                onTouchEnd={handleTouchEnd}
-                onContextMenu={(e) => handleRightClick(e, product._id)}
-                className={`hover:bg-gray-100 cursor-pointer ${
-                  isSelected ? "bg-gray-100" : ""
-                }`}
-              >
-                <td className="px-4 py-3">
-                  <div className="relative flex items-center">
-                    {selectMode && isSelected && (
-                      <div className="absolute -top-1 -left-1 z-10 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center shadow">
-                        ✓
-                      </div>
-                    )}
-                    <div className="flex-shrink-0 h-16 w-16 rounded-md overflow-hidden border border-gray-200">
-                      <img
-                        src={getProductImage(product)}
-                        alt={product.name}
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                          e.target.src = "/placeholder.jpg";
-                          e.target.className = "h-full w-full object-contain p-2 bg-gray-100";
-                        }}
-                      />
-                    </div>
-                    <div className="ml-3">
-                      <div className="text-sm font-medium text-gray-900 line-clamp-1">
-                        {product.name}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">ID: {product._id}</div>
-                      {product.model && (
-                        <div className="text-xs text-gray-500 mt-1">Model: {product.model}</div>
-                      )}
-                    </div>
-                  </div>
-                </td>
-
-                <td className="px-4 py-3 text-sm text-gray-700 capitalize">
-                  {product.gender}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  ₹{product.price?.toLocaleString()}
-                </td>
-                <td className="px-4 py-3 text-sm font-medium text-gray-700">
-                  ₹{product.finalPrice?.toLocaleString()}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  <div className="flex items-center">
-                    <span className="font-medium">{product.rating.average?.toFixed(1) || "0.0"}</span>
-                    <span className="ml-1"><StarIcon /></span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  {product.sold?.toLocaleString()}
-                </td>
-                <td className="px-4 py-3 text-sm">
-                  <div className="flex flex-nowrap gap-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
-                    {product.variants?.map((variant, i) => (
-                      <img
-                        key={i}
-                        src={formatImageUrl(variant.images?.[0])}
-                        alt={variant.color}
-                        title={variant.color}
-                        className="w-8 h-8 rounded-md border border-gray-300 object-cover flex-shrink-0"
-                        onError={(e) => {
-                          e.target.src = "/placeholder.jpg";
-                          e.target.className =
-                            "w-8 h-8 object-contain p-1 bg-gray-100 border border-gray-300 rounded";
-                        }}
-                      />
-                    ))}
-                  </div>
-                </td>
-              </tr>
-            );
-          })
-        ) : (
-          <tr>
-            <td
-              colSpan={selectMode ? 8 : 7}
-              className="px-4 py-6 text-center text-sm text-gray-500"
-            >
-              No products found. Try adjusting your filters.
-              <button onClick={resetFilters} className="ml-2 text-blue-600 hover:underline">
-                Clear filters
-              </button>
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  </div>
-
-  {/* Pagination */}
-  {pagination?.totalPages > 1 && (
-    <div className="flex justify-center mt-4 gap-2 text-sm px-4">
-      {[...Array(pagination.totalPages)].map((_, i) => (
-        <button
-          key={i}
-          onClick={() => setCurrentPage(i + 1)}
-          className={`px-3 py-1 border rounded ${
-            i + 1 === pagination.currentPage
-              ? "bg-black text-white"
-              : "bg-white text-black"
-          }`}
-        >
-          {i + 1}
-        </button>
-      ))}
-    </div>
-  )}
-</div>
-
+        ))}
       </div>
-    </></div>
+      {statsError && (
+        <p className="pm-notice" role="alert">
+          Summary couldn’t load.{" "}
+          <button
+            type="button"
+            onClick={() => setRefresh((value) => value + 1)}
+          >
+            Retry
+          </button>
+        </p>
+      )}
+      <div className="pm-toolbar">
+        <form
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setQuery(search.trim());
+            setPage(1);
+          }}
+        >
+          <button type="submit" aria-label="Search products">
+            <MagnifyingGlassIcon />
+          </button>
+          <input
+            aria-label="Search products, ID, or model"
+            placeholder="Search products, ID, or model…"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          {search && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => {
+                setSearch("");
+                setQuery("");
+                setPage(1);
+              }}
+            >
+              <XMarkIcon />
+            </button>
+          )}
+        </form>
+        <div className="pm-toolbar-actions">
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(filters);
+              setFilterError("");
+              setShowFilters(true);
+            }}
+            className={activeFilters ? "pm-filter-active" : ""}
+          >
+            <FunnelIcon />
+            Filter{activeFilters > 0 && <small>{activeFilters}</small>}
+          </button>
+          <label className="pm-sort">
+            <BarsArrowDownIcon />
+            <select
+              aria-label="Sort products"
+              value={sort}
+              onChange={(event) => {
+                setSort(event.target.value);
+                setPage(1);
+              }}
+            >
+              {sorting.map(([value, label]) => (
+                <option value={value} key={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            aria-label="Refresh products"
+            disabled={loading || deleting}
+            onClick={() => setRefresh((value) => value + 1)}
+          >
+            <ArrowPathIcon className={loading ? "pm-spinning" : ""} />
+          </button>
+          <div
+            className="pm-view-controls"
+            role="group"
+            aria-label="Product view"
+          >
+            <button
+              type="button"
+              aria-label="Grid view"
+              aria-pressed={view === "grid"}
+              onClick={() => setView("grid")}
+            >
+              <Squares2X2Icon />
+            </button>
+            <button
+              type="button"
+              aria-label="Table view"
+              aria-pressed={view === "table"}
+              onClick={() => setView("table")}
+            >
+              <ListBulletIcon />
+            </button>
+          </div>
+        </div>
+      </div>
+      {activeFilters > 0 && (
+        <div className="pm-applied">
+          <span>{activeFilters} filters applied</span>
+          <button type="button" onClick={reset}>
+            Clear all
+          </button>
+        </div>
+      )}
+      {selected.length > 0 && (
+        <div className="pm-selection" role="status">
+          <span>{selected.length} selected</span>
+          <button
+            type="button"
+            onClick={() =>
+              setSelected(
+                selected.length === products.length
+                  ? []
+                  : products.map((product) => product._id),
+              )
+            }
+          >
+            {selected.length === products.length
+              ? "Deselect all"
+              : "Select page"}
+          </button>
+          <button
+            type="button"
+            className="pm-delete"
+            disabled={deleting || loading}
+            onClick={() => setDeleteIds([...selected])}
+          >
+            <TrashIcon />
+            Delete selected
+          </button>
+        </div>
+      )}
+      {error ? (
+        <div className="pm-empty" role="alert">
+          <h2>Couldn’t load products</h2>
+          <p>{error}</p>
+          <button
+            type="button"
+            onClick={() => setRefresh((value) => value + 1)}
+          >
+            Try again
+          </button>
+        </div>
+      ) : loading ? (
+        <div className="pm-loading" role="status" aria-label="Loading products">
+          {[0, 1, 2, 3, 4].map((key) => (
+            <div className="pm-skeleton" key={key} />
+          ))}
+        </div>
+      ) : !products.length ? (
+        <div className="pm-empty">
+          <h2>No products found</h2>
+          <p>Try a different search or adjust your filters.</p>
+          <button type="button" onClick={reset}>
+            Clear filters
+          </button>
+        </div>
+      ) : view === "table" ? (
+        <div className="pm-table-scroll">
+          <table className="pm-table">
+            <thead>
+              <tr>
+                <th>
+                  <input
+                    ref={checkAll}
+                    type="checkbox"
+                    aria-label="Select all products on this page"
+                    checked={
+                      selected.length === products.length && products.length > 0
+                    }
+                    onChange={() =>
+                      setSelected(
+                        selected.length === products.length
+                          ? []
+                          : products.map((product) => product._id),
+                      )
+                    }
+                  />
+                </th>
+                {[
+                  "Product",
+                  "Gender",
+                  "Price",
+                  "Final Price",
+                  "Rating",
+                  "Sold",
+                  "Variants",
+                  "Status",
+                ].map((label) => (
+                  <th key={label} scope="col">
+                    {label}
+                  </th>
+                ))}
+                <th scope="col">
+                  <span className="pm-visually-hidden">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product) => (
+                <tr
+                  key={product._id}
+                  className={
+                    selected.includes(product._id) ? "pm-selected" : ""
+                  }
+                >
+                  <td>
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${product.name}`}
+                      checked={selected.includes(product._id)}
+                      onChange={() => toggle(product._id)}
+                    />
+                  </td>
+                  <td>{details(product)}</td>
+                  <td>
+                    <span className={`pm-gender pm-gender-${product.gender}`}>
+                      {product.gender}
+                    </span>
+                  </td>
+                  <td>{money(product.price)}</td>
+                  <td>{finalPrice(product)}</td>
+                  <td>{rating(product)}</td>
+                  <td>{Number(product.sold || 0).toLocaleString("en-IN")}</td>
+                  <td>{variants(product)}</td>
+                  <td>{status(product)}</td>
+                  <td>{actions(product)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="pm-grid">
+          {products.map((product) => (
+            <article
+              className={`pm-grid-card${selected.includes(product._id) ? " pm-selected" : ""}`}
+              key={product._id}
+            >
+              <div className="pm-grid-controls">
+                <label>
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${product.name}`}
+                    checked={selected.includes(product._id)}
+                    onChange={() => toggle(product._id)}
+                  />
+                </label>
+                {status(product)}
+              </div>
+              {details(product)}
+              <div className="pm-grid-meta">
+                <span className={`pm-gender pm-gender-${product.gender}`}>
+                  {product.gender}
+                </span>
+                {rating(product)}
+              </div>
+              <div className="pm-grid-pricing">
+                <span>
+                  <small>Price</small>
+                  {money(product.price)}
+                </span>
+                <span>
+                  <small>Final price</small>
+                  {finalPrice(product)}
+                </span>
+                <span>
+                  <small>Sold</small>
+                  {product.sold || 0}
+                </span>
+              </div>
+              <footer>
+                {variants(product)}
+                {actions(product)}
+              </footer>
+            </article>
+          ))}
+        </div>
+      )}
+      {!loading && !error && (
+        <footer className="pm-pagination">
+          <span>
+            {pagination.totalItems ?? products.length} products
+            {products.length > 0
+              ? ` · Page ${page} of ${Math.max(1, pagination.totalPages || 1)}`
+              : ""}
+          </span>
+          {Number(pagination.totalPages) > 1 && (
+            <div>
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((value) => value - 1)}
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                disabled={page >= pagination.totalPages}
+                onClick={() => setPage((value) => value + 1)}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </footer>
+      )}
+      {menu &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="pm-action-menu"
+            style={{ top: menu.top, left: Math.max(8, menu.left) }}
+            role="group"
+            aria-label={`Actions for ${menu.product.name}`}
+          >
+            <Link to={`/admin/product/${menu.product.slug}`}>
+              <ArrowUpRightIcon />
+              View product
+            </Link>
+            <Link to={`/admin/product/update/${menu.product.slug}`}>
+              <PencilSquareIcon />
+              Edit product
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setDeleteIds([menu.product._id]);
+                setMenu(null);
+              }}
+            >
+              <TrashIcon />
+              Delete product
+            </button>
+          </div>,
+          document.body,
+        )}
+      {showFilters && (
+        <Dialog title="Product filters" onClose={() => setShowFilters(false)}>
+          <form onSubmit={apply}>
+            <div className="pm-filter-fields">
+              {optionsLoading && <p role="status">Loading filter options…</p>}
+              {optionsError && (
+                <p role="alert">
+                  Some filter options couldn’t load. Close and refresh to retry.
+                </p>
+              )}
+              {filterSelect("Category", "category", options.categories)}
+              {filterSelect("Gender", "gender", options.genders)}
+              {filterSelect("Model", "model", options.models)}
+              {filterSelect(
+                "Activity Type",
+                "activityType",
+                options.activityTypes,
+              )}
+              {filterSelect("Sport Type", "sportType", options.sportTypes)}
+              {filterSelect(
+                "Minimum Rating",
+                "minRating",
+                [1, 2, 3, 4, 5],
+                "Any rating",
+              )}
+              {filterSelect(
+                "Minimum Discount",
+                "minDiscount",
+                [5, 10, 20, 30, 40, 50, 60, 70],
+                "Any discount",
+              )}
+              {filterSelect("Color", "color", options.colors)}
+              {filterSelect(
+                "Size",
+                "size",
+                options.sizesByCategory?.[draft.category] || [],
+                "All sizes",
+              )}
+              <label>
+                Minimum price
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Min ₹"
+                  value={draft.minPrice}
+                  onChange={(event) => change("minPrice", event.target.value)}
+                />
+              </label>
+              <label>
+                Maximum price
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Max ₹"
+                  value={draft.maxPrice}
+                  onChange={(event) => change("maxPrice", event.target.value)}
+                />
+              </label>
+              <div className="pm-filter-flags">
+                {[
+                  ["isFeatured", "Featured"],
+                  ["isTrending", "Trending"],
+                  ["newArrival", "New Arrival"],
+                ].map(([key, label]) => (
+                  <label key={key}>
+                    <input
+                      type="checkbox"
+                      checked={draft[key]}
+                      onChange={(event) => change(key, event.target.checked)}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            </div>
+            {filterError && (
+              <p className="pm-filter-error" role="alert">
+                {filterError}
+              </p>
+            )}
+            <footer>
+              <button type="button" onClick={reset}>
+                Clear all
+              </button>
+              <button className="pm-primary" type="submit">
+                Apply filters
+              </button>
+            </footer>
+          </form>
+        </Dialog>
+      )}
+      {deleteIds && (
+        <Dialog
+          title={`Delete ${deleteIds.length} product${deleteIds.length === 1 ? "" : "s"}?`}
+          onClose={() => setDeleteIds(null)}
+          locked={deleting}
+        >
+          <p className="pm-confirm-copy">
+            This permanently deletes the selected products. This action cannot
+            be undone.
+          </p>
+          <footer>
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={() => setDeleteIds(null)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="pm-danger"
+              disabled={deleting}
+              onClick={remove}
+            >
+              {deleting ? "Deleting…" : "Delete products"}
+            </button>
+          </footer>
+        </Dialog>
+      )}
+    </section>
   );
 };

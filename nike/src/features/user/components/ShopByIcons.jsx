@@ -78,14 +78,14 @@ const ShopByIcons = () => {
         <div className="store-icons-controls">
           <button
             onClick={() => scroll("left")}
-            className="z-10 bg-white rounded-full shadow-md p-3.5 hover:bg-gray-100 transition"
+            className="store-control-btn"
             aria-label="Scroll left"
           >
             <ArrowIconLeft />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="z-10 bg-white rounded-full shadow-md p-3.5 hover:bg-gray-100 transition"
+            className="store-control-btn"
             aria-label="Scroll right"
           >
             <ArrowIconRight />
@@ -112,9 +112,6 @@ const ShopByIcons = () => {
               ))
             : products.map((product) => (
                 <Link
-                  onClick={() =>
-                    window.scrollTo({ top: 0, behavior: "smooth" })
-                  }
 
                   key={product.id}
                   to={`/model/${encodeURIComponent(product.model)}`}

@@ -43,9 +43,10 @@ test("mobile navigation opens, exposes real category links, and Escape restores 
   const toggle = container.querySelector('[aria-controls="store-mobile-nav"]');
   await click(toggle);
   expect(toggle.getAttribute("aria-expanded")).toBe("true");
+  await click(container.querySelectorAll(".store-menu-categories > button")[2]);
   expect(
     container.querySelector(
-      '#store-mobile-nav a[href="/women/shoes?gender=women&category=shoes"]',
+      '#store-mobile-nav a[href="/products?gender=women&category=shoes"]',
     ),
   ).not.toBeNull();
   expect(document.body.style.overflow).toBe("hidden");

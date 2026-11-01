@@ -1,3 +1,5 @@
+import { useScrollHeader } from "../../../hooks/useScrollHeader";
+import AppBar, { AppBarBrand } from "../../../shared/ui/AppBar";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -8,6 +10,10 @@ import {
   XMarkIcon,
   ArrowUpRightIcon,
   UserIcon,
+  ChevronRightIcon,
+  ChevronLeftIcon,
+  CubeIcon,
+  ComputerDesktopIcon,
 } from "@heroicons/react/24/outline";
 import { useAppContext } from "../../../context/AppContext";
 import Search from "./Search";
@@ -16,37 +22,31 @@ import "../../../css/navbar.css";
 const menus = [
   {
     label: "New & Featured",
-    to: "/new/arrivals?newArrival=true",
+    to: "/products?newArrival=true",
     items: [
-      ["New arrivals", "/new/arrivals?newArrival=true"],
-      ["Best sellers", "/new/best-sellers?bestSellers=true"],
-      ["Trending now", "/new/trending?isTrending=true"],
+      ["New arrivals", "/products?newArrival=true"],
+      ["Best sellers", "/products?bestSellers=true"],
+      ["Trending now", "/products?isTrending=true"],
     ],
   },
   ...["Men", "Women", "Kids"].map((label) => ({
     label,
-    to: `/${label.toLowerCase()}/shoes?gender=${label.toLowerCase()}&category=shoes`,
+    to: `/products?gender=${label.toLowerCase()}&category=shoes`,
     items: [
-      [
-        "Shoes",
-        `/${label.toLowerCase()}/shoes?gender=${label.toLowerCase()}&category=shoes`,
-      ],
-      [
-        "Clothing",
-        `/${label.toLowerCase()}/clothing?gender=${label.toLowerCase()}&category=clothing`,
-      ],
+      ["Shoes", `/products?gender=${label.toLowerCase()}&category=shoes`],
+      ["Clothing", `/products?gender=${label.toLowerCase()}&category=clothing`],
       [
         "New arrivals",
-        `/${label.toLowerCase()}/arrivals?gender=${label.toLowerCase()}&newArrival=true`,
+        `/products?gender=${label.toLowerCase()}&newArrival=true`,
       ],
     ],
   })),
   {
     label: "Sale",
-    to: "/sale/shopAllSale?minDiscount=1",
+    to: "/products?minDiscount=1",
     items: [
-      ["Shop all sale", "/sale/shopAllSale?minDiscount=1"],
-      ["Last chance", "/sale/last-chance?minDiscount=40&lastChance=true"],
+      ["Shop all sale", "/products?minDiscount=1"],
+      ["Last chance", "/products?minDiscount=40&lastChance=true"],
     ],
   },
 ];
@@ -55,22 +55,41 @@ export function Navbar() {
   const { user, logout, backendUrl } = useAppContext();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [activeMenu, setActiveMenu] = useState(null);
+  const lastMenu = useRef(0),
+    previousMenu = useRef(null),
+    categoryButtons = useRef([]),
+    submenuBack = useRef(null),
+    submenu = useRef(null);
+  const selectedMenu = menus[activeMenu ?? lastMenu.current];
   const [bagItemCount, setBagItemCount] = useState(0);
   const location = useLocation();
   const menuButton = useRef(null);
   const header = useRef(null);
+  const scroll = useScrollHeader({
+    autoHide: true,
+    elementRef: header,
+    locked: menuOpen || searchOpen,
+  });
   useEffect(() => {
     setMenuOpen(false);
+    setActiveMenu(null);
     setSearchOpen(false);
     header.current?.querySelectorAll("details[open]").forEach((item) => {
       item.open = false;
     });
   }, [location.pathname, location.search]);
   useEffect(() => {
-    const update = () => {
+    const update = (event) => {
       try {
-        const items = JSON.parse(localStorage.getItem("bagItems") || "[]");
-        setBagItemCount(Array.isArray(items) ? items.length : 0);
+        const items =
+          event?.detail?.items ??
+          JSON.parse(localStorage.getItem("guest_cart") || "[]");
+        setBagItemCount(
+          Array.isArray(items)
+            ? items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
+            : 0,
+        );
       } catch {
         setBagItemCount(0);
       }
@@ -85,10 +104,15 @@ export function Navbar() {
   }, []);
   useEffect(() => {
     if (!menuOpen) return;
+    const resize = () => {
+      if (window.innerWidth > 900) setMenuOpen(false);
+    };
+    window.addEventListener("resize", resize);
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previous;
+      window.removeEventListener("resize", resize);
     };
   }, [menuOpen]);
   useEffect(() => {
@@ -99,12 +123,32 @@ export function Navbar() {
         header.current?.querySelectorAll("details[open]").forEach((item) => {
           item.open = false;
         });
-        menuButton.current?.focus();
+        menuButton.current?.focus({ preventScroll: true });
       }
     };
     document.addEventListener("keydown", close);
     return () => document.removeEventListener("keydown", close);
   }, []);
+  useEffect(() => {
+    if (!menuOpen) {
+      setActiveMenu(null);
+      previousMenu.current = null;
+      return;
+    }
+    if (activeMenu != null) {
+      submenu.current?.scrollTo?.({ top: 0 });
+      submenuBack.current?.focus({ preventScroll: true });
+    } else if (previousMenu.current != null) {
+      categoryButtons.current[previousMenu.current]?.focus({
+        preventScroll: true,
+      });
+    }
+    previousMenu.current = activeMenu;
+  }, [menuOpen, activeMenu]);
+  const openSubmenu = (index) => {
+    lastMenu.current = index;
+    setActiveMenu(index);
+  };
   const signOut = async () => {
     try {
       await fetch(`${backendUrl}/api/auth/logout`, {
@@ -118,7 +162,13 @@ export function Navbar() {
     }
   };
   return (
-    <header className="store-header" ref={header}>
+    <header
+      data-scroll-hidden={scroll.hidden}
+      aria-hidden={scroll.hidden || undefined}
+      inert={scroll.hidden || undefined}
+      className={`store-header scroll-header scroll-header-sticky${menuOpen ? " store-menu-open" : ""}`}
+      ref={header}
+    >
       <a className="store-skip" href="#main-content">
         Skip to content
       </a>
@@ -130,7 +180,8 @@ export function Navbar() {
               <Link to="/account">
                 Hi, {user.name?.split(" ")[0] || "there"}
               </Link>
-              {user.role === "admin" && <Link to="/admin">Dashboard</Link>}<button onClick={signOut}>Sign out</button>
+              {user.role === "admin" && <Link to="/admin">Dashboard</Link>}
+              <button onClick={signOut}>Sign out</button>
             </>
           ) : (
             <Link to="/signin">
@@ -139,13 +190,8 @@ export function Navbar() {
           )}
         </div>
       </div>
-      <nav className="store-nav" aria-label="Main navigation">
-        <Link to="/home" className="store-wordmark" aria-label="Nike home">
-          <img src="/assets/logo/nikeLogo.png" alt="Nike" />
-          <span>
-            NIKE<span className="wordmark-star">®</span>
-          </span>
-        </Link>
+      <AppBar home className="store-nav">
+        <AppBarBrand showText={true} />
         <div className="store-nav-links">
           {menus.map((menu) => (
             <details className="store-dropdown" key={menu.label}>
@@ -198,35 +244,104 @@ export function Navbar() {
             {menuOpen ? <XMarkIcon /> : <Bars2Icon />}
           </button>
         </div>
-      </nav>
+      </AppBar>
       {menuOpen && (
         <nav
           className="store-mobile-nav"
           id="store-mobile-nav"
           aria-label="Mobile navigation"
         >
-          {menus.map((menu) => (
-            <details key={menu.label}>
-              <summary>{menu.label}</summary>
-              {menu.items.map(([label, to]) => (
-                <Link key={to} to={to}>
-                  {label}
+          <div
+            className={`store-mobile-slider${activeMenu != null ? " store-mobile-submenu-open" : ""}`}
+          >
+            <section
+              className="store-menu-page"
+              aria-label="Main menu"
+              aria-hidden={activeMenu != null}
+              inert={activeMenu != null || undefined}
+            >
+              <div className="store-menu-categories">
+                {menus.map((menu, index) => (
+                  <button
+                    type="button"
+                    key={menu.label}
+                    ref={(element) => {
+                      categoryButtons.current[index] = element;
+                    }}
+                    aria-expanded={activeMenu === index}
+                    aria-controls="store-mobile-submenu"
+                    onClick={() => openSubmenu(index)}
+                  >
+                    <span>{menu.label}</span>
+                    <ChevronRightIcon />
+                  </button>
+                ))}
+              </div>
+              <div className="store-menu-account-links">
+                <Link to="/wishlist">
+                  <HeartIcon />
+                  <span>Your favourites</span>
+                  <ChevronRightIcon />
+                </Link>
+                <Link to={user ? "/account" : "/signin"}>
+                  <UserIcon />
+                  <span>{user ? "Your account" : "Join us / Sign in"}</span>
+                  <ChevronRightIcon />
+                </Link>
+                <Link to="/orders">
+                  <CubeIcon />
+                  <span>Your orders</span>
                   <ArrowUpRightIcon />
                 </Link>
-              ))}
-            </details>
-          ))}
-          <Link to="/wishlist">
-            <HeartIcon /> Your favourites
-          </Link>
-          <Link to={user ? "/account" : "/signin"}>
-            <UserIcon />
-            {user ? "Your account" : "Join us / Sign in"}
-          </Link>
-          <Link to="/orders">
-            Your orders <ArrowUpRightIcon />
-          </Link>
-          {user?.role === "admin" && <Link to="/admin">Admin dashboard</Link>}
+                {user?.role === "admin" && (
+                  <Link to="/admin">
+                    <ComputerDesktopIcon />
+                    <span>Admin dashboard</span>
+                    <ChevronRightIcon />
+                  </Link>
+                )}
+              </div>
+            </section>
+            <section
+              ref={submenu}
+              className="store-menu-page store-menu-submenu-page"
+              id="store-mobile-submenu"
+              aria-label={`${selectedMenu.label} menu`}
+              aria-hidden={activeMenu == null}
+              inert={activeMenu == null || undefined}
+            >
+              <button
+                ref={submenuBack}
+                type="button"
+                className="store-submenu-back"
+                onClick={() => setActiveMenu(null)}
+              >
+                <ChevronLeftIcon />
+                All categories
+              </button>
+              <h2>{selectedMenu.label}</h2>
+              <div className="store-submenu-links">
+                <Link
+                  to={
+                    lastMenu.current === 0
+                      ? "/products"
+                      : lastMenu.current > 0 && lastMenu.current < 4
+                        ? `/products?gender=${selectedMenu.label.toLowerCase()}`
+                        : selectedMenu.to
+                  }
+                >
+                  Shop all {selectedMenu.label.toLowerCase()}
+                  <ArrowUpRightIcon />
+                </Link>
+                {selectedMenu.items.map(([label, to]) => (
+                  <Link key={to} to={to}>
+                    {label}
+                    <ChevronRightIcon />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          </div>
         </nav>
       )}
       {searchOpen && <Search isOpen onClose={() => setSearchOpen(false)} />}

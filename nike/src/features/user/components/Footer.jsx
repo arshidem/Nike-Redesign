@@ -5,11 +5,11 @@ const groups = [
   {
     title: "Find your next",
     links: [
-      ["New arrivals", "/new/arrivals?newArrival=true"],
-      ["Best sellers", "/new/best-sellers?bestSellers=true"],
-      ["Men", "/men/shoes?gender=men&category=shoes"],
-      ["Women", "/women/shoes?gender=women&category=shoes"],
-      ["Kids", "/kids/shoes?gender=kids&category=shoes"],
+      ["New arrivals", "/products?newArrival=true"],
+      ["Best sellers", "/products?bestSellers=true"],
+      ["Men", "/products?gender=men&category=shoes"],
+      ["Women", "/products?gender=women&category=shoes"],
+      ["Kids", "/products?gender=kids&category=shoes"],
     ],
   },
   {
