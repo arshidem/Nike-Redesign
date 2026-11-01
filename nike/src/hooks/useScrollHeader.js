@@ -2,19 +2,21 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import "../css/scroll-header.css";
 
-/** Hide on deliberate downward travel; reveal promptly on upward travel. */
+/** Keep bars visible by default; Home opts into hiding on downward scroll. */
 export function useScrollHeader({
   enabled = true,
+  autoHide = false,
   locked = false,
   elementRef,
 } = {}) {
   const ownRef = useRef(null),
     ref = elementRef || ownRef;
+  const active = enabled && autoHide;
   const [hidden, setHidden] = useState(false);
   const { pathname, search, hash } = useLocation();
   useLayoutEffect(() => {
     setHidden(false);
-    if (!enabled) return;
+    if (!active) return;
     let previous = Math.max(0, window.scrollY),
       distance = 0,
       direction = 0,
@@ -85,6 +87,6 @@ export function useScrollHeader({
       element?.removeEventListener("focusin", reveal);
       element?.removeEventListener("toggle", reveal, true);
     };
-  }, [enabled, locked, pathname, search, hash, ref]);
-  return { ref, hidden: enabled && !locked && hidden };
+  }, [active, locked, pathname, search, hash, ref]);
+  return { ref, hidden: active && !locked && hidden };
 }

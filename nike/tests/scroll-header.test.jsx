@@ -2,8 +2,8 @@ import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 import { useScrollHeader } from "../src/hooks/useScrollHeader";
-function Harness() {
-  const { ref, hidden } = useScrollHeader();
+function Harness({ autoHide = true }) {
+  const { ref, hidden } = useScrollHeader({ autoHide });
   const navigate = useNavigate();
   return (
     <>
@@ -46,11 +46,11 @@ afterEach(async () => {
   document.body.style.overflow = "";
   jest.useRealTimers();
 });
-const render = async () =>
+const render = async (autoHide = true) =>
   act(async () =>
     root.render(
       <MemoryRouter>
-        <Harness />
+        <Harness autoHide={autoHide} />
       </MemoryRouter>,
     ),
   );
@@ -114,4 +114,13 @@ test("clamps bottom overscroll and batches rapid scroll events into one animatio
   });
   expect(requestAnimationFrame).toHaveBeenCalledTimes(1);
   expect(hidden()).toBe("false");
+});
+
+test("ordinary app bars remain visible throughout scrolling without registering animation work", async () => {
+  await render(false);
+  await scroll(350);
+  expect(hidden()).toBe("false");
+  await scroll(250);
+  expect(hidden()).toBe("false");
+  expect(requestAnimationFrame).not.toHaveBeenCalled();
 });

@@ -115,8 +115,8 @@ test("scroll swaps the logo and title and reverses on return, batching repeated 
   expect(host.querySelector(".od-nav-title").getAttribute("aria-hidden")).toBe(
     "false",
   );
-  // One frame for title replacement and one for header visibility.
-  expect(requestAnimationFrame).toHaveBeenCalledTimes(2);
+  // The visible app bar needs only the title-replacement scroll frame.
+  expect(requestAnimationFrame).toHaveBeenCalledTimes(1);
   bottom = 180;
   await act(async () => {
     window.dispatchEvent(new Event("scroll"));
