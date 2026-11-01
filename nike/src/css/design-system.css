@@ -1634,6 +1634,7 @@
   }
 }
 
+
 /* ==========================================================================
    Refined Back Button & Typography for Auth Membership Screens
    ========================================================================== */
@@ -1649,23 +1650,65 @@
 .auth-nav-back {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  position: relative;
+  min-width: 76px;
+  height: 36px;
+  padding: 0 14px 0 10px;
+  box-sizing: border-box;
   font-size: 13px;
-  font-weight: 600;
-  color: #1a1e16;
+  font-weight: 500;
+  line-height: 1;
+  color: #151612;
   text-decoration: none;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(110, 125, 85, 0.25);
-  padding: 6px 14px 6px 10px;
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.28);
+  border: 1px solid #BFC6B2;
+  border-radius: 9999px;
   backdrop-filter: blur(8px);
-  transition: all 0.2s ease;
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.4, 1);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Accessible 44px touch target on mobile/touch devices */
+.auth-nav-back::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
+}
+
+.auth-nav-back svg {
+  width: 13px;
+  height: 13px;
+  stroke: #151612;
+  stroke-width: 1.8;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
 .auth-nav-back:hover {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.7);
+  border-color: #9fa792;
   color: #000000;
   transform: translateX(-2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.auth-nav-back:hover svg {
+  transform: translateX(-1.5px);
+}
+
+.auth-nav-back:focus-visible {
+  outline: 2px solid #55623f;
+  outline-offset: 2px;
 }
 
 .auth-brand-badge {
@@ -1744,22 +1787,72 @@
 }
 
 @media (max-width: 900px) {
+  .auth-membership-main {
+    flex-direction: column;
+    padding: 16px 20px 20px; /* 20px horizontal spacing on mobile per specification */
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 16px; /* tight, balanced gap without excessive whitespace */
+    height: 100%;
+    min-height: 0;
+  }
+
   .auth-header-bar {
-    margin-bottom: 8px;
+    margin-bottom: 12px;
   }
+
   .auth-nav-back {
-    font-size: 11.5px;
-    padding: 4px 10px 4px 8px;
+    height: 36px;
+    font-size: 13px;
+    padding: 0 14px 0 10px;
   }
+
   .auth-brand-badge img {
-    width: 44px;
-    height: 22px;
+    width: 48px;
+    height: 24px;
   }
+
+  .auth-membership-left {
+    max-width: 100%;
+    flex: 0 0 auto;
+    margin-bottom: 0;
+  }
+
   .auth-editorial-kicker {
-    font-size: 9px;
-    margin-bottom: 4px;
+    font-size: 9.5px;
+    margin-bottom: 6px;
   }
+
+  .auth-membership-title {
+    font-size: clamp(34px, 5.5vh, 46px);
+    line-height: 0.9;
+    margin: 0 0 6px;
+  }
+
+  .auth-membership-sub {
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 0 0 2px;
+    max-width: 320px;
+  }
+
   .auth-editorial-points {
-    display: none; /* keep mobile completely compact without scroll */
+    display: none;
+  }
+
+  .auth-membership-right {
+    max-width: 100%;
+    justify-content: center;
+    flex: 1 1 auto;
+    margin-top: 0;
+    padding-bottom: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .auth-member-card {
+    max-width: 100%;
+    padding: 20px 20px 18px;
+    border-radius: 24px;
   }
 }
