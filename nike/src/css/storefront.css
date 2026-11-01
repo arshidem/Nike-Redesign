@@ -36,12 +36,15 @@ button:focus-visible {
   outline: 2px solid #526b1b;
   outline-offset: 4px;
 }
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid #526b1b;
-  outline-offset: 2px;
+/* Keep form fields visually steady when selected, across pages and dialogs.
+   Normal borders, validation states and checked selections remain unchanged. */
+:root body :is(input, select, textarea):is(:focus, :focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
 }
+
 .commerce-page {
   max-width: 1440px !important;
   margin-left: auto;

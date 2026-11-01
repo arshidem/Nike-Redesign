@@ -194,10 +194,6 @@
 .checkout-save input:checked + i::after {
   transform: translateX(18px);
 }
-.checkout-save input:focus-visible + i {
-  outline: 2px solid #557c37;
-  outline-offset: 3px;
-}
 .checkout-saved-address {
   display: flex;
   flex-direction: column;
@@ -274,10 +270,6 @@
 .checkout-field input:focus,
 .checkout-field select:focus {
   outline: none;
-}
-.checkout-field:focus-within {
-  border-color: #697f51;
-  box-shadow: 0 0 0 1px #697f51;
 }
 .checkout-field.has-error {
   border-color: #b76048;

@@ -73,9 +73,6 @@
   min-width: 0;
   padding: 6px 16px 6px 20px;
 }
-.nike-search-form:focus-within {
-  box-shadow: 0 0 0 1px #586641;
-}
 .nike-search-form input {
   font-family: inherit;
   min-width: 0;

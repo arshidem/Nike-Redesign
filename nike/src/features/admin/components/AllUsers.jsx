@@ -253,7 +253,7 @@ export const AllUsers = () => {
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}
       onKeyDown={handleKeyDown}
-      className="w-full pl-3 pr-8 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
+      className="w-full pl-3 pr-8 py-1 text-xs border border-gray-300 rounded"
     />
     <button
       type="button"
@@ -439,7 +439,7 @@ export const AllUsers = () => {
                   <select
                     value={filters.role}
                     onChange={(e) => handleFilterChange("role", e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-gray-400 focus:border-gray-400"
+                    className="w-full p-2 border border-gray-300 rounded"
                   >
                     <option value="">All Roles</option>
                     <option value="user">User</option>
@@ -457,7 +457,7 @@ export const AllUsers = () => {
                     onChange={(e) =>
                       handleFilterChange("gender", e.target.value)
                     }
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-gray-400 focus:border-gray-400"
+                    className="w-full p-2 border border-gray-300 rounded"
                   >
                     <option value="">All Genders</option>
                     <option value="male">Male</option>
@@ -477,7 +477,7 @@ export const AllUsers = () => {
                     onChange={(e) =>
                       handleFilterChange("status", e.target.value)
                     }
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-gray-400 focus:border-gray-400"
+                    className="w-full p-2 border border-gray-300 rounded"
                   >
                     <option value="">All Statuses</option>
                     <option value="active">Active</option>
@@ -496,7 +496,7 @@ export const AllUsers = () => {
                     onChange={(e) =>
                       handleFilterChange("isActive", e.target.value)
                     }
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-gray-400 focus:border-gray-400"
+                    className="w-full p-2 border border-gray-300 rounded"
                   >
                     <option value="">All</option>
                     <option value="true">Active</option>

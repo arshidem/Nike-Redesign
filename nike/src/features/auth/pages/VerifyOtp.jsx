@@ -134,7 +134,7 @@ const VerifyOtp = () => {
               value={digit}
               onChange={(e) => handleChange(idx, e.target.value)}
               onKeyDown={(e) => handleKeyDown(idx, e)}
-              className="w-10 h-10 sm:w-12 sm:h-12 border text-center text-base sm:text-lg rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-10 h-10 sm:w-12 sm:h-12 border text-center text-base sm:text-lg rounded-md"
             />
           ))}
         </div>

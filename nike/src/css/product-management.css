@@ -210,10 +210,6 @@
 .pm-toolbar input::placeholder {
   color: #838879;
 }
-.pm-toolbar form:focus-within {
-  outline: 2px solid #9ab16f;
-  outline-offset: 1px;
-}
 .pm-toolbar input:focus-visible {
   outline: none;
 }

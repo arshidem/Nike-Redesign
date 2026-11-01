@@ -85,7 +85,7 @@ const handleCompleteRegister = async () => {
         <input
           type="text"
           placeholder="Full Name"
-          className="w-full border px-4 py-3 rounded-md text-sm mb-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black bg-white/60 backdrop-blur-sm"
+          className="w-full border px-4 py-3 rounded-md text-sm mb-4 placeholder-gray-400 bg-white/60 backdrop-blur-sm"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -93,7 +93,7 @@ const handleCompleteRegister = async () => {
         <select
           value={gender}
           onChange={(e) => setGender(e.target.value)}
-          className="w-full border px-4 py-3 rounded-md text-sm mb-4 text-gray-600 focus:outline-none focus:ring-2 focus:ring-black bg-white/60 backdrop-blur-sm"
+          className="w-full border px-4 py-3 rounded-md text-sm mb-4 text-gray-600 bg-white/60 backdrop-blur-sm"
         >
           <option value="" disabled hidden>Select gender</option>
           <option value="male">Male</option>

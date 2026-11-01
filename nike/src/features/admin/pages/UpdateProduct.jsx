@@ -631,7 +631,7 @@ const handleSubmit = async (e) => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                   required
                 />
               </div>
@@ -646,7 +646,7 @@ const handleSubmit = async (e) => {
                   name="productDetails"
                   value={formData.productDetails}
                   onChange={handleChange}
-                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                 />
               </div>
 
@@ -660,7 +660,7 @@ const handleSubmit = async (e) => {
                   name="price"
                   value={formData.price}
                   onChange={handleChange}
-                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                   min="0"
                   step="0.01"
                   required
@@ -677,7 +677,7 @@ const handleSubmit = async (e) => {
                   name="discountPercentage"
                   value={formData.discountPercentage}
                   onChange={handleChange}
-                  className="w-full text-xs sm:text-sm border border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full text-xs sm:text-sm border border-gray-300 rounded-md p-2"
                   min="0"
                   max="100"
                 />
@@ -692,7 +692,7 @@ const handleSubmit = async (e) => {
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
-                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                   required
                 >
                   <option value="men">Men</option>
@@ -712,7 +712,7 @@ const handleSubmit = async (e) => {
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                 />
               </div>
 
@@ -726,7 +726,7 @@ const handleSubmit = async (e) => {
                   name="model"
                   value={formData.model}
                   onChange={handleChange}
-                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                 />
               </div>
 
@@ -739,7 +739,7 @@ const handleSubmit = async (e) => {
                   name="activityType"
                   value={formData.activityType}
                   onChange={handleChange}
-                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                 >
                   {ACTIVITY_TYPES.map((type) => (
                     <option key={type} value={type}>
@@ -758,7 +758,7 @@ const handleSubmit = async (e) => {
                   name="sportType"
                   value={formData.sportType}
                   onChange={handleChange}
-                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                 >
                   {SPORT_TYPES.map((type) => (
                     <option key={type} value={type}>
@@ -781,7 +781,7 @@ const handleSubmit = async (e) => {
                     name="isFeatured"
                     checked={formData.isFeatured}
                     onChange={handleChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                   />
                   <span className="ml-2 text-xs sm:text-sm text-gray-700">Featured</span>
                 </label>
@@ -792,7 +792,7 @@ const handleSubmit = async (e) => {
                     name="isTrending"
                     checked={formData.isTrending}
                     onChange={handleChange}
-                    className="h-4 w-4 text-xs sm:text-sm text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-xs sm:text-sm text-blue-600 border-gray-300 rounded"
                   />
                   <span className="ml-2 text-xs sm:text-sm text-gray-700">Trending</span>
                 </label>
@@ -808,7 +808,7 @@ const handleSubmit = async (e) => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                 rows="4"
               />
             </div>
@@ -859,7 +859,7 @@ const handleSubmit = async (e) => {
                           e.target.value
                         )
                       }
-                      className="w-full border border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border border-gray-300 rounded-md p-2"
                       required
                     />
                   </div>
@@ -966,7 +966,7 @@ const handleSubmit = async (e) => {
                             e.target.value
                           )
                         }
-                        className="border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        className="border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                         min="0"
                         required
                       />
@@ -1008,7 +1008,7 @@ const handleSubmit = async (e) => {
                   name="metaTitle"
                   value={formData.metaTitle}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-300 rounded-md p-2"
                 />
               </div>
 
@@ -1022,7 +1022,7 @@ const handleSubmit = async (e) => {
                   name="metaDescription"
                   value={formData.metaDescription}
                   onChange={handleChange}
-                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                 />
               </div>
 
@@ -1041,7 +1041,7 @@ const handleSubmit = async (e) => {
                       .map((tag) => tag.trim());
                     setFormData({ ...formData, tags });
                   }}
-                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                   placeholder="running, casual, limited"
                 />
               </div>
@@ -1061,7 +1061,7 @@ const handleSubmit = async (e) => {
                       .map((badge) => badge.trim());
                     setFormData({ ...formData, badges });
                   }}
-                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                   placeholder="New, Limited, Hot"
                 />
               </div>
@@ -1076,7 +1076,7 @@ const handleSubmit = async (e) => {
                   name="videoUrl"
                   value={formData.videoUrl}
                   onChange={handleChange}
-                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border text-xs sm:text-sm border-gray-300 rounded-md p-2"
                   placeholder="https://youtube.com/embed/..."
                 />
               </div>
