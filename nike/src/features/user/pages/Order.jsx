@@ -1,132 +1,313 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  MagnifyingGlassIcon,
+  XMarkIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  TruckIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
+import AppBar from "../../../shared/ui/AppBar";
 import useOrderServices from "../services/orderServices";
-import { BackBar } from "../../../shared/ui/Icons";
-import toast from "react-hot-toast";
 import { useAppContext } from "../../../context/AppContext";
 import Footer from "../components/Footer";
-import { OrderSkeleton } from "../../../shared/ui/Skeleton";
+import "../../../css/customer-orders.css";
 
+const statuses = [
+  ["", "All Orders"],
+  ["processing", "Processing"],
+  ["shipped", "Shipped"],
+  ["delivered", "Delivered"],
+  ["cancelled", "Cancelled"],
+];
+const icons = {
+  processing: ClockIcon,
+  shipped: TruckIcon,
+  delivered: CheckCircleIcon,
+  cancelled: XCircleIcon,
+};
 export default function Order() {
-  const { getUserOrders } = useOrderServices();
-  const [orders, setOrders] = useState([]);
-  const [pagination, setPagination] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const { backendUrl } = useAppContext();
-
-  const formatImageUrl = (imagePath) => {
-    if (!imagePath || typeof imagePath !== "string") return "/placeholder.jpg";
-    const match = imagePath.match(/uploads[\\/][\w\-.]+\.(jpg|jpeg|png|webp|avif)/i);
-    const relativePath = match ? match[0].replace(/\\/g, "/") : imagePath;
-    return `${backendUrl}/${relativePath}`;
-  };
-
-  const fetchOrders = async () => {
-    setLoading(true);
-    const res = await getUserOrders(page, 5);
-    if (res.success) {
-      setOrders(Array.isArray(res.orders) ? res.orders : []);
-      setPagination(res.pagination || {});
-    } else {
-      toast.error(res.error || "Failed to load orders");
-    }
-    setLoading(false);
-  };
-
+  const { backendUrl, token } = useAppContext();
+  const service = useOrderServices(),
+    latest = useRef(service);
+  latest.current = service;
+  const [orders, setOrders] = useState([]),
+    [counts, setCounts] = useState({}),
+    [pagination, setPagination] = useState({}),
+    [loading, setLoading] = useState(Boolean(token)),
+    [error, setError] = useState("");
+  const [search, setSearch] = useState(""),
+    [query, setQuery] = useState(""),
+    [status, setStatus] = useState(""),
+    [page, setPage] = useState(1),
+    [retry, setRetry] = useState(0);
   useEffect(() => {
-    fetchOrders();
-  }, [page]);
-
-  const statusColors = {
-    delivered: "bg-green-100 text-green-700",
-    shipped: "bg-orange-100 text-orange-700",
-    processing: "bg-red-100 text-red-600",
-    cancelled: "bg-gray-200 text-gray-600",
+    if (search.trim() === query) return;
+    const timer = setTimeout(() => {
+      setQuery(search.trim());
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search, query]);
+  useEffect(() => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    let active = true;
+    setLoading(true);
+    setError("");
+    latest.current
+      .getUserOrders(page, 10, { search: query, status })
+      .then((result) => {
+        if (!active) return;
+        if (!result?.success)
+          throw new Error(result?.error || "We couldn’t load your orders.");
+        const pages = Number(result.pagination?.totalPages || 0);
+        if (page > Math.max(1, pages)) {
+          setPage(Math.max(1, pages));
+          return;
+        }
+        setOrders(Array.isArray(result.orders) ? result.orders : []);
+        setPagination(result.pagination || {});
+        setCounts(result.statusCounts || {});
+      })
+      .catch((err) => {
+        if (active) setError(err.message || "We couldn’t load your orders.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [backendUrl, token, page, query, status, retry]);
+  const image = (path) => {
+    if (typeof path !== "string" || !path)
+      return "/assets/editorial/image-unavailable.svg";
+    if (/^https?:\/\//i.test(path)) return path;
+    const normalized = path.replace(/\\/g, "/");
+    return `${(backendUrl || "").replace(/\/$/, "")}/${normalized.includes("uploads/") ? normalized.slice(normalized.indexOf("uploads/")) : normalized.replace(/^\/+/, "")}`;
   };
-
-  if (loading) return <div className="design-page design-customer design-order"><BackBar /><OrderSkeleton/></div>;
-
+  const reset = () => {
+    setSearch("");
+    setQuery("");
+    setStatus("");
+    setPage(1);
+  };
   return (
-    <div className="design-page design-customer design-order"><>
-      <BackBar />
-      <div className="max-w-4xl mx-auto px-4 py-8 mt-8">
-        <h1 data-section="YOUR SPACE / ORDERS" className="sm:text-xl font-bold mb-6">Your Orders</h1>
-
-        {orders.length === 0 ? (
-          <p className="text-center text-gray-500">No orders found.</p>
+    <div className="customer-orders-page">
+      <AppBar fallback="/home" />
+      <main className="customer-orders-main">
+        <header className="customer-orders-heading">
+          <p>YOUR SPACE / ORDERS</p>
+          <h1>Your Orders</h1>
+          <span>Track and manage your Nike orders.</span>
+        </header>
+        {!token ? (
+          <section className="customer-orders-empty">
+            <h2>Your orders are one sign-in away.</h2>
+            <p>Sign in to track your purchases and deliveries.</p>
+            <Link to="/signin" state={{ returnTo: "/orders" }}>
+              Sign in
+            </Link>
+          </section>
         ) : (
-          <div className="space-y-4">
-            {orders.map((order) => {
-              const statusKey = order.status?.toLowerCase();
-              const statusClass = statusColors[statusKey] || "bg-gray-100 text-gray-700";
-              const formattedDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              });
-
-              return (
-                <Link
-                  to={`/orders/${order._id}`}
-                  key={order._id}
-                  className="flex items-start gap-4 p-4 bg-white rounded-lg border hover:border-gray-300 shadow-sm transition"
+          <>
+            <form
+              className="customer-orders-search"
+              role="search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setQuery(search.trim());
+                setPage(1);
+              }}
+            >
+              <MagnifyingGlassIcon />
+              <input
+                aria-label="Search orders by ID, product, or date"
+                placeholder="Search orders by ID, product, or date"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+              {search && (
+                <button
+                  type="button"
+                  aria-label="Clear order search"
+                  onClick={() => {
+                    setSearch("");
+                    setQuery("");
+                    setPage(1);
+                  }}
                 >
-                  <img
-                    src={formatImageUrl(order.items[0]?.image)}
-                    alt="product"
-                    className="w-20 h-20 object-contain rounded bg-gray-50"
-                  />
-
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <p className="font-medium text-lg">#{order._id.slice(-6)}</p>
-                      <span
-                        className={`px-2 py-0.5 rounded text-sm font-medium ${statusClass}`}
-                      >
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      Placed on {formattedDate}
-                    </p>
-                    <div className="grid grid-cols-2 text-sm text-gray-700 gap-2 mt-1">
-                     
-                      <p className="font-semibold text-black">
-                        Total: ₹{order.totalPrice.toLocaleString("en-IN")}
-                      </p>
-                    </div>
+                  <XMarkIcon />
+                </button>
+              )}
+            </form>
+            <div
+              className="customer-orders-pills"
+              role="group"
+              aria-label="Filter orders by status"
+            >
+              {statuses
+                .filter(
+                  ([key]) => !key || Number(counts[key]) > 0 || key === status,
+                )
+                .map(([key, label]) => (
+                  <button
+                    type="button"
+                    key={key}
+                    aria-pressed={status === key}
+                    onClick={() => {
+                      setStatus(key);
+                      setPage(1);
+                    }}
+                  >
+                    {label}
+                    {counts[key || "all"] != null
+                      ? ` (${counts[key || "all"]})`
+                      : ""}
+                  </button>
+                ))}
+            </div>
+            {loading ? (
+              <div
+                className="customer-orders-loading"
+                role="status"
+                aria-label="Loading orders"
+              >
+                {[0, 1, 2].map((key) => (
+                  <div key={key}>
+                    <span />
+                    <span />
                   </div>
-                </Link>
-              );
-            })}
-          </div>
+                ))}
+              </div>
+            ) : error ? (
+              <section className="customer-orders-empty" role="alert">
+                <h2>Your orders couldn’t load.</h2>
+                <p>{error}</p>
+                <button
+                  type="button"
+                  onClick={() => setRetry((value) => value + 1)}
+                >
+                  Try again
+                </button>
+              </section>
+            ) : orders.length ? (
+              <ul className="customer-orders-list">
+                {orders.map((order, index) => {
+                  const key = String(
+                      order.status || "processing",
+                    ).toLowerCase(),
+                    Icon = icons[key] || ClockIcon,
+                    date = new Date(order.createdAt),
+                    first = order.items?.[0];
+                  return (
+                    <li key={order._id}>
+                      <Link
+                        className={`customer-order-card${index === 0 ? " customer-order-featured" : ""}`}
+                        to={`/orders/${order._id}`}
+                        aria-label={`View order ${String(order._id).slice(-6)}`}
+                      >
+                        <img
+                          src={image(
+                            first?.image || first?.product?.featuredImg,
+                          )}
+                          alt={
+                            first?.title ||
+                            first?.product?.name ||
+                            "Order product"
+                          }
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src =
+                              "/assets/editorial/image-unavailable.svg";
+                          }}
+                        />
+                        <div className="customer-order-copy">
+                          <strong>#{String(order._id).slice(-6)}</strong>
+                          <p>
+                            Placed on{" "}
+                            {Number.isNaN(date.getTime())
+                              ? "date unavailable"
+                              : date.toLocaleDateString("en-IN", {
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric",
+                                  timeZone: "Asia/Kolkata",
+                                })}
+                          </p>
+                          <b>
+                            Total: ₹
+                            {Number(order.totalPrice || 0).toLocaleString(
+                              "en-IN",
+                            )}
+                          </b>
+                        </div>
+                        <span
+                          className={`customer-order-status customer-order-${key}`}
+                        >
+                          <Icon />
+                          {key.charAt(0).toUpperCase() + key.slice(1)}
+                        </span>
+                        <ChevronRightIcon className="customer-order-chevron" />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <section className="customer-orders-empty">
+                <h2>
+                  {query || status
+                    ? "No matching orders."
+                    : "Your next move starts here."}
+                </h2>
+                <p>
+                  {query || status
+                    ? "Try another search or clear your filters."
+                    : "Your orders will appear here after your first purchase."}
+                </p>
+                {query || status ? (
+                  <button type="button" onClick={reset}>
+                    Clear filters
+                  </button>
+                ) : (
+                  <Link to="/products">Explore products</Link>
+                )}
+              </section>
+            )}
+            {!loading && !error && pagination.totalPages > 1 && (
+              <nav
+                className="customer-orders-pagination"
+                aria-label="Order pages"
+              >
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((value) => value - 1)}
+                >
+                  Previous
+                </button>
+                <span>
+                  Page {page} of {pagination.totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={page >= pagination.totalPages}
+                  onClick={() => setPage((value) => value + 1)}
+                >
+                  Next
+                </button>
+              </nav>
+            )}
+          </>
         )}
-
-        {/* Pagination */}
-        {pagination?.totalPages > 1 && (
-          <div className="flex justify-center gap-4 mt-8">
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-              className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50"
-            >
-              Prev
-            </button>
-            <span className="px-3 py-1 text-gray-700">
-              {page} / {pagination.totalPages}
-            </span>
-            <button
-              disabled={page >= pagination.totalPages}
-              onClick={() => setPage((p) => p + 1)}
-              className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        )}
-      </div>
-      <Footer/>
-    </></div>
+      </main>
+      <Footer />
+    </div>
   );
 }

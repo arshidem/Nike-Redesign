@@ -231,7 +231,12 @@ exports.getAllProducts = async (req, res) => {
 
 
     if (req.query.search) {
-      query.name = { $regex: req.query.search, $options: "i" };
+      if (req.query.searchFields === "management") {
+        const term = String(req.query.search).trim();
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        query.$or = [{ name: { $regex: escaped, $options: "i" } }, { model: { $regex: escaped, $options: "i" } }];
+        if (/^[a-f0-9]{24}$/i.test(term)) query.$or.push({ _id: new mongoose.Types.ObjectId(term) });
+      } else query.name = { $regex: req.query.search, $options: "i" };
     }
 
     // Price range
@@ -294,6 +299,9 @@ exports.getAllProducts = async (req, res) => {
     if (req.query.sortBy === "priceAsc") sortOption = { finalPrice: 1 };
     if (req.query.sortBy === "priceDesc") sortOption = { finalPrice: -1 };
 
+    if (req.query.sortBy === "nameAsc") sortOption = { name: 1 };
+    if (req.query.sortBy === "nameDesc") sortOption = { name: -1 };
+
     // Pagination
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 10));
@@ -312,8 +320,10 @@ exports.getAllProducts = async (req, res) => {
     ]);
     const genderCounts = { all: allCount, men: menCount, women: womenCount, kids: kidsCount };
     const useSalesRank = bestSellerIds && (!req.query.sortBy || req.query.sortBy === "sold");
+    const managementSalesSort = req.query.searchFields === "management" && req.query.sortBy === "sold";
     let products;
-    if (useSalesRank) {
+    if (managementSalesSort) products = await Product.find(query).lean();
+    else if (useSalesRank) {
       // Best sellers are capped at 20 IDs. Rank that small result set before
       // slicing a page so page one always contains the strongest sellers.
       products = await Product.find(query).lean();
@@ -325,6 +335,20 @@ exports.getAllProducts = async (req, res) => {
         .skip(skip)
         .limit(limit)
         .lean();
+    }
+
+    if (req.query.searchFields === "management" && products.length) {
+      const sales = await Order.aggregate([
+        { $unwind: "$items" },
+        { $match: { "items.product": { $in: products.map(product => product._id) } } },
+        { $group: { _id: "$items.product", sold: { $sum: "$items.quantity" } } }
+      ]);
+      const salesByProduct = new Map(sales.map(row => [row._id.toString(), row.sold]));
+      products = products.map(product => ({ ...product, sold: salesByProduct.get(product._id.toString()) || 0 }));
+      if (managementSalesSort) {
+        products.sort((a, b) => b.sold - a.sold || a._id.toString().localeCompare(b._id.toString()));
+        products = products.slice(skip, skip + limit);
+      }
     }
 
     const totalPages = Math.ceil(totalItems / limit);
@@ -1075,9 +1099,11 @@ exports.getProductAnalytics = async (req, res) => {
       coldProducts: [],
     };
 
-    const [totalReviews] = await Promise.all([Review.countDocuments()]);
-
-    analytics.totalReviews = totalReviews;
+    const reviewSummary = await Review.aggregate([
+      { $group: { _id: null, total: { $sum: 1 }, average: { $avg: "$rating" } } }
+    ]);
+    analytics.totalReviews = reviewSummary[0]?.total || 0;
+    analytics.averageRating = Number((reviewSummary[0]?.average || 0).toFixed(1));
 
     // Calculate sales by time period from orders
     for (const order of allOrders) {

@@ -10,6 +10,8 @@ function controller(products, reviews = []) {
   const calls = [];
   const matches = (product, query) =>
     Object.entries(query).every(([key, value]) => {
+      if (key === "$or") return value.some(branch => matches(product, branch));
+      if (value && typeof value === "object" && "$regex" in value) return new RegExp(value.$regex, value.$options).test(product[key] || "");
       if (key === "$expr") {
         const price = product.finalPrice ?? product.price;
         return price >= value.$and[0].$gte[1] && price <= value.$and[1].$lte[1];
@@ -26,7 +28,7 @@ function controller(products, reviews = []) {
         return value.$in.map(String).includes(String(product[key]));
       if (value && typeof value === "object" && "$gte" in value)
         return product[key] >= value.$gte;
-      return product[key] === value;
+      return String(product[key]) === String(value);
     });
   const Product = {
     countDocuments: async (query) =>
@@ -92,6 +94,7 @@ function controller(products, reviews = []) {
     },
   };
   const Order = {
+    aggregate: async () => [{ _id: "1", sold: 10 }, { _id: "0", sold: 1 }],
     find: () => ({ select: () => ({ lean: async () => [{ items: [
       { product: "1", quantity: 10 }, { product: "0", quantity: 1 },
     ] }] }) }),
@@ -104,7 +107,7 @@ function controller(products, reviews = []) {
         ? Product
         : name === "../models/Review"
           ? Review
-          : name === "../models/Order" ? Order : {},
+          : name === "../models/Order" ? Order : name === "mongoose" ? { Types: { ObjectId: class { constructor(value) { this.value = value; } toString() { return this.value; } } } } : {},
   };
   vm.runInNewContext(
     fs.readFileSync(
@@ -217,4 +220,46 @@ test("best sellers are ranked before slicing pages", async () => {
   assert.equal(second.body.products[0]._id, "0");
   assert.equal(first.body.pagination.totalItems, 2);
   assert.equal(first.body.pagination.totalPages, 2);
+});
+
+
+test("management search matches model and exact IDs while escaping regex characters", async () => {
+  const id = "685697335655fa9d37572be9";
+  const adapter = controller([{ ...products[0], _id: id, name: "Nike [Dunk]", model: "Blazer" }, products[1]]);
+  const byModel = await adapter.request({ searchFields: "management", search: "Blazer" });
+  assert.equal(byModel.status, 200); assert.equal(byModel.body.products.length, 1);
+  const byId = await adapter.request({ searchFields: "management", search: id });
+  assert.equal(byId.body.products[0]._id, id);
+  const literal = await adapter.request({ searchFields: "management", search: "[Dunk]" });
+  assert.equal(literal.body.products.length, 1);
+});
+test("management sales ranking runs before pagination and includes unsold products", async () => {
+  const adapter = controller(products);
+  const first = await adapter.request({ searchFields: "management", sortBy: "sold", page: "1", limit: "1" });
+  const second = await adapter.request({ searchFields: "management", sortBy: "sold", page: "2", limit: "1" });
+  assert.equal(first.body.products[0]._id, "1"); assert.equal(first.body.products[0].sold, 10);
+  assert.equal(second.body.products[0]._id, "0");
+  const unsold = await adapter.request({ searchFields: "management", sortBy: "sold", page: "3", limit: "1" });
+  assert.equal(unsold.body.products[0].sold, 0); assert.equal(first.body.pagination.totalItems, 30);
+});
+test("management name sorting applies before slicing a page", async () => {
+  const adapter = controller(products);
+  const result = await adapter.request({ searchFields: "management", sortBy: "nameAsc", limit: "2" });
+  assert.deepEqual(result.body.products.map(item => item.name), ["Product 0", "Product 1"]);
+});
+
+test("product analytics returns an overall review average and handles no reviews", async () => {
+  let reviewRows = [{ total: 3, average: 4.1666666667 }], pipeline;
+  const chain = { select() { return this; }, lean: async () => [] };
+  const sandbox = {
+    exports: {}, console: {log() {}, error() {}},
+    require: name => name === "../models/Product" || name === "../models/Order" ? {find: () => chain} : name === "../models/Review" ? {aggregate: async value => {pipeline = value; return reviewRows;}} : {},
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, "../controllers/productController.js"), "utf8"), sandbox);
+  let body; const response = {status() {return this;}, json(value) {body=value;}};
+  await sandbox.exports.getProductAnalytics({}, response);
+  assert.equal(pipeline[0].$group.average.$avg, "$rating");
+  assert.equal(body.averageRating, 4.2); assert.equal(body.totalReviews, 3);
+  reviewRows=[]; await sandbox.exports.getProductAnalytics({}, response);
+  assert.equal(body.averageRating, 0); assert.equal(body.totalReviews, 0);
 });
