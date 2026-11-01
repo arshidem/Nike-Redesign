@@ -27,6 +27,7 @@ export default function AppBar({
   bagCount = 0,
   home = false,
   children,
+  center,
 }) {
   const navigate = useNavigate();
   const Tag = home ? "nav" : "header";
@@ -53,7 +54,7 @@ export default function AppBar({
             <ArrowLeftIcon />
             <span>Back</span>
           </button>
-          <AppBarBrand />
+          {center ?? <AppBarBrand />}
           <div className="customer-appbar-actions">
             {!hideSearch && (
               <button
