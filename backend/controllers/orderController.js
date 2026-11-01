@@ -136,29 +136,28 @@ exports.verifyPayment = async (req, res) => {
 // Get user orders
 exports.getUserOrders = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-
-    const skip = (page - 1) * limit;
-    const totalOrders = await Order.countDocuments({ user: req.user._id });
-
-    const orders = await Order.find({ user: req.user._id })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate("items.product", "name featuredImg")
-      .lean();
-
-    return res.status(200).json({
-      success: true,
-      orders,
-      pagination: {
-        page,
-        limit,
-        totalOrders,
-        totalPages: Math.ceil(totalOrders / limit),
-      },
-    });
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
+    const status = req.query.status || "";
+    if (status && !["processing", "shipped", "delivered", "cancelled"].includes(status)) return res.status(400).json({ success: false, message: "Invalid order status" });
+    const base = { user: req.user._id };
+    const search = String(req.query.search || "").trim().slice(0, 200);
+    if (search) {
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const id = search.replace(/^#/, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      base.$or = [{ "items.title": { $regex: escaped, $options: "i" } }, { $expr: { $regexMatch: { input: { $toString: "$_id" }, regex: id, options: "i" } } }];
+      const date = moment.tz(search, ["YYYY-MM-DD", "D MMMM YYYY", "D MMM YYYY", "DD/MM/YYYY"], true, "Asia/Kolkata");
+      if (date.isValid()) base.$or.push({ createdAt: { $gte: date.clone().startOf("day").toDate(), $lte: date.clone().endOf("day").toDate() } });
+    }
+    const query = { ...base, ...(status ? { status } : {}) };
+    const [totalOrders, groups, orders] = await Promise.all([
+      Order.countDocuments(query),
+      Order.aggregate([{ $match: base }, { $group: { _id: "$status", count: { $sum: 1 } } }]),
+      Order.find(query).sort({ createdAt: -1, _id: -1 }).skip((page - 1) * limit).limit(limit).populate("items.product", "name featuredImg").lean()
+    ]);
+    const statusCounts = { all: 0, processing: 0, shipped: 0, delivered: 0, cancelled: 0 };
+    for (const group of groups) { statusCounts.all += group.count; if (group._id in statusCounts && group._id !== "all") statusCounts[group._id] = group.count; }
+    return res.status(200).json({ success: true, orders, statusCounts, pagination: { page, limit, totalOrders, totalPages: Math.ceil(totalOrders / limit) } });
   } catch (error) {
     console.error("Get user orders failed:", error);
     res.status(500).json({ success: false, message: "Failed to get orders" });

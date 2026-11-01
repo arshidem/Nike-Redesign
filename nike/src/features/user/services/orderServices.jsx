@@ -110,12 +110,13 @@ const useOrderServices = () => {
   /**
    * Get logged-in user's paginated orders
    */
-  const getUserOrders = async (page = 1, limit = 10) => {
+  const getUserOrders = async (page = 1, limit = 10, filters = {}) => {
     try {
-      const response = await api.get(`/my-orders?page=${page}&limit=${limit}`);
+      const response = await api.get("/my-orders", { params: { page, limit, ...filters } });
       return {
         success: true,
         orders: response.data.orders,
+        statusCounts: response.data.statusCounts,
         pagination: response.data.pagination,
       };
     } catch (error) {
