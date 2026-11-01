@@ -59,6 +59,7 @@ export function Navbar() {
   const menuButton = useRef(null);
   const header = useRef(null);
   const scroll = useScrollHeader({
+    autoHide: true,
     elementRef: header,
     locked: menuOpen || searchOpen,
   });
