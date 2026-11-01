@@ -122,7 +122,10 @@ const VerifyOtp = () => {
         <div className="auth-membership-left">
           <div className="auth-header-bar">
             <Link to="/signin" className="auth-nav-back" aria-label="Back to sign in">
-              <span>?</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
               <span>Change email</span>
             </Link>
             <Link to="/home" className="auth-brand-badge" aria-label="Return to Nike home">
