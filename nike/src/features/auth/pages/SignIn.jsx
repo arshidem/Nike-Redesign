@@ -142,20 +142,18 @@ const SignIn = () => {
       <div className="auth-membership-main">
         {/* Left Editorial Branding */}
         <div className="auth-membership-left">
-          <Link to="/home" className="auth-brand-badge" aria-label="Return to Nike home">
-            <svg
-              className="nike-logo-icon"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              width="44"
-              height="22"
-            >
-              <path d="M21.707 5.293c-2.313 1.25-5.26 2.531-8.207 3.551-2.947 1.02-5.467 1.53-7.5 1.53-2.38 0-4.043-.65-5-1.947-.64-.863-.84-1.897-.59-3.09.28-1.33 1.15-2.61 2.59-3.837C3.12 1.39 3.25 1.28 3.4 1.17c.2-.14.43-.22.67-.22.42 0 .79.25.94.64.44 1.16 1.48 2.65 3.12 4.47 1.64 1.82 3.65 3.32 6.03 4.5 2.38 1.18 4.88 1.96 7.5 2.34.62.09.92.51.72 1.04-.15.39-.42.56-.67.35z" />
-            </svg>
-          </Link>
+          <div className="auth-header-bar">
+            <Link to="/home" className="auth-nav-back" aria-label="Back to storefront">
+              <span>?</span>
+              <span>Back</span>
+            </Link>
+            <Link to="/home" className="auth-brand-badge" aria-label="Return to Nike home">
+              <img src="/assets/logo/nikeLogo.png" alt="Nike" />
+            </Link>
+          </div>
 
           <div className="auth-membership-copy">
-            <span className="auth-membership-tag">NIKE / MEMBERSHIP</span>
+            <div className="auth-editorial-kicker">Nike Membership</div>
             <h1 className="auth-membership-title">
               YOUR
               <br />
@@ -170,7 +168,16 @@ const SignIn = () => {
               <br />
               that moves you.
             </p>
-            <div className="auth-title-bar"></div>
+            <div className="auth-editorial-points">
+              <div className="auth-point-item">
+                <svg viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Members-only drops & priority delivery</span>
+              </div>
+              <div className="auth-point-item">
+                <svg viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Personalized styles, wishlist & order tracking</span>
+              </div>
+            </div>
           </div>
         </div>
 

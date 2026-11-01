@@ -1633,3 +1633,133 @@
     font-size: 11.5px;
   }
 }
+
+/* ==========================================================================
+   Refined Back Button & Typography for Auth Membership Screens
+   ========================================================================== */
+
+.auth-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: clamp(14px, 2.5vh, 28px);
+}
+
+.auth-nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1e16;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(110, 125, 85, 0.25);
+  padding: 6px 14px 6px 10px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.auth-nav-back:hover {
+  background: rgba(255, 255, 255, 0.85);
+  color: #000000;
+  transform: translateX(-2px);
+}
+
+.auth-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  color: #111111;
+  text-decoration: none;
+  transition: opacity 0.2s;
+  margin-bottom: 0;
+}
+
+.auth-brand-badge img {
+  width: 58px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.auth-brand-badge:hover {
+  opacity: 0.8;
+}
+
+/* Enhanced typography & balance for the left side */
+.auth-editorial-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #3b442f;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.auth-editorial-kicker::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #55623f;
+}
+
+.auth-membership-title {
+  font-family: "Anton", Impact, "Arial Black", sans-serif;
+  font-size: clamp(52px, 7vw, 106px);
+  line-height: 0.88;
+  letter-spacing: -0.02em;
+  color: #151812;
+  margin: 0 0 20px;
+  text-transform: uppercase;
+}
+
+.auth-editorial-points {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.auth-point-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #434c37;
+  letter-spacing: 0.04em;
+}
+
+.auth-point-item svg {
+  width: 14px;
+  height: 14px;
+  stroke: #55623f;
+  stroke-width: 2.2;
+}
+
+@media (max-width: 900px) {
+  .auth-header-bar {
+    margin-bottom: 8px;
+  }
+  .auth-nav-back {
+    font-size: 11.5px;
+    padding: 4px 10px 4px 8px;
+  }
+  .auth-brand-badge img {
+    width: 44px;
+    height: 22px;
+  }
+  .auth-editorial-kicker {
+    font-size: 9px;
+    margin-bottom: 4px;
+  }
+  .auth-editorial-points {
+    display: none; /* keep mobile completely compact without scroll */
+  }
+}
