@@ -1,9 +1,6 @@
-import AuthFrame from "../../../shared/ui/AuthFrame";
-// src/features/auth/components/VerifyOtp.jsx
-
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../../context/AppContext.jsx";
 import toast, { Toaster } from "react-hot-toast";
 import { syncGuestCartToServer } from "../../../utils/cartSync.js";
@@ -116,52 +113,152 @@ const VerifyOtp = () => {
   };
 
   return (
-    <AuthFrame><div className="design-page design-auth design-verify-otp flex items-center justify-center h-screen bg-gray-50 px-4">
-      <Toaster />
-      <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
-        <h2 data-section="MEMBER ACCESS" className="text-xl sm:text-2xl font-semibold mb-4 text-center">Verify OTP</h2>
-        <p className="text-sm text-gray-600 mb-4 text-center">
-          OTP sent to <span className="font-medium">{email}</span>
-        </p>
+    <div className="auth-membership-page">
+      <Toaster position="top-center" />
 
-        <div className="flex justify-center gap-2 mb-4">
-          {otpValues.map((digit, idx) => (
-            <input
-              key={idx}
-              ref={(el) => (inputRefs.current[idx] = el)}
-              type="text"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handleChange(idx, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(idx, e)}
-              className="w-10 h-10 sm:w-12 sm:h-12 border text-center text-base sm:text-lg rounded-md"
-            />
-          ))}
-        </div>
-
-        <div className="flex justify-between items-center mb-4">
-          {canResend ? (
-            <button
-              onClick={handleResendOTP}
-              className="text-blue-600 underline text-sm"
-              disabled={loading}
+      {/* Top Main Section */}
+      <div className="auth-membership-main">
+        {/* Left Editorial Branding */}
+        <div className="auth-membership-left">
+          <Link to="/home" className="auth-brand-badge" aria-label="Return to Nike home">
+            <svg
+              className="nike-logo-icon"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              width="44"
+              height="22"
             >
-              Resend OTP
-            </button>
-          ) : (
-            <span className="text-gray-500 text-sm">Resend in {timer}s</span>
-          )}
+              <path d="M21.707 5.293c-2.313 1.25-5.26 2.531-8.207 3.551-2.947 1.02-5.467 1.53-7.5 1.53-2.38 0-4.043-.65-5-1.947-.64-.863-.84-1.897-.59-3.09.28-1.33 1.15-2.61 2.59-3.837C3.12 1.39 3.25 1.28 3.4 1.17c.2-.14.43-.22.67-.22.42 0 .79.25.94.64.44 1.16 1.48 2.65 3.12 4.47 1.64 1.82 3.65 3.32 6.03 4.5 2.38 1.18 4.88 1.96 7.5 2.34.62.09.92.51.72 1.04-.15.39-.42.56-.67.35z" />
+            </svg>
+          </Link>
+
+          <div className="auth-membership-copy">
+            <span className="auth-membership-tag">NIKE / MEMBERSHIP</span>
+            <h1 className="auth-membership-title">
+              YOUR
+              <br />
+              NEXT
+              <br />
+              <span>MOVE.</span>
+            </h1>
+            <p className="auth-membership-sub">
+              A space for your favourites,
+              <br />
+              your next pair, and everything
+              <br />
+              that moves you.
+            </p>
+            <div className="auth-title-bar"></div>
+          </div>
         </div>
 
-        <button
-          onClick={handleVerifyOTP}
-          disabled={loading}
-          className="w-full bg-black text-white py-2 sm:py-3 text-sm sm:text-base rounded hover:bg-gray-800 transition"
-        >
-          {loading ? "Verifying..." : "Verify & Continue"}
-        </button>
+        {/* Right Form Card */}
+        <div className="auth-membership-right">
+          <div className="auth-member-card">
+            <h2 className="auth-member-heading">Verify OTP</h2>
+            <p className="auth-member-desc">
+              Enter the 6-digit code sent to{" "}
+              <strong className="text-black">{email}</strong>.
+            </p>
+
+            {/* 6-Digit Code Inputs */}
+            <div className="auth-otp-inputs">
+              {otpValues.map((digit, idx) => (
+                <input
+                  key={idx}
+                  ref={(el) => (inputRefs.current[idx] = el)}
+                  type="text"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleChange(idx, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(idx, e)}
+                  className="auth-otp-digit"
+                  autoFocus={idx === 0}
+                  inputMode="numeric"
+                />
+              ))}
+            </div>
+
+            {/* Resend and Edit Email Row */}
+            <div className="auth-resend-row">
+              {canResend ? (
+                <button
+                  type="button"
+                  onClick={handleResendOTP}
+                  disabled={loading}
+                  className="auth-resend-btn"
+                >
+                  Resend OTP
+                </button>
+              ) : (
+                <span className="auth-resend-timer">Resend in {timer}s</span>
+              )}
+              <Link to="/signin" className="auth-change-email">
+                Edit email
+              </Link>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="button"
+              onClick={handleVerifyOTP}
+              disabled={loading}
+              className="auth-otp-submit-btn"
+            >
+              <span>{loading ? "Verifying..." : "Verify & Continue"}</span>
+              <span className="auth-arrow">→</span>
+            </button>
+
+            {/* Legal text */}
+            <p className="auth-legal-text">
+              By continuing, I agree to Nike&apos;s{" "}
+              <Link to="/privacy-policy" className="auth-legal-link">
+                Privacy Policy
+              </Link>
+              <br />
+              and{" "}
+              <Link to="/terms-of-service" className="auth-legal-link">
+                Terms of Service
+              </Link>
+              .
+            </p>
+          </div>
+        </div>
       </div>
-    </div></AuthFrame>
+
+      {/* Bottom Benefit Strip */}
+      <footer className="auth-membership-footer">
+        <div className="auth-benefit-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+          <span>FASTER CHECKOUT</span>
+        </div>
+        <div className="auth-benefit-divider"></div>
+        <div className="auth-benefit-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+            <line x1="12" y1="22.08" x2="12" y2="12" />
+          </svg>
+          <span>ORDER TRACKING</span>
+        </div>
+        <div className="auth-benefit-divider"></div>
+        <div className="auth-benefit-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+          <span>WISHLIST</span>
+        </div>
+        <div className="auth-benefit-divider"></div>
+        <div className="auth-benefit-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+          <span>MEMBER BENEFITS</span>
+        </div>
+      </footer>
+    </div>
   );
 };
 
