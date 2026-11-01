@@ -23,7 +23,6 @@ import {
   DocumentTextIcon,
   ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/outline";
-import Search from "../components/Search";
 import SizeGuide from "../components/SizeGuide";
 import "../../../css/product-details.css";
 import useCartServices from "../services/cartServices";
@@ -62,7 +61,6 @@ const ProductDetails = () => {
   const [loadError, setLoadError] = useState(false);
   const [retry, setRetry] = useState(0);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const sizeGuideButton = useRef(null);
   const touchStart = useRef(null);
   const closeSizeGuide = useCallback(() => setSizeGuideOpen(false), []);
@@ -212,14 +210,6 @@ const ProductDetails = () => {
   }, [productSlug, retry]);
 
   useEffect(() => {
-    const close = (event) => {
-      if (event.key === "Escape") setSearchOpen(false);
-    };
-    document.addEventListener("keydown", close);
-    return () => document.removeEventListener("keydown", close);
-  }, []);
-
-  useEffect(() => {
     if (!product || !selectedSize) return;
 
     const variant = product.variants[selectedVariantIndex];
@@ -340,13 +330,12 @@ const ProductDetails = () => {
   };
 
   const header = (
-    <AppBar className="pdp-header" fallback="/products" onSearch={() => setSearchOpen(true)} />
+    <AppBar className="pdp-header" fallback="/products" />
   );
   if (!product)
     return (
       <div className="pdp-page">
         {header}
-        {searchOpen && <Search isOpen onClose={() => setSearchOpen(false)} />}
         {loadError ? (
           <main className="pdp-unavailable">
             <p className="store-eyebrow">LET’S FIND YOUR NEXT</p>
@@ -396,7 +385,6 @@ const ProductDetails = () => {
     <div className="pdp-page">
       <Toaster position="top-center" />
       {header}
-      {searchOpen && <Search isOpen onClose={() => setSearchOpen(false)} />}
       <main className="pdp-main">
         <div className="pdp-layout">
           <section className="pdp-gallery" aria-label="Product images">

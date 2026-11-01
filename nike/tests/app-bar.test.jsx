@@ -1,3 +1,6 @@
+jest.mock("../src/context/AppContext", () => ({
+  useAppContext: () => ({ backendUrl: "https://store.test" }),
+}));
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
@@ -45,11 +48,15 @@ test("bag hides its bag and search actions; checkout exposes its item count", as
   ).not.toBeNull();
   expect(host.querySelector(".customer-appbar-count").textContent).toBe("3");
 });
-test("page-specific back actions are preserved and default search navigates", async () => {
+test("page-specific back actions are preserved and search opens without navigating", async () => {
   const onBack = jest.fn();
   await render(<AppBar onBack={onBack} />);
   await click(".customer-appbar-back");
   expect(onBack).toHaveBeenCalledTimes(1);
   await click('[aria-label="Search products"]');
-  expect(host.textContent).toContain("Search destination");
+  expect(host.textContent).not.toContain("Search destination");
+  expect(document.querySelector('[role="dialog"] input')).toBe(
+    document.activeElement,
+  );
+  expect(document.querySelector(".nike-search-suggestions")).not.toBeNull();
 });
