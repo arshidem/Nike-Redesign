@@ -108,7 +108,7 @@ export function Navbar() {
         header.current?.querySelectorAll("details[open]").forEach((item) => {
           item.open = false;
         });
-        menuButton.current?.focus();
+        menuButton.current?.focus({ preventScroll: true });
       }
     };
     document.addEventListener("keydown", close);

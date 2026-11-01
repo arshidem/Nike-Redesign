@@ -63,7 +63,6 @@ export default function ProductSuggestions({ productSlug }) {
                 className="pdp-recommendation"
                 key={product._id || product.slug}
                 to={`/product/${product.slug}`}
-                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               >
                 <img
                   src={imageUrl(

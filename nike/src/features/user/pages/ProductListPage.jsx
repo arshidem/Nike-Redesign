@@ -489,7 +489,7 @@ export default function ProductListPage() {
     if (!filtersOpen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    drawer.current?.querySelector("button")?.focus();
+    drawer.current?.querySelector("button")?.focus({ preventScroll: true });
     const onKey = (event) => {
       if (event.key === "Escape") {
         setFiltersOpen(false);
@@ -519,7 +519,7 @@ export default function ProductListPage() {
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", onKey);
-      filterButton.current?.focus();
+      filterButton.current?.focus({ preventScroll: true });
     };
   }, [filtersOpen]);
 
@@ -852,7 +852,6 @@ export default function ProductListPage() {
                   const next = new URLSearchParams(params);
                   next.set("page", page - 1);
                   update(next, true);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
               >
                 Previous
@@ -866,7 +865,6 @@ export default function ProductListPage() {
                   const next = new URLSearchParams(params);
                   next.set("page", page + 1);
                   update(next, true);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
               >
                 Next

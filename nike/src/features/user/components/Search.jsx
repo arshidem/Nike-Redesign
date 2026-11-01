@@ -56,7 +56,7 @@ export default function Search({ isOpen, onClose }) {
     const previous = document.activeElement,
       overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    input.current?.focus();
+    input.current?.focus({ preventScroll: true });
     const keydown = (event) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -81,7 +81,7 @@ export default function Search({ isOpen, onClose }) {
     return () => {
       document.body.style.overflow = overflow;
       document.removeEventListener("keydown", keydown);
-      if (previous?.isConnected) previous.focus();
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
     };
   }, [active]);
   useEffect(() => {
@@ -204,7 +204,7 @@ export default function Search({ isOpen, onClose }) {
                     aria-label="Clear search"
                     onClick={() => {
                       setQuery("");
-                      input.current?.focus();
+                      input.current?.focus({ preventScroll: true });
                     }}
                   >
                     <XMarkIcon />

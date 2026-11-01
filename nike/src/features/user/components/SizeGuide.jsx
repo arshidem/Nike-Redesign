@@ -32,7 +32,7 @@ function GuideDialog({
   useEffect(() => {
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    dialog.current?.querySelector('[aria-label="Close size guide"]')?.focus();
+    dialog.current?.querySelector('[aria-label="Close size guide"]')?.focus({ preventScroll: true });
     const keydown = (event) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -59,7 +59,7 @@ function GuideDialog({
     return () => {
       document.body.style.overflow = previous;
       document.removeEventListener("keydown", keydown);
-      returnFocusRef.current?.focus();
+      returnFocusRef.current?.focus({ preventScroll: true });
     };
   }, [onClose, returnFocusRef]);
   const transition = reducedMotion

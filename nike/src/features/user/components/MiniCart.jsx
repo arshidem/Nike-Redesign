@@ -65,7 +65,7 @@ export default function MiniCart() {
     place();
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    panel.current?.querySelector("button")?.focus();
+    panel.current?.querySelector("button")?.focus({ preventScroll: true });
     const keydown = (event) => {
       if (event.key === "Escape") close();
       if (event.key === "Tab") {
@@ -89,7 +89,7 @@ export default function MiniCart() {
       document.body.style.overflow = overflow;
       document.removeEventListener("keydown", keydown);
       window.removeEventListener("resize", place);
-      if (previousFocus.current?.isConnected) previousFocus.current.focus();
+      if (previousFocus.current?.isConnected) previousFocus.current.focus({ preventScroll: true });
     };
   }, [open]);
   const item = cart.items.find(

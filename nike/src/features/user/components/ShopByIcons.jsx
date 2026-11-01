@@ -112,9 +112,6 @@ const ShopByIcons = () => {
               ))
             : products.map((product) => (
                 <Link
-                  onClick={() =>
-                    window.scrollTo({ top: 0, behavior: "smooth" })
-                  }
 
                   key={product.id}
                   to={`/model/${encodeURIComponent(product.model)}`}
