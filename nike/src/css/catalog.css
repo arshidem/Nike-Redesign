@@ -1167,3 +1167,37 @@
     animation: none;
   }
 }
+
+/* ==========================================================================
+   Sticky Filter Controls Bar for ProductListPage
+   ========================================================================== */
+
+.catalog-sticky-controls {
+  position: sticky;
+  top: var(--store-appbar-height, 56px);
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 12px var(--store-gutter, 24px) 10px;
+  margin-left: calc(-1 * var(--store-gutter, 24px));
+  margin-right: calc(-1 * var(--store-gutter, 24px));
+  border-bottom: 1px solid rgba(220, 224, 210, 0.7);
+  transition: box-shadow 0.2s ease;
+}
+
+.catalog-sticky-controls.is-stuck {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.catalog-sticky-controls .catalog-toolbar {
+  margin-bottom: 10px;
+}
+
+.catalog-sticky-controls .catalog-gender-pills {
+  margin-bottom: 10px;
+}
+
+.catalog-sticky-controls .catalog-active-filters {
+  margin: 0 0 4px;
+}

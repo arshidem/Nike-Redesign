@@ -408,9 +408,34 @@ export default function ProductListPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [draft, setDraft] = useState(new URLSearchParams());
   const [draftError, setDraftError] = useState("");
+  const [heroScrolled, setHeroScrolled] = useState(false);
   const filterButton = useRef(null);
   const drawer = useRef(null);
+  const heroRef = useRef(null);
   const heading = catalogHeading(params);
+
+  useEffect(() => {
+    let frameId = null;
+    const update = () => {
+      frameId = null;
+      if (!heroRef.current) return;
+      const rect = heroRef.current.getBoundingClientRect();
+      setHeroScrolled(rect.bottom <= 56);
+    };
+
+    const onScroll = () => {
+      if (frameId == null) frameId = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frameId != null) cancelAnimationFrame(frameId);
+    };
+  }, []);
   const page = Math.max(1, Number(params.get("page")) || 1);
   const activeFilters = [...params.entries()].filter(
     ([key]) => !["page", "limit", "sortBy"].includes(key),
@@ -568,11 +593,18 @@ export default function ProductListPage() {
     }[key] ||
     label(value);
 
+  const appBarTitle = `${heading[0]} ${heading[1]}`.trim();
+
   return (
     <div className="catalog-storefront">
-      <AppBar className="catalog-header" fallback="/home" />
+      <AppBar
+        className="catalog-header"
+        fallback="/home"
+        title={appBarTitle}
+        isScrolled={heroScrolled}
+      />
       <main id="main-content">
-        <section className="catalog-hero" aria-labelledby="catalog-title">
+        <section ref={heroRef} className="catalog-hero" aria-labelledby="catalog-title">
           <div className="catalog-hero-copy">
             <p className="store-eyebrow">FIND YOUR NEXT / NIKE</p>
             <h1 id="catalog-title">
@@ -600,6 +632,7 @@ export default function ProductListPage() {
           />
         </section>
         <div className="catalog-content">
+          <div className={`catalog-sticky-controls ${heroScrolled ? "is-stuck" : ""}`}>
           <div className="catalog-toolbar">
             <button
               className="catalog-control"
@@ -688,6 +721,7 @@ export default function ProductListPage() {
               </button>
             </div>
           )}
+          </div>
           <div className="sr-only" role="status" aria-live="polite">
             {state.loading
               ? "Loading products"

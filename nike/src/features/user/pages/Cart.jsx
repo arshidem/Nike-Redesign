@@ -31,6 +31,31 @@ const capitalize = (text) =>
   text ? text.charAt(0).toUpperCase() + text.slice(1) : "";
 
 export default function Cart() {
+  const [collapsed, setCollapsed] = useState(false);
+  const titleRef = useRef(null);
+
+  useEffect(() => {
+    let frameId = null;
+    const update = () => {
+      frameId = null;
+      if (!titleRef.current) return;
+      const bottom = titleRef.current.getBoundingClientRect().bottom;
+      setCollapsed(bottom < 56);
+    };
+
+    const onScroll = () => {
+      if (frameId == null) frameId = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frameId != null) cancelAnimationFrame(frameId);
+    };
+  }, []);
   const { getCart, updateItemQuantity, removeItemFromCart } = useCartServices();
   const { fetchProducts } = useProductService();
   const { backendUrl, token, user } = useAppContext();
@@ -169,10 +194,17 @@ export default function Cart() {
   return (
     <div className="bag-page">
       <Toaster position="top-center" />
-      <AppBar className="bag-header" fallback="/products" hideBag hideSearch />
+      <AppBar
+        className="bag-header"
+        fallback="/products"
+        hideBag
+        hideSearch
+        title="Your Bag"
+        isScrolled={collapsed}
+      />
       <main className="bag-main" id="main-content">
         <div className="bag-heading">
-          <h1>
+          <h1 ref={titleRef}>
             Your Bag <span>({loading ? "…" : itemCount})</span>
           </h1>
           <p>One step closer to your next move.</p>

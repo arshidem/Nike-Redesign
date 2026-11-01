@@ -155,3 +155,70 @@
 }
 
 .design-wishlist.min-h-screen > .customer-appbar.legacy-appbar { margin-left: 0; }
+
+/* ==========================================================================
+   Shared Animated Brand / Title Switch in AppBar
+   ========================================================================== */
+
+.customer-appbar-brand-switch {
+  position: relative;
+  overflow: hidden;
+  height: 44px;
+  min-width: 140px;
+  max-width: 280px;
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.customer-appbar-switch-logo,
+.customer-appbar-switch-title {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.38s cubic-bezier(0.22, 0.85, 0.25, 1),
+    opacity 0.3s ease;
+  will-change: transform, opacity;
+}
+
+.customer-appbar-switch-logo img {
+  width: 52px;
+  height: 28px;
+  object-fit: contain;
+  transition: transform 0.15s ease;
+}
+
+.customer-appbar-switch-logo:hover img {
+  transform: scale(1.05);
+}
+
+.customer-appbar-switch-title {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: #11150e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform: translateY(115%);
+  opacity: 0;
+  pointer-events: none;
+  padding: 0 4px;
+}
+
+.customer-appbar-brand-collapsed .customer-appbar-switch-logo {
+  transform: translateY(-115%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.customer-appbar-brand-collapsed .customer-appbar-switch-title {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}

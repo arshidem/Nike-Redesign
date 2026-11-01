@@ -56,6 +56,31 @@ const AccordionItem = ({
 
 const ProductDetails = () => {
   const { productSlug } = useParams();
+  const [collapsed, setCollapsed] = useState(false);
+  const titleRef = useRef(null);
+
+  useEffect(() => {
+    let frameId = null;
+    const update = () => {
+      frameId = null;
+      if (!titleRef.current) return;
+      const bottom = titleRef.current.getBoundingClientRect().bottom;
+      setCollapsed(bottom < 56);
+    };
+
+    const onScroll = () => {
+      if (frameId == null) frameId = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frameId != null) cancelAnimationFrame(frameId);
+    };
+  }, [productSlug]);
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loadError, setLoadError] = useState(false);
@@ -330,7 +355,12 @@ const ProductDetails = () => {
   };
 
   const header = (
-    <AppBar className="pdp-header" fallback="/products" />
+    <AppBar
+      className="pdp-header"
+      fallback="/products"
+      title={product?.name || ""}
+      isScrolled={collapsed}
+    />
   );
   if (!product)
     return (
@@ -464,7 +494,7 @@ const ProductDetails = () => {
                   ? product.category
                   : "Collection"}
             </p>
-            <h1 id="product-title">{product.name}</h1>
+            <h1 ref={titleRef} id="product-title">{product.name}</h1>
             <div className="pdp-price">
               <strong>₹ {Number(price).toLocaleString("en-IN")}</strong>
               <span>(incl. of taxes)</span>

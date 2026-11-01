@@ -18,6 +18,25 @@ export function AppBarBrand({ showText = false }) {
   );
 }
 
+export function AppBarBrandSwitch({ title = "", isScrolled = false }) {
+  return (
+    <div className={`customer-appbar-brand-switch ${isScrolled ? "customer-appbar-brand-collapsed" : ""}`}>
+      <Link
+        to="/home"
+        className="customer-appbar-switch-logo"
+        aria-label="Nike home"
+        aria-hidden={isScrolled}
+        tabIndex={isScrolled ? -1 : undefined}
+      >
+        <img src="/assets/logo/nikeLogo.png" alt="Nike" />
+      </Link>
+      <span className="customer-appbar-switch-title" aria-hidden={!isScrolled} title={title}>
+        {title}
+      </span>
+    </div>
+  );
+}
+
 /** Shared geometry; each page keeps only the actions relevant to its flow. */
 export default function AppBar({
   className = "",
@@ -30,6 +49,8 @@ export default function AppBar({
   home = false,
   children,
   center,
+  title,
+  isScrolled = false,
   scrollAware = true,
 }) {
   const navigate = useNavigate();
@@ -38,6 +59,15 @@ export default function AppBar({
   useEffect(() => setSearchOpen(false), [location.pathname, location.search]);
   const scroll = useScrollHeader({ enabled: scrollAware && !home });
   const Tag = home ? "nav" : "header";
+
+  const renderCenter = () => {
+    if (center !== undefined) return center;
+    if (title) {
+      return <AppBarBrandSwitch title={title} isScrolled={isScrolled} />;
+    }
+    return <AppBarBrand />;
+  };
+
   return (
     <>
       <Tag
@@ -66,7 +96,7 @@ export default function AppBar({
               <ArrowLeftIcon />
               <span>Back</span>
             </button>
-            {center ?? <AppBarBrand />}
+            {renderCenter()}
             <div className="customer-appbar-actions">
               {!hideSearch && (
                 <button

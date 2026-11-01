@@ -71,6 +71,31 @@ function Field({ label, icon: Icon, error, className = "", children }) {
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const [collapsed, setCollapsed] = useState(false);
+  const deliveryTitleRef = useRef(null);
+
+  useEffect(() => {
+    let frameId = null;
+    const update = () => {
+      frameId = null;
+      if (!deliveryTitleRef.current) return;
+      const bottom = deliveryTitleRef.current.getBoundingClientRect().bottom;
+      setCollapsed(bottom < 56);
+    };
+
+    const onScroll = () => {
+      if (frameId == null) frameId = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frameId != null) cancelAnimationFrame(frameId);
+    };
+  }, []);
   const { user, token, backendUrl } = useAppContext();
   const { getAddresses, addAddress, updateAddress } = useAddressService();
   const { initiatePayment, verifyPayment } = useOrderServices();
@@ -418,7 +443,14 @@ export default function Checkout() {
     />
   );
   const header = (
-    <AppBar className="checkout-header" fallback="/bag" hideSearch bagCount={itemCount} />
+    <AppBar
+      className="checkout-header"
+      fallback="/bag"
+      hideSearch
+      bagCount={itemCount}
+      title="Checkout"
+      isScrolled={collapsed}
+    />
   );
   if (loading)
     return (
@@ -469,7 +501,7 @@ export default function Checkout() {
           aria-labelledby="checkout-delivery-title"
         >
           <p className="store-eyebrow">DELIVERY</p>
-          <h1 id="checkout-delivery-title">Delivery Information.</h1>
+          <h1 ref={deliveryTitleRef} id="checkout-delivery-title">Delivery Information.</h1>
           <p className="checkout-intro">
             Enter your details to get your order.
           </p>

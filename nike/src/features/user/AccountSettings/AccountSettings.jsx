@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Link,
   Routes,
@@ -162,6 +162,31 @@ export default function AccountSettings({ publicPage }) {
   const { token } = useAppContext(),
     location = useLocation(),
     navigate = useNavigate();
+  const [collapsed, setCollapsed] = useState(false);
+  const titleRef = useRef(null);
+
+  useEffect(() => {
+    let frameId = null;
+    const update = () => {
+      frameId = null;
+      if (!titleRef.current) return;
+      const bottom = titleRef.current.getBoundingClientRect().bottom;
+      setCollapsed(bottom < 56);
+    };
+
+    const onScroll = () => {
+      if (frameId == null) frameId = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frameId != null) cancelAnimationFrame(frameId);
+    };
+  }, [location.pathname]);
   const page = publicPage || location.pathname.split("/")[2] || "",
     known = headings[page],
     legal = publicPage || page === "terms" || page === "policy",
@@ -181,12 +206,14 @@ export default function AccountSettings({ publicPage }) {
     <div className="settings-page">
       <AppBar
         fallback="/home"
+        title={title}
+        isScrolled={collapsed}
         onBack={page || publicPage ? () => navigate("/account") : undefined}
       />
       <main className="settings-main">
         <header className="settings-heading">
           <p>YOUR SPACE / ACCOUNT</p>
-          <h1>{title}</h1>
+          <h1 ref={titleRef}>{title}</h1>
           <span>{description}</span>
         </header>
         {!token && !isPublic ? (

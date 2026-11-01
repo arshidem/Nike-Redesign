@@ -33,6 +33,32 @@ export default function Order() {
   const service = useOrderServices(),
     latest = useRef(service);
   latest.current = service;
+  const [collapsed, setCollapsed] = useState(false);
+  const titleRef = useRef(null);
+
+  useEffect(() => {
+    let frameId = null;
+    const update = () => {
+      frameId = null;
+      if (!titleRef.current) return;
+      const bottom = titleRef.current.getBoundingClientRect().bottom;
+      setCollapsed(bottom < 56);
+    };
+
+    const onScroll = () => {
+      if (frameId == null) frameId = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frameId != null) cancelAnimationFrame(frameId);
+    };
+  }, []);
+
   const [orders, setOrders] = useState([]),
     [counts, setCounts] = useState({}),
     [pagination, setPagination] = useState({}),
@@ -99,11 +125,11 @@ export default function Order() {
   };
   return (
     <div className="customer-orders-page">
-      <AppBar fallback="/home" />
+      <AppBar fallback="/home" title="Your Orders" isScrolled={collapsed} />
       <main className="customer-orders-main">
         <header className="customer-orders-heading">
           <p>YOUR SPACE / ORDERS</p>
-          <h1>Your Orders</h1>
+          <h1 ref={titleRef}>Your Orders</h1>
           <span>Track and manage your Nike orders.</span>
         </header>
         {!token ? (
