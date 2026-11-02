@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import AuthFrame from "../../../shared/ui/AuthFrame";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -90,7 +91,7 @@ const handleCompleteRegister = async () => {
           onChange={(e) => setName(e.target.value)}
         />
 
-        <select
+        <NikeSelect
           value={gender}
           onChange={(e) => setGender(e.target.value)}
           className="w-full border px-4 py-3 rounded-md text-sm mb-4 text-gray-600 bg-white/60 backdrop-blur-sm"
@@ -100,7 +101,7 @@ const handleCompleteRegister = async () => {
           <option value="female">Female</option>
           <option value="other">Other</option>
           <option value="prefer-not-to-say">Prefer Not To Say</option>
-        </select>
+        </NikeSelect>
 
         <button
           onClick={handleCompleteRegister}
