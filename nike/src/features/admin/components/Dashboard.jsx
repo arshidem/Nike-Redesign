@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import React, { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -147,7 +148,7 @@ function Stat({ label, value, icon: Icon, featured = false, loading, detail }) {
 }
 function Period({ value, onChange, label }) {
   return (
-    <select
+    <NikeSelect
       aria-label={label}
       value={value}
       onChange={(event) => onChange(event.target.value)}
@@ -157,7 +158,7 @@ function Period({ value, onChange, label }) {
           {text}
         </option>
       ))}
-    </select>
+    </NikeSelect>
   );
 }
 const empty = (text) => <p className="admin-empty">{text}</p>;
@@ -417,7 +418,7 @@ export const Dashboard = ({ onSummary }) => {
           title="Order Trend"
           icon={ArrowTrendingUpIcon}
           controls={
-            <select
+            <NikeSelect
               aria-label="Order trend range"
               value={trendRange}
               onChange={(event) => setTrendRange(event.target.value)}
@@ -427,7 +428,7 @@ export const Dashboard = ({ onSummary }) => {
                   {label}
                 </option>
               ))}
-            </select>
+            </NikeSelect>
           }
         >
           <Loading resource={trend}>
