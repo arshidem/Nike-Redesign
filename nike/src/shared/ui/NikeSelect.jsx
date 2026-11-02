@@ -96,7 +96,7 @@ export default function NikeSelect({
   return (
     <div ref={rootRef} className={`nike-select ${className}`} style={style}>
       <select tabIndex={-1} aria-hidden="true" name={name} value={selected} required={required} disabled={disabled}
-        onChange={() => {}} className="nike-select-native" {...(rest.autoComplete ? { autoComplete: rest.autoComplete } : {})}>
+        onChange={(event) => choose(options.find((option) => option.value === event.target.value) || { value: event.target.value })} className="nike-select-native" {...(rest.autoComplete ? { autoComplete: rest.autoComplete } : {})}>
         {children}
       </select>
       <button type="button" id={id} className={`nike-select-trigger ${open ? "is-open" : ""} ${ariaInvalid ? "is-invalid" : ""}`}
