@@ -481,21 +481,25 @@ export const AllProducts = () => {
       [key]: value,
       ...(key === "category" ? { size: "" } : {}),
     }));
-  const filterSelect = (label, key, values, emptyLabel) => (
-    <div key={key} className="pm-filter-select-box">
-      <NikeSelect
-        label={label}
-        value={draft[key]}
-        onChange={(val) => change(key, val)}
-        disabled={optionsLoading || (key === "size" && !draft.category)}
-        options={[
-          { value: "", label: emptyLabel || All  },
-          ...values.map((v) => ({ value: v, label: String(v) })),
-        ]}
-        placeholder={emptyLabel || All }
-      />
-    </div>
-  );
+  const filterSelect = (label, key, values = [], emptyLabel) => {
+    const safeValues = Array.isArray(values) ? values : [];
+    const defaultLabel = emptyLabel || `All ${label.toLowerCase()}`;
+    return (
+      <div key={key} className="pm-filter-select-box">
+        <NikeSelect
+          label={label}
+          value={draft[key] || ""}
+          onChange={(val) => change(key, val)}
+          disabled={optionsLoading || (key === "size" && !draft.category)}
+          options={[
+            { value: "", label: defaultLabel },
+            ...safeValues.map((v) => ({ value: String(v), label: String(v) })),
+          ]}
+          placeholder={defaultLabel}
+        />
+      </div>
+    );
+  };
   return (
     <section className="pm-page">
       <nav className="pm-breadcrumb" aria-label="Breadcrumb">
