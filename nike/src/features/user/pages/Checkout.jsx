@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import AppBar from "../../../shared/ui/AppBar";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -552,7 +553,7 @@ export default function Checkout() {
           {addresses.length > 0 && (
             <label className="checkout-saved-address">
               Saved address
-              <select
+              <NikeSelect
                 aria-label="Saved address"
                 value={selectedAddress}
                 disabled={Boolean(busy) || Boolean(pendingPayment)}
@@ -573,7 +574,7 @@ export default function Checkout() {
                     {address.fullName} · {address.city} · {address.postalCode}
                   </option>
                 ))}
-              </select>
+              </NikeSelect>
             </label>
           )}
           <div className="checkout-address-grid">
@@ -608,7 +609,7 @@ export default function Checkout() {
             <div className="checkout-region-row">
               <Field label="State" error={errors.state}>
                 {states.length ? (
-                  <select
+                  <NikeSelect
                     name="state"
                     aria-invalid={Boolean(errors.state)}
                     value={form.state}
@@ -622,7 +623,7 @@ export default function Checkout() {
                         {state.name}
                       </option>
                     ))}
-                  </select>
+                  </NikeSelect>
                 ) : (
                   input("state", "address-level1")
                 )}
@@ -636,7 +637,7 @@ export default function Checkout() {
                 })}
               </Field>
               <Field label="Country" error={errors.country}>
-                <select
+                <NikeSelect
                   name="country"
                   value={form.country}
                   onChange={change}
@@ -648,7 +649,7 @@ export default function Checkout() {
                       {country.name}
                     </option>
                   ))}
-                </select>
+                </NikeSelect>
               </Field>
             </div>
           </div>
