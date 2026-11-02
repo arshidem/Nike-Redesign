@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserService } from "../../user/services/userService";
@@ -436,7 +437,7 @@ export const AllUsers = () => {
                   <label className="block text-xs sm:text-xs sm:text-sm font-medium text-gray-700 mb-1">
                     Role
                   </label>
-                  <select
+                  <NikeSelect
                     value={filters.role}
                     onChange={(e) => handleFilterChange("role", e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded"
@@ -444,7 +445,7 @@ export const AllUsers = () => {
                     <option value="">All Roles</option>
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
-                  </select>
+                  </NikeSelect>
                 </div>
 
                 {/* Gender Filter */}
@@ -452,7 +453,7 @@ export const AllUsers = () => {
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                     Gender
                   </label>
-                  <select
+                  <NikeSelect
                     value={filters.gender}
                     onChange={(e) =>
                       handleFilterChange("gender", e.target.value)
@@ -464,7 +465,7 @@ export const AllUsers = () => {
                     <option value="female">Female</option>
                     <option value="other">Other</option>
                     <option value="prefer-not-to-say">Prefer not to say</option>
-                  </select>
+                  </NikeSelect>
                 </div>
 
                 {/* Status Filter */}
@@ -472,7 +473,7 @@ export const AllUsers = () => {
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                     Status
                   </label>
-                  <select
+                  <NikeSelect
                     value={filters.status}
                     onChange={(e) =>
                       handleFilterChange("status", e.target.value)
@@ -483,7 +484,7 @@ export const AllUsers = () => {
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                     <option value="pending">Pending</option>
-                  </select>
+                  </NikeSelect>
                 </div>
 
                 {/* Active Status Filter */}
@@ -491,7 +492,7 @@ export const AllUsers = () => {
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                     Active Status
                   </label>
-                  <select
+                  <NikeSelect
                     value={filters.isActive}
                     onChange={(e) =>
                       handleFilterChange("isActive", e.target.value)
@@ -501,7 +502,7 @@ export const AllUsers = () => {
                     <option value="">All</option>
                     <option value="true">Active</option>
                     <option value="false">Inactive</option>
-                  </select>
+                  </NikeSelect>
                 </div>
               </div>
 
