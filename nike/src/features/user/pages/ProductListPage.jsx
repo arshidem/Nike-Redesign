@@ -1,4 +1,5 @@
 import AppBar from "../../../shared/ui/AppBar";
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import WishlistSpinner from "../../../shared/ui/WishlistSpinner";
 import React, { useEffect, useMemo, useRef, useState, useId } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -342,32 +343,35 @@ function FilterFields({ params, onChange, options }) {
         </div>
       </FilterGroup>
       <FilterGroup title="Rating">
-        <select
-          aria-label="Minimum rating"
+        <NikeSelect
+          label="Minimum Rating"
           value={params.get("minRating") || ""}
-          onChange={(e) => set("minRating", e.target.value)}
-        >
-          <option value="">All ratings</option>
-          {[4, 3, 2, 1].map((value) => (
-            <option key={value} value={value}>
-              {value} stars &amp; up
-            </option>
-          ))}
-        </select>
+          onChange={(val) => set("minRating", val)}
+          options={[
+            { value: "", label: "All ratings" },
+            { value: "4", label: "4 Stars & Above" },
+            { value: "3", label: "3 Stars & Above" },
+            { value: "2", label: "2 Stars & Above" },
+            { value: "1", label: "1 Star & Above" },
+          ]}
+          placeholder="All ratings"
+        />
       </FilterGroup>
       <FilterGroup title="Discount">
-        <select
-          aria-label="Minimum discount"
+        <NikeSelect
+          label="Minimum Discount"
           value={params.get("minDiscount") || ""}
-          onChange={(e) => set("minDiscount", e.target.value)}
-        >
-          <option value="">Any discount</option>
-          {[10, 20, 30, 40, 50].map((value) => (
-            <option key={value} value={value}>
-              {value}% &amp; up
-            </option>
-          ))}
-        </select>
+          onChange={(val) => set("minDiscount", val)}
+          options={[
+            { value: "", label: "Any discount" },
+            { value: "10", label: "10% & Above" },
+            { value: "20", label: "20% & Above" },
+            { value: "30", label: "30% & Above" },
+            { value: "40", label: "40% & Above" },
+            { value: "50", label: "50% & Above" },
+          ]}
+          placeholder="Any discount"
+        />
       </FilterGroup>
     </div>
   );
@@ -648,21 +652,19 @@ export default function ProductListPage() {
               <AdjustmentsHorizontalIcon />
               Filters
             </button>
-            <label className="catalog-sort">
-              <span className="sr-only">Sort by</span>
-              <select
-                aria-label="Sort by"
+            <div className="catalog-sort-wrapper" style={{ minWidth: "200px" }}>
+              <NikeSelect
+                size="sm"
+                label="Sort By"
                 value={params.get("sortBy") || ""}
-                onChange={(e) => setParam("sortBy", e.target.value)}
-              >
-                {sortOptions.map(([value, text]) => (
-                  <option key={value} value={value}>
-                    {value ? text : "Sort by"}
-                  </option>
-                ))}
-              </select>
-              <ChevronDownIcon />
-            </label>
+                onChange={(val) => setParam("sortBy", val)}
+                options={sortOptions.map(([val, text]) => ({
+                  value: val,
+                  label: val ? text : "Featured (Best Match)",
+                }))}
+                placeholder="Sort by"
+              />
+            </div>
             <div
               className="catalog-view-controls"
               role="group"

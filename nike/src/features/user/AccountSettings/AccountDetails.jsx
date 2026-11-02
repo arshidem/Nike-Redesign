@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import { Link } from "react-router-dom";
 import { useAppContext } from "../../../context/AppContext";
 import useAuthService from "../services/authServices";
@@ -105,21 +106,24 @@ export default function AccountDetails() {
             value={String(form.dob).slice(0, 10)}
             onChange={change}
           />
-          <Field label="Gender">
-            <select name="gender" value={form.gender} onChange={change}>
-              <option value="">Choose gender</option>
-              {[
-                ["male", "Male"],
-                ["female", "Female"],
-                ["other", "Other"],
-                ["prefer-not-to-say", "Prefer not to say"],
-              ].map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <div className="settings-field-box">
+            <NikeSelect
+              label="Gender"
+              value={form.gender}
+              onChange={(val) => {
+                setForm((prev) => ({ ...prev, gender: val }));
+// dirty tracking
+              }}
+              options={[
+                { value: "", label: "Choose gender" },
+                { value: "male", label: "Male" },
+                { value: "female", label: "Female" },
+                { value: "other", label: "Other" },
+                { value: "prefer-not-to-say", label: "Prefer not to say" },
+              ]}
+              placeholder="Choose gender"
+            />
+          </div>
           <Field
             label="Country / Region"
             name="country"

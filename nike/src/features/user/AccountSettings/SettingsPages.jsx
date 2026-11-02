@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../../context/AppContext";
 import useAccountService from "../services/accountServices";
@@ -260,18 +261,20 @@ export function Help() {
         <>
           <form className="settings-card settings-form" onSubmit={submit}>
             <h2>Send a support request.</h2>
-            <Field label="Topic">
-              <select
+            <div className="settings-field-box mb-4">
+              <NikeSelect
+                label="Topic"
                 value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-              >
-                {["order", "payment", "account", "other"].map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </Field>
+                onChange={(val) => setForm((prev) => ({ ...prev, category: val }))}
+                options={[
+                  { value: "order", label: "Orders & Shipping" },
+                  { value: "payment", label: "Payments & Invoices" },
+                  { value: "account", label: "Account & Profile" },
+                  { value: "other", label: "General Support" },
+                ]}
+                placeholder="Select topic"
+              />
+            </div>
             <Field
               label="Subject"
               required

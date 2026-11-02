@@ -1,4 +1,5 @@
 import AppBar from "../../../shared/ui/AppBar";
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Country, State } from "country-state-city";
@@ -550,31 +551,28 @@ export default function Checkout() {
             </p>
           )}
           {addresses.length > 0 && (
-            <label className="checkout-saved-address">
-              Saved address
-              <select
-                aria-label="Saved address"
+            <div className="checkout-saved-address" style={{ marginBottom: "18px" }}>
+              <NikeSelect
+                label="Saved Address"
                 value={selectedAddress}
                 disabled={Boolean(busy) || Boolean(pendingPayment)}
-                onChange={(event) => {
-                  const address = addresses.find(
-                    (entry) => entry._id === event.target.value,
-                  );
-                  setSelectedAddress(event.target.value);
-                  setForm(
-                    address ? { ...blankAddress, ...address } : blankAddress,
-                  );
+                onChange={(val) => {
+                  const address = addresses.find((entry) => entry._id === val);
+                  setSelectedAddress(val);
+                  setForm(address ? { ...blankAddress, ...address } : blankAddress);
                   setErrors({});
                 }}
-              >
-                <option value="">Use a new address</option>
-                {addresses.map((address) => (
-                  <option key={address._id} value={address._id}>
-                    {address.fullName} · {address.city} · {address.postalCode}
-                  </option>
-                ))}
-              </select>
-            </label>
+                options={[
+                  { value: "", label: "Use a new address" },
+                  ...addresses.map((address) => ({
+                    value: address._id,
+                    label: `${address.fullName} · ${address.city}`,
+                    subtext: address.postalCode,
+                  })),
+                ]}
+                placeholder="Use a new address"
+              />
+            </div>
           )}
           <div className="checkout-address-grid">
             <Field label="Full name" icon={UserIcon} error={errors.fullName}>
@@ -606,27 +604,30 @@ export default function Checkout() {
               {input("city", "address-level2")}
             </Field>
             <div className="checkout-region-row">
-              <Field label="State" error={errors.state}>
+              <div className="checkout-field-wrapper">
                 {states.length ? (
-                  <select
+                  <NikeSelect
+                    label="State"
                     name="state"
-                    aria-invalid={Boolean(errors.state)}
                     value={form.state}
-                    onChange={change}
-                    autoComplete="address-level1"
+                    onChange={(val) => {
+                      setForm((prev) => ({ ...prev, state: val }));
+                      if (errors.state) setErrors((prev) => ({ ...prev, state: "" }));
+                    }}
+                    options={[
+                      { value: "", label: "Select state" },
+                      ...states.map((st) => ({ value: st.name, label: st.name })),
+                    ]}
                     disabled={Boolean(busy) || Boolean(pendingPayment)}
-                  >
-                    <option value="">Select state</option>
-                    {states.map((state) => (
-                      <option key={state.isoCode} value={state.name}>
-                        {state.name}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Select state"
+                  />
                 ) : (
-                  input("state", "address-level1")
+                  <Field label="State" error={errors.state}>
+                    {input("state", "address-level1")}
+                  </Field>
                 )}
-              </Field>
+                {errors.state && <p className="checkout-error" role="alert">{errors.state}</p>}
+              </div>
               <Field
                 label={countryCode === "IN" ? "PIN code" : "Postal code"}
                 error={errors.postalCode}
@@ -635,21 +636,21 @@ export default function Checkout() {
                   inputMode: countryCode === "IN" ? "numeric" : "text",
                 })}
               </Field>
-              <Field label="Country" error={errors.country}>
-                <select
+              <div className="checkout-field-wrapper">
+                <NikeSelect
+                  label="Country"
                   name="country"
                   value={form.country}
-                  onChange={change}
-                  autoComplete="country-name"
+                  onChange={(val) => {
+                    setForm((prev) => ({ ...prev, country: val, state: "" }));
+                    if (errors.country) setErrors((prev) => ({ ...prev, country: "" }));
+                  }}
+                  options={countries.map((c) => ({ value: c.name, label: c.name }))}
                   disabled={Boolean(busy) || Boolean(pendingPayment)}
-                >
-                  {countries.map((country) => (
-                    <option key={country.isoCode} value={country.name}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+                  placeholder="Select country"
+                />
+                {errors.country && <p className="checkout-error" role="alert">{errors.country}</p>}
+              </div>
             </div>
           </div>
         </section>
