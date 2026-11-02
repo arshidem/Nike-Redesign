@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
@@ -483,7 +484,7 @@ export const AllProducts = () => {
   const filterSelect = (label, key, values, emptyLabel) => (
     <label key={key}>
       {label}
-      <select
+      <NikeSelect
         aria-label={label}
         value={draft[key]}
         onChange={(event) => change(key, event.target.value)}
@@ -495,7 +496,7 @@ export const AllProducts = () => {
             {value}
           </option>
         ))}
-      </select>
+      </NikeSelect>
     </label>
   );
   return (
@@ -598,7 +599,7 @@ export const AllProducts = () => {
           </button>
           <label className="pm-sort">
             <BarsArrowDownIcon />
-            <select
+            <NikeSelect
               aria-label="Sort products"
               value={sort}
               onChange={(event) => {
@@ -611,7 +612,7 @@ export const AllProducts = () => {
                   {label}
                 </option>
               ))}
-            </select>
+            </NikeSelect>
           </label>
           <button
             type="button"
