@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useDropzone } from "react-dropzone";
 import { useAppContext } from "../../../context/AppContext";
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import toast, { Toaster } from 'react-hot-toast';
 
 const CreateProduct = () => {

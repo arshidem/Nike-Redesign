@@ -2,6 +2,7 @@ import { useScrollHeader } from "../../../hooks/useScrollHeader";
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../../context/AppContext";
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import { EditIcon, XIcon } from "../../../shared/ui/Icons";
 import { useProductService } from "../../product/services/productService";
 import toast, { Toaster } from "react-hot-toast";

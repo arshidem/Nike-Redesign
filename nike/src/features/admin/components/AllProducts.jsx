@@ -23,6 +23,7 @@ import {
 import toast from "react-hot-toast";
 import { useProductService } from "../../product/services/productService";
 import { useAppContext } from "../../../context/AppContext";
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import "../../../css/product-management.css";
 
 const money = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
@@ -481,22 +482,19 @@ export const AllProducts = () => {
       ...(key === "category" ? { size: "" } : {}),
     }));
   const filterSelect = (label, key, values, emptyLabel) => (
-    <label key={key}>
-      {label}
-      <select
-        aria-label={label}
+    <div key={key} className="pm-filter-select-box">
+      <NikeSelect
+        label={label}
         value={draft[key]}
-        onChange={(event) => change(key, event.target.value)}
+        onChange={(val) => change(key, val)}
         disabled={optionsLoading || (key === "size" && !draft.category)}
-      >
-        <option value="">{emptyLabel || `All ${label.toLowerCase()}`}</option>
-        {values.map((value) => (
-          <option value={value} key={value}>
-            {value}
-          </option>
-        ))}
-      </select>
-    </label>
+        options={[
+          { value: "", label: emptyLabel || All  },
+          ...values.map((v) => ({ value: v, label: String(v) })),
+        ]}
+        placeholder={emptyLabel || All }
+      />
+    </div>
   );
   return (
     <section className="pm-page">
@@ -596,23 +594,19 @@ export const AllProducts = () => {
             <FunnelIcon />
             Filter{activeFilters > 0 && <small>{activeFilters}</small>}
           </button>
-          <label className="pm-sort">
-            <BarsArrowDownIcon />
-            <select
-              aria-label="Sort products"
+          <div className="pm-sort-wrapper" style={{ minWidth: "190px" }}>
+            <NikeSelect
+              size="sm"
+              label="Sort By"
               value={sort}
-              onChange={(event) => {
-                setSort(event.target.value);
+              onChange={(val) => {
+                setSort(val);
                 setPage(1);
               }}
-            >
-              {sorting.map(([value, label]) => (
-                <option value={value} key={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
+              options={sorting.map(([val, lbl]) => ({ value: val, label: lbl }))}
+              placeholder="Sort products"
+            />
+          </div>
           <button
             type="button"
             aria-label="Refresh products"

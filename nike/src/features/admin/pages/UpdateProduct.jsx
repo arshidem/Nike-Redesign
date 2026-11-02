@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useDropzone } from "react-dropzone";
 import { useAppContext } from "../../../context/AppContext";
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import { div } from "framer-motion/client";
 import { useProductService } from "../../product/services/productService";
 import { UpdateProductSkeleton } from "../../../shared/ui/Skeleton";

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import { useCouponService } from "../../product/services/couponService";
 import toast, { Toaster } from "react-hot-toast";
 import {
@@ -165,14 +166,17 @@ const handleDelete = (id) => {
     onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
     className="p-2 border rounded text-xs sm:text-sm"
   />
-  <select
+  <NikeSelect
+    size="sm"
+    label="Active Status"
     value={form.isActive.toString()}
-    onChange={(e) => setForm({ ...form, isActive: e.target.value === "true" })}
-    className="p-2 border rounded text-xs sm:text-sm"
-  >
-    <option value="true">Active</option>
-    <option value="false">Inactive</option>
-  </select>
+    onChange={(val) => setForm({ ...form, isActive: val === "true" })}
+    options={[
+      { value: "true", label: "Active" },
+      { value: "false", label: "Inactive" },
+    ]}
+    placeholder="Active Status"
+  />
 
   <button
     type="submit"

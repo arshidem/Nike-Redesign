@@ -29,6 +29,7 @@ import {
   HeartIcon,
 } from "@heroicons/react/24/outline";
 import { useAppContext } from "../../../context/AppContext";
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import useOrderServices from "../../user/services/orderServices";
 import { useProductService } from "../../product/services/productService";
 
@@ -147,17 +148,16 @@ function Stat({ label, value, icon: Icon, featured = false, loading, detail }) {
 }
 function Period({ value, onChange, label }) {
   return (
-    <select
-      aria-label={label}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-    >
-      {Object.entries(periods).map(([key, text]) => (
-        <option key={key} value={key}>
-          {text}
-        </option>
-      ))}
-    </select>
+    <div style={{ minWidth: "160px" }}>
+      <NikeSelect
+        size="sm"
+        label="Period"
+        value={value}
+        onChange={(val) => onChange(val)}
+        options={Object.entries(periods).map(([k, t]) => ({ value: k, label: t }))}
+        placeholder="Select period"
+      />
+    </div>
   );
 }
 const empty = (text) => <p className="admin-empty">{text}</p>;
