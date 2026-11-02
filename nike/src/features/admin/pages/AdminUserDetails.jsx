@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUserService } from '../../user/services/userService';
@@ -153,7 +154,7 @@ if (userData?.data) {
           <div className="border-t pt-4">
             <h2 data-section="NIKE / STUDIO CONSOLE" className="font-semibold text-lg text-black mb-3">Admin Actions</h2>
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <select
+              <NikeSelect
                 className="border border-gray-300 px-4 py-2 rounded-md w-full sm:w-auto"
                 value={user.role}
                 onChange={handleRoleChange}
@@ -162,7 +163,7 @@ if (userData?.data) {
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
                 <option value="manager">Manager</option>
-              </select>
+              </NikeSelect>
               <button
                 onClick={() => setShowDeleteModal(true)}
                 disabled={actionLoading}

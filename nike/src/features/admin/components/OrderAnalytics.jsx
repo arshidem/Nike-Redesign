@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import React, { useEffect, useState, useCallback } from "react";
 import {
   PieChart,
@@ -142,7 +143,7 @@ if (summaryLoading) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ChartCard title="📈 Order Trend">
           <div className="flex justify-end mb-3">
-            <select
+            <NikeSelect
               value={orderRange}
               onChange={(e) => setOrderRange(e.target.value)}
               className="border rounded px-2 py-1 text-sm"
@@ -151,7 +152,7 @@ if (summaryLoading) {
               <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
               <option value="yearly">Yearly</option>
-            </select>
+            </NikeSelect>
           </div>
 
           {trendLoading ? (
@@ -185,7 +186,7 @@ if (summaryLoading) {
 
         <ChartCard title="🧾 Order Status Breakdown">
           <div className="flex justify-end mb-3">
-            <select
+            <NikeSelect
               value={statusRange}
               onChange={(e) => setStatusRange(e.target.value)}
               className="border rounded px-2 py-1 text-sm"
@@ -194,7 +195,7 @@ if (summaryLoading) {
               <option value="week">This Week</option>
               <option value="month">This Month</option>
               <option value="year">This Year</option>
-            </select>
+            </NikeSelect>
           </div>
 
           {statusLoading ? (

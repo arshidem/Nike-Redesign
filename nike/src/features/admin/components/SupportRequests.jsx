@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import React, { useState } from "react";
 import useAccountService from "../../user/services/accountServices";
 import {
@@ -52,7 +53,7 @@ export default function SupportRequests() {
                 </div>
                 <label>
                   Status{" "}
-                  <select
+                  <NikeSelect
                     aria-label={`Status for ${ticket.subject}`}
                     disabled={!!busy}
                     value={ticket.status}
@@ -63,7 +64,7 @@ export default function SupportRequests() {
                         {status.replace("-", " ")}
                       </option>
                     ))}
-                  </select>
+                  </NikeSelect>
                 </label>
               </div>
               <p>{ticket.message}</p>

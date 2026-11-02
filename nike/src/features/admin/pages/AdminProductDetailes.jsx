@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import { useScrollHeader } from "../../../hooks/useScrollHeader";
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -262,7 +263,7 @@ const AdminProductDetails = () => {
           <div className="mt-6">
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-md font-semibold">Sold Units Timeline</h3>
-              <select
+              <NikeSelect
                 value={range}
                 onChange={(e) => setRange(e.target.value)}
                 className="border rounded px-2 py-1 text-sm"
@@ -271,7 +272,7 @@ const AdminProductDetails = () => {
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
                 <option value="year">This Year</option>
-              </select>
+              </NikeSelect>
             </div>
 
             {/* ✅ Total Sales Display */}

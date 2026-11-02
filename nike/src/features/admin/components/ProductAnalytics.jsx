@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import React, { useEffect, useState, useMemo } from "react";
 import PropTypes from "prop-types";
 import { useProductService } from "../../product/services/productService";
@@ -294,7 +295,7 @@ const ProductAnalytics = () => {
         <div className="bg-white shadow-md rounded-lg p-4">
           <div className="flex justify-between items-center mb-3">
             <h4 className="font-medium text-gray-700">Trending Products</h4>
-            <select
+            <NikeSelect
               value={trendingPeriod}
               onChange={(e) => setTrendingPeriod(e.target.value)}
               className="border rounded px-2 py-1 text-sm"
@@ -303,7 +304,7 @@ const ProductAnalytics = () => {
               <option value="week">This Week</option>
               <option value="month">This Month</option>
               <option value="year">This Year</option>
-            </select>
+            </NikeSelect>
           </div>
 
           {loadingTrending ? (
@@ -325,7 +326,7 @@ const ProductAnalytics = () => {
         <div className="bg-white shadow-md rounded-lg p-4">
           <div className="flex justify-between items-center mb-3">
             <h4 className="font-medium text-gray-700">❄️ Cold Products</h4>
-            <select
+            <NikeSelect
               value={coldPeriod}
               onChange={(e) => setColdPeriod(e.target.value)}
               className="border rounded px-2 py-1 text-sm"
@@ -333,7 +334,7 @@ const ProductAnalytics = () => {
               <option value="week">This Week</option>
               <option value="month">This Month</option>
               <option value="year">This Year</option>
-            </select>
+            </NikeSelect>
           </div>
 
           {loadingCold ? (

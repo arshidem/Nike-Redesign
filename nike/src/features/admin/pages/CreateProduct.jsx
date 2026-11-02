@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import { useScrollHeader } from "../../../hooks/useScrollHeader";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -537,7 +538,7 @@ const CreateProduct = () => {
               {/* Gender */}
               <div>
                 <label className="block text-xs sm:text-md font-medium mb-1">Gender*</label>
-                <select
+                <NikeSelect
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
@@ -548,7 +549,7 @@ const CreateProduct = () => {
                   <option value="women">Women</option>
                   <option value="kids">Kids</option>
                   <option value="unisex">Unisex</option>
-                </select>
+                </NikeSelect>
               </div>
               
               {/* Category */}
@@ -578,7 +579,7 @@ const CreateProduct = () => {
               {/* Activity Type */}
               <div>
                 <label className="block text-xs sm:text-md font-medium mb-1">Activity Type</label>
-                <select
+                <NikeSelect
                   name="activityType"
                   value={formData.activityType}
                   onChange={handleChange}
@@ -589,13 +590,13 @@ const CreateProduct = () => {
                       {type.charAt(0).toUpperCase() + type.slice(1)}
                     </option>
                   ))}
-                </select>
+                </NikeSelect>
               </div>
 
               {/* Sport Type */}
               <div>
                 <label className="block text-xs sm:text-md font-medium mb-1">Sport Type</label>
-                <select
+                <NikeSelect
                   name="sportType"
                   value={formData.sportType}
                   onChange={handleChange}
@@ -608,7 +609,7 @@ const CreateProduct = () => {
                       ).join(' ')}
                     </option>
                   ))}
-                </select>
+                </NikeSelect>
               </div>
               
               {/* Flags */}
@@ -739,7 +740,7 @@ const CreateProduct = () => {
                     <div key={sizeIndex} className="grid grid-cols-3 gap-3 mb-3">
                       {/* Size Selector */}
                       {(isShoesCategory(formData.category) || isClothingCategory(formData.category)) ? (
-                        <select
+                        <NikeSelect
                           value={size.size}
                           onChange={(e) => handleSizeChange(variantIndex, sizeIndex, "size", e.target.value)}
                           className="border p-2 rounded"
@@ -749,7 +750,7 @@ const CreateProduct = () => {
                           {getSizeOptions(formData.category).map((sizeOption, i) => (
                             <option key={i} value={sizeOption}>{sizeOption}</option>
                           ))}
-                        </select>
+                        </NikeSelect>
                       ) : (
                         <input
                           type="text"

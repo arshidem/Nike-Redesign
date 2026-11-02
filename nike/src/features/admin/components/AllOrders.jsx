@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import React, {
   useEffect,
   useState,
@@ -942,7 +943,7 @@ export const AllOrders = () => {
             {/* Update Status */}
             <div>
               <label className="font-medium text-sm">Update Order Status</label>
-              <select
+              <NikeSelect
                 value={selectedOrder.status}
                 onChange={(e) => handleStatusUpdate(e.target.value)}
                 className="block w-full mt-1 border rounded px-3 py-2 bg-white"
@@ -951,7 +952,7 @@ export const AllOrders = () => {
                 <option value="shipped">Shipped</option>
                 <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
-              </select>
+              </NikeSelect>
             </div>
           </div>
         </div>
@@ -1064,7 +1065,7 @@ export const AllOrders = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Order Status
                 </label>
-                <select
+                <NikeSelect
                   value={filters.status}
                   onChange={(e) => handleFilterChange("status", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
@@ -1074,7 +1075,7 @@ export const AllOrders = () => {
                   <option value="shipped">Shipped</option>
                   <option value="delivered">Delivered</option>
                   <option value="cancelled">Cancelled</option>
-                </select>
+                </NikeSelect>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

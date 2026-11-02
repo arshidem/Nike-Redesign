@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAppContext } from "../../../context/AppContext";
@@ -106,7 +107,7 @@ export default function AccountDetails() {
             onChange={change}
           />
           <Field label="Gender">
-            <select name="gender" value={form.gender} onChange={change}>
+            <NikeSelect name="gender" value={form.gender} onChange={change}>
               <option value="">Choose gender</option>
               {[
                 ["male", "Male"],
@@ -118,7 +119,7 @@ export default function AccountDetails() {
                   {label}
                 </option>
               ))}
-            </select>
+            </NikeSelect>
           </Field>
           <Field
             label="Country / Region"

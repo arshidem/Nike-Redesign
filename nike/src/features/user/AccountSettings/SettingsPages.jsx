@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppContext } from "../../../context/AppContext";
@@ -261,7 +262,7 @@ export function Help() {
           <form className="settings-card settings-form" onSubmit={submit}>
             <h2>Send a support request.</h2>
             <Field label="Topic">
-              <select
+              <NikeSelect
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
               >
@@ -270,7 +271,7 @@ export function Help() {
                     {value}
                   </option>
                 ))}
-              </select>
+              </NikeSelect>
             </Field>
             <Field
               label="Subject"

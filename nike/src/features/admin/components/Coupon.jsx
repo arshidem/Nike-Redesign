@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import React, { useEffect, useState } from "react";
 import { useCouponService } from "../../product/services/couponService";
 import toast, { Toaster } from "react-hot-toast";
@@ -144,14 +145,14 @@ const handleDelete = (id) => {
     onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
     className="p-2 border rounded text-xs sm:text-sm"
   />
-  <select
+  <NikeSelect
     value={form.discountType}
     onChange={(e) => setForm({ ...form, discountType: e.target.value })}
     className="p-2 border rounded text-xs sm:text-sm"
   >
     <option value="fixed">Fixed</option>
     <option value="percent">Percent</option>
-  </select>
+  </NikeSelect>
   <input
     type="number"
     placeholder="Min Order Amount"
@@ -165,14 +166,14 @@ const handleDelete = (id) => {
     onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
     className="p-2 border rounded text-xs sm:text-sm"
   />
-  <select
+  <NikeSelect
     value={form.isActive.toString()}
     onChange={(e) => setForm({ ...form, isActive: e.target.value === "true" })}
     className="p-2 border rounded text-xs sm:text-sm"
   >
     <option value="true">Active</option>
     <option value="false">Inactive</option>
-  </select>
+  </NikeSelect>
 
   <button
     type="submit"

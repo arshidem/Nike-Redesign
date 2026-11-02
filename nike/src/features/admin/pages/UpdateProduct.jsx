@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import { useScrollHeader } from "../../../hooks/useScrollHeader";
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -688,7 +689,7 @@ const handleSubmit = async (e) => {
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Gender*
                 </label>
-                <select
+                <NikeSelect
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
@@ -699,7 +700,7 @@ const handleSubmit = async (e) => {
                   <option value="women">Women</option>
                   <option value="kids">Kids</option>
                   <option value="unisex">Unisex</option>
-                </select>
+                </NikeSelect>
               </div>
 
               {/* Category */}
@@ -735,7 +736,7 @@ const handleSubmit = async (e) => {
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Activity Type
                 </label>
-                <select
+                <NikeSelect
                   name="activityType"
                   value={formData.activityType}
                   onChange={handleChange}
@@ -746,7 +747,7 @@ const handleSubmit = async (e) => {
                       {type.charAt(0).toUpperCase() + type.slice(1)}
                     </option>
                   ))}
-                </select>
+                </NikeSelect>
               </div>
 
               {/* Sport Type */}
@@ -754,7 +755,7 @@ const handleSubmit = async (e) => {
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Sport Type
                 </label>
-                <select
+                <NikeSelect
                   name="sportType"
                   value={formData.sportType}
                   onChange={handleChange}
@@ -770,7 +771,7 @@ const handleSubmit = async (e) => {
                         .join(" ")}
                     </option>
                   ))}
-                </select>
+                </NikeSelect>
               </div>
 
               {/* Flags */}
@@ -915,7 +916,7 @@ const handleSubmit = async (e) => {
                       {/* Size Selector */}
                       {isShoesCategory(formData.category) ||
                       isClothingCategory(formData.category) ? (
-                        <select
+                        <NikeSelect
                           value={size.size}
                           onChange={(e) =>
                             handleSizeChange(
@@ -936,7 +937,7 @@ const handleSubmit = async (e) => {
                               </option>
                             )
                           )}
-                        </select>
+                        </NikeSelect>
                       ) : (
                         <input
                           type="text"

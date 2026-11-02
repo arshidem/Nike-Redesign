@@ -1,3 +1,4 @@
+import NikeSelect from "../../../shared/ui/NikeSelect";
 import AppBar from "../../../shared/ui/AppBar";
 import WishlistSpinner from "../../../shared/ui/WishlistSpinner";
 import React, { useEffect, useMemo, useRef, useState, useId } from "react";
@@ -342,7 +343,7 @@ function FilterFields({ params, onChange, options }) {
         </div>
       </FilterGroup>
       <FilterGroup title="Rating">
-        <select
+        <NikeSelect
           aria-label="Minimum rating"
           value={params.get("minRating") || ""}
           onChange={(e) => set("minRating", e.target.value)}
@@ -353,10 +354,10 @@ function FilterFields({ params, onChange, options }) {
               {value} stars &amp; up
             </option>
           ))}
-        </select>
+        </NikeSelect>
       </FilterGroup>
       <FilterGroup title="Discount">
-        <select
+        <NikeSelect
           aria-label="Minimum discount"
           value={params.get("minDiscount") || ""}
           onChange={(e) => set("minDiscount", e.target.value)}
@@ -367,7 +368,7 @@ function FilterFields({ params, onChange, options }) {
               {value}% &amp; up
             </option>
           ))}
-        </select>
+        </NikeSelect>
       </FilterGroup>
     </div>
   );
@@ -650,7 +651,7 @@ export default function ProductListPage() {
             </button>
             <label className="catalog-sort">
               <span className="sr-only">Sort by</span>
-              <select
+              <NikeSelect
                 aria-label="Sort by"
                 value={params.get("sortBy") || ""}
                 onChange={(e) => setParam("sortBy", e.target.value)}
@@ -660,7 +661,7 @@ export default function ProductListPage() {
                     {value ? text : "Sort by"}
                   </option>
                 ))}
-              </select>
+              </NikeSelect>
               <ChevronDownIcon />
             </label>
             <div
