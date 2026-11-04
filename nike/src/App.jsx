@@ -13,8 +13,8 @@ import AccountSettings from "./features/user/AccountSettings/AccountSettings";
 import { AdminUserDetails } from "./features/admin/pages/AdminUserDetails";
 import { AdminRoute } from "./features/admin/routes/AdminRoute";
 import ProductListPage from "./features/user/pages/ProductListPage"
+import ModelCatalogRedirect from "./shared/ui/ModelCatalogRedirect";
 const LegalPage = lazy(() => import("./features/legal/LegalPage"));
-const ModelPage = lazy(() => import("./features/user/pages/ModelPage"));
 const ProductDetails = lazy(() => import("./features/user/pages/ProductDetails"));
 const Cart = lazy(() => import("./features/user/pages/Cart"));
 const Checkout = lazy(() => import("./features/user/pages/Checkout"));
@@ -69,7 +69,7 @@ function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/home" element={<Home />} />
       <Route path="/products" element={<ProductListPage />} />
-      <Route path="/model/:modelName" element={<ModelPage />} />
+      <Route path="/model/:modelName" element={<ModelCatalogRedirect />} />
       <Route path="/product/:productSlug" element={<ProductDetails />} />
       <Route path="/bag" element={<Cart />} />
       <Route path="/wishlist" element={<Wishlist />} />
