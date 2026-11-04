@@ -1201,3 +1201,9 @@
 .catalog-sticky-controls .catalog-active-filters {
   margin: 0 0 4px;
 }
+
+.catalog-sort-wrapper { width: 200px; min-width: 0; }
+@media (max-width: 600px) {
+  .catalog-sort-wrapper { flex: 1; width: auto; }
+  .catalog-sticky-controls { margin-inline: -4vw; padding-inline: 4vw; }
+}

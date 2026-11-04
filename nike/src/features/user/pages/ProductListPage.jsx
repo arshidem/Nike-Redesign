@@ -85,6 +85,13 @@ function catalogHeading(params) {
       "Results",
       `Find your next favourite for “${params.get("search")}”.`,
     ];
+  const models = params.getAll("model");
+  if (models.length)
+    return [
+      models.length === 1 ? models[0] : "Model",
+      models.length === 1 ? "Collection" : "Collections",
+      "Explore your everyday icons. Refine your favourites with the filters below.",
+    ];
   return [
     "All",
     "Products",
@@ -594,6 +601,7 @@ export default function ProductListPage() {
       minRating: `${value}★ & up`,
       minDiscount: `${value}% off & up`,
       search: `Search: ${value}`,
+      model: `Model: ${value}`,
     }[key] ||
     label(value);
 
@@ -652,7 +660,7 @@ export default function ProductListPage() {
               <AdjustmentsHorizontalIcon />
               Filters
             </button>
-            <div className="catalog-sort-wrapper" style={{ minWidth: "200px" }}>
+            <div className="catalog-sort-wrapper">
               <NikeSelect
                 size="sm"
                 label="Sort By"

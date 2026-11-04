@@ -112,9 +112,8 @@ const ShopByIcons = () => {
               ))
             : products.map((product) => (
                 <Link
-
                   key={product.id}
-                  to={`/model/${encodeURIComponent(product.model)}`}
+                  to={`/products?${new URLSearchParams({ model: product.model })}`}
                   className="store-icon-card"
                 >
                   <img
