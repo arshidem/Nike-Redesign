@@ -1,7 +1,10 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { MemoryRouter, useLocation } from "react-router-dom";
+import { MemoryRouter, useLocation, Routes, Route } from "react-router-dom";
 import ProductListPage from "../src/features/user/pages/ProductListPage";
+
+import ShopByIcons from "../src/features/user/components/ShopByIcons";
+import ModelCatalogRedirect from "../src/shared/ui/ModelCatalogRedirect";
 
 const mockFetch = jest.fn();
 const mockWishlist = jest.fn();
@@ -35,6 +38,7 @@ const shoe = {
   _id: "shoe",
   slug: "shoe",
   name: "Dunk",
+  model: "Nike Dunk",
   gender: "men",
   price: 10000,
   category: "shoes",
@@ -67,9 +71,12 @@ beforeEach(() => {
   mockFetch.mockReset();
   mockWishlist.mockReset();
   mockFetch.mockImplementation(async (query) => ({
-    products: query.newArrival || query.category ? [shoe] : [shoe, apparel],
+    products:
+      query.newArrival || query.category || query.model
+        ? [shoe]
+        : [shoe, apparel],
     pagination: {
-      totalItems: query.newArrival || query.category ? 1 : 2,
+      totalItems: query.newArrival || query.category || query.model ? 1 : 2,
       totalPages: 1,
     },
     genderCounts: { all: 2, men: 1, women: 1, kids: 0 },
@@ -128,7 +135,12 @@ test("legacy collection entry uses the URL for its header; clear all removes eve
 test("gender and sort retain collection and repeated category filters; removing a chip removes only that filter", async () => {
   await render("/products?isTrending=true&category=shoes&category=clothing");
   await click(container.querySelectorAll(".catalog-gender-pills button")[2]);
-  await change(container.querySelector('[aria-label="Sort by"]'), "priceAsc");
+  await click(container.querySelector('[aria-label="Sort By"]'));
+  await click(
+    [...container.querySelectorAll('[role="option"]')].find((option) =>
+      option.textContent.includes("Price: Low to high"),
+    ),
+  );
   expect(mockFetch.mock.calls.at(-1)[0]).toMatchObject({
     isTrending: "true",
     gender: "women",
@@ -216,16 +228,151 @@ test("an older request cannot overwrite results after the filters change", async
 });
 
 test("reference-style groups retain every current filter, including selections in collapsed groups", async () => {
-  await render("/products?newArrival=true&gender=men&category=shoes&model=Nike%20Dunk&sportType=running&activityType=casual&size=UK%205&color=black&minPrice=5000&maxPrice=15000&minRating=4&minDiscount=10");
+  await render(
+    "/products?newArrival=true&gender=men&category=shoes&model=Nike%20Dunk&sportType=running&activityType=casual&size=UK%205&color=black&minPrice=5000&maxPrice=15000&minRating=4&minDiscount=10",
+  );
   await click(container.querySelector('[aria-controls="catalog-filters"]'));
   const dialog = container.querySelector('[role="dialog"]');
-  expect([...dialog.querySelectorAll("legend button")].map((button) => button.textContent)).toEqual(["Collections", "Gender", "Category", "Model", "Sport", "Activity", "Size", "Color", "Price (₹)", "Rating", "Discount"]);
+  expect(
+    [...dialog.querySelectorAll("legend button")].map(
+      (button) => button.textContent,
+    ),
+  ).toEqual([
+    "Collections",
+    "Gender",
+    "Category",
+    "Model",
+    "Sport",
+    "Activity",
+    "Size",
+    "Color",
+    "Price (₹)",
+    "Rating",
+    "Discount",
+  ]);
   const modelGroup = dialog.querySelector(".catalog-model-group");
   await click(modelGroup.querySelector("legend button"));
-  expect(modelGroup.querySelector(".catalog-filter-group-body").hidden).toBe(true);
+  expect(modelGroup.querySelector(".catalog-filter-group-body").hidden).toBe(
+    true,
+  );
   expect(modelGroup.querySelector("input").checked).toBe(true);
-  const white = [...dialog.querySelectorAll(".catalog-color-option")].find((option) => option.textContent === "White");
+  const white = [...dialog.querySelectorAll(".catalog-color-option")].find(
+    (option) => option.textContent === "White",
+  );
   await click(white.querySelector("input"));
   await click(dialog.querySelector("footer .store-button"));
-  expect(mockFetch.mock.calls.at(-1)[0]).toMatchObject({ newArrival: "true", gender: "men", category: ["shoes"], model: ["Nike Dunk"], sportType: ["running"], activityType: ["casual"], size: ["UK 5"], color: "white", minPrice: "5000", maxPrice: "15000", minRating: "4", minDiscount: "10" });
+  expect(mockFetch.mock.calls.at(-1)[0]).toMatchObject({
+    newArrival: "true",
+    gender: "men",
+    category: ["shoes"],
+    model: ["Nike Dunk"],
+    sportType: ["running"],
+    activityType: ["casual"],
+    size: ["UK 5"],
+    color: "white",
+    minPrice: "5000",
+    maxPrice: "15000",
+    minRating: "4",
+    minDiscount: "10",
+  });
+});
+
+test("Icons for a reason opens the shared catalog with the clicked model and clear returns all products", async () => {
+  await act(async () =>
+    root.render(
+      <MemoryRouter initialEntries={["/home"]}>
+        <Location />
+        <Routes>
+          <Route path="/home" element={<ShopByIcons />} />
+          <Route path="/products" element={<ProductListPage />} />
+        </Routes>
+      </MemoryRouter>,
+    ),
+  );
+  const card = container.querySelector(".store-icon-card");
+  expect(card.getAttribute("href")).toBe("/products?model=Nike+Dunk");
+  await click(card);
+  expect(location()).toBe("/products?model=Nike+Dunk");
+  expect(mockFetch.mock.calls.at(-1)[0].model).toEqual(["Nike Dunk"]);
+  expect(container.querySelector("h1").textContent).toContain(
+    "Nike DunkCollection",
+  );
+  expect(
+    container.querySelector(".catalog-active-filters").textContent,
+  ).toContain("Model: Nike Dunk");
+  await click(container.querySelector('[aria-controls="catalog-filters"]'));
+  const drawer = container.querySelector('[role="dialog"]');
+  const options = [...drawer.querySelectorAll(".catalog-model-group label")];
+  expect(
+    options
+      .find((option) => option.textContent === "Nike Dunk")
+      .querySelector("input").checked,
+  ).toBe(true);
+  await click(
+    options
+      .find((option) => option.textContent === "Blazer")
+      .querySelector("input"),
+  );
+  await click(drawer.querySelector("footer .store-button"));
+  expect(mockFetch.mock.calls.at(-1)[0].model).toEqual(["Nike Dunk", "Blazer"]);
+  await click(
+    container.querySelector('[aria-label="Remove Model: Nike Dunk filter"]'),
+  );
+  expect(mockFetch.mock.calls.at(-1)[0].model).toEqual(["Blazer"]);
+  await click(container.querySelector(".catalog-clear"));
+  expect(location()).toBe("/products");
+  expect(mockFetch.mock.calls.at(-1)[0].model).toBeUndefined();
+  expect(container.textContent).toContain("Everyday T-shirt");
+});
+
+test("legacy model links redirect to the shared catalog, preserve other filters and reset pagination", async () => {
+  await act(async () =>
+    root.render(
+      <MemoryRouter
+        initialEntries={[
+          "/model/Nike%20Dunk?gender=men&sortBy=priceAsc&page=9",
+        ]}
+      >
+        <Location />
+        <Routes>
+          <Route path="/model/:modelName" element={<ModelCatalogRedirect />} />
+          <Route path="/products" element={<ProductListPage />} />
+        </Routes>
+      </MemoryRouter>,
+    ),
+  );
+  const query = new URLSearchParams(location().split("?")[1]);
+  expect(location().startsWith("/products?")).toBe(true);
+  expect(query.get("model")).toBe("Nike Dunk");
+  expect(query.get("gender")).toBe("men");
+  expect(query.get("sortBy")).toBe("priceAsc");
+  expect(query.has("page")).toBe(false);
+  expect(mockFetch.mock.calls.at(-1)[0]).toMatchObject({
+    model: ["Nike Dunk"],
+    gender: "men",
+    sortBy: "priceAsc",
+    page: 1,
+  });
+});
+
+test("legacy model names with punctuation are encoded once and remain one model filter", async () => {
+  await act(async () =>
+    root.render(
+      <MemoryRouter
+        initialEntries={["/model/Air%20%2B%20Zoom%20%26%20Dunk%2F90"]}
+      >
+        <Location />
+        <Routes>
+          <Route path="/model/:modelName" element={<ModelCatalogRedirect />} />
+          <Route path="/products" element={<ProductListPage />} />
+        </Routes>
+      </MemoryRouter>,
+    ),
+  );
+  expect(new URLSearchParams(location().split("?")[1]).getAll("model")).toEqual(
+    ["Air + Zoom & Dunk/90"],
+  );
+  expect(mockFetch.mock.calls.at(-1)[0].model).toEqual([
+    "Air + Zoom & Dunk/90",
+  ]);
 });
