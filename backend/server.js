@@ -19,27 +19,7 @@ app.set("trust proxy", 1);
 connectDB();
 
 // CORS middleware
-const corsOptions = {
-  origin: (origin, callback) => {
- const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.FRONTEND_URL_HOST,
-  "https://nike-redesign-six.vercel.app",
-  "https://nike-redesign-six.vercel.app/",
-  "http://localhost:5173",
-  "http://localhost:3000",
-];
-
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-  optionsSuccessStatus: 200,
-};
+const { corsOptions } = require("./config/corsOptions");
 app.use(cors(corsOptions));
 
 // Body parsers
