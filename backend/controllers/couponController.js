@@ -1,4 +1,5 @@
 const Coupon = require('../models/Coupon');
+const Order = require('../models/Order');
 
 exports.createCoupon = async (req, res) => {
   try {
@@ -17,8 +18,13 @@ exports.getCoupons = async (req, res) => {
     if (code) query.code = new RegExp(code, 'i');
     if (isActive !== undefined) query.isActive = isActive === 'true';
 
-    const coupons = await Coupon.find(query).sort({ createdAt: -1 });
-    res.json({ success: true, data: coupons });
+    const coupons = await Coupon.find(query).sort({ createdAt: -1 }).lean();
+    const usage = coupons.length ? await Order.aggregate([
+      { $match: { isPaid: true, couponCode: { $in: coupons.map(coupon => coupon.code) } } },
+      { $group: { _id: "$couponCode", count: { $sum: 1 } } },
+    ]) : [];
+    const counts = new Map(usage.map(row => [row._id, row.count]));
+    res.json({ success: true, data: coupons.map(coupon => ({ ...coupon, usageCount: counts.get(coupon.code) || 0 })) });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -27,7 +33,7 @@ exports.getCoupons = async (req, res) => {
 exports.updateCoupon = async (req, res) => {
   try {
     const { id } = req.params;
-    const updated = await Coupon.findByIdAndUpdate(id, req.body, { new: true });
+    const updated = await Coupon.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
     if (!updated) return res.status(404).json({ success: false, error: 'Coupon not found' });
     res.json({ success: true, data: updated });
   } catch (err) {

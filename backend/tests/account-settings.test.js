@@ -214,6 +214,7 @@ test("available coupons require active, unexpired offers and expose only custome
     lean: async () => [{ code: "MOVE20" }],
   };
   const controller = load("controllers/couponController.js", {
+    "../models/Order": {},
     "../models/Coupon": {
       find: (value) => {
         filter = value;
